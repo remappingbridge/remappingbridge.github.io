@@ -198,6 +198,7 @@
     function onEngineEvent(event){
       paint();
       if(event.kind==="mice-updated")return;
+      if(event.kind==="lock"||event.kind==="unlock")renderMice();
       if(event.kind==="remove-request"){mice.remove(event.control);return;}
       if(event.kind==="access"&&event.state.screen==="PAIR_MOUSE"){
         try{mice.beginPair(mouseName.value);}catch(error){announce(error.message);}
