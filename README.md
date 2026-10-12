@@ -2,13 +2,21 @@
 
 An **English-only**, static, single-page browser simulator of the [RemappingBridge](https://github.com/remappingbridge/remappingbridge) Pico 2 W and Waveshare Pico-LCD-1.3 firmware.
 
-**WEB-01–WEB-08 accepted by the operator. WEB-09 is the current production-browser candidate, with the requested demo selector and Virtual Mouse Lab revision; operator acceptance is pending.**
+**WEB-01–WEB-09 accepted by the operator. WEB-10 is the current full-parity/static-publication candidate; operator acceptance is pending.**
 
 ## Production
 
 [Open the simulator](https://remappingbridge.github.io/) · [Run browser-only tests](https://remappingbridge.github.io/tests/)
 
 The site consists solely of HTML/CSS/native JavaScript. No npm, Node.js, bundler, external CDN, service worker, application backend, telemetry, hosted storage, Web Bluetooth or custom Pages build workflow is required.
+
+## WEB-10: full firmware screen parity and static deployment audit
+
+- The `tests/fixtures/firmware-screens-v3.2.4.js` independent fixture is generated from the **actual release v3.2.4 C source literals**, `src/ux_model/ux_model.c` Git blob `132010179de09ea81f4543e9ca83def09c0a743f`, at release commit `69a640d9767ec7198572eb9b5073ed71f8f3d202`.
+- Direct source auditing found **45 of 45 exact firmware screen literals and dynamic row masks matching the web model**. The browser test runner additionally compares the fixture with every displayed source template, beside the prior exact LCD font/geometry/color goldens, movement, shortcuts, Help, Lock, diagnostic and multi-mouse state checks.
+- The `tests/index.html` copy has been updated to match the accepted deletion of the optional brightness/density controls and the correct WEB-10 regression scope. Tests must run in a real browser for production acceptance; no previous isolated harness result should be represented as a real Firefox/Chromium run.
+- Source and script assets remain same-origin relative static files with `.nojekyll` and no web build dependency. GitHub Pages deployment and versioned site `main` SHA are tracked in planner evidence.
+- WEB-10 is **not automatically accepted** merely because source parity and Pages deploy succeed. Manual Firefox, Chromium, smartphone, keyboard/touch, HiDPI/zoom, clipboard/exports, CSS sticky and browser-console checks remain the operator's acceptance tests.
 
 ## WEB-09: clean HAT and browser-only diagnostics
 

@@ -1,4 +1,4 @@
-/* WEB-09 — physical HAT, local diagnostic Inspector and reproducible evidence.
+/* WEB-10 — source parity audit of HAT, local diagnostic Inspector and reproducible evidence.
  * Virtual pairing is browser-only; no actual BLE/HID hardware is accessed.
  */
 (function () {
@@ -8,7 +8,7 @@
     uiBaseline:"v3.2.3",
     commit:"69a640d9767ec7198572eb9b5073ed71f8f3d202",
     uiBaselineCommit:"f38c5fd15c68ea9a36d3b05912727788d7b98e81",
-    gate:"WEB-09",lcdMode:"Canvas 240x240 RGB565 glyph preview",
+    gate:"WEB-10",lcdMode:"Canvas 240x240 RGB565 glyph preview",
     framebufferImplemented:true,hatInteractionImplemented:true,
     uxImplemented:true,bluetoothImplemented:false,virtualMiceImplemented:true,profilesImplemented:true,shortcutsImplemented:true,displayControlsImplemented:false,diagnosticsImplemented:true,maxWebBrightnessPercent:100
   });
@@ -91,7 +91,7 @@
        !diagnosticEvents||!diagnosticFeedback||diagnosticExports.length!==3||touchButtons.length!==9||
        !mouseName||!mouseSelect||!mouseCount||!mouseConnection||!profileStatus||!mousePersistence||!mousePending||!mouseLog||labButtons.length!==12||
        catalog.ids.length!==45||buttons.length!==9||scenarios.length!==3||
-       !isValidPreview(INITIAL))throw new Error("WEB-09: invalid DOM/renderer contract");
+       !isValidPreview(INITIAL))throw new Error("WEB-10: invalid DOM/renderer contract");
 
     var touchNames=touchButtons.map(function(button){return button.getAttribute("data-touch-control");});
     if(new Set(touchNames).size!==9||touchNames.some(function(id){return !controlLabel(id);}))
