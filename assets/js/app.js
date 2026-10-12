@@ -56,6 +56,10 @@
   }
 
   function boot(doc) {
+    if (doc.documentElement && doc.documentElement.lang !== "en") {
+      throw new Error("RemappingBridge pages must declare English (lang=en)");
+    }
+
     var root = doc.querySelector("[data-app-root]");
     if (!root) return false;
 
@@ -92,14 +96,14 @@
       });
       button.addEventListener("click", function () {
         taps += 1;
-        announce(controlLabel(button.getAttribute("data-control")) + " — entrada de demonstração registrada.");
+        announce(controlLabel(button.getAttribute("data-control")) + " — demo input recorded.");
       });
     });
 
     reset.addEventListener("click", function () {
       taps = 0;
       buttons.forEach(function (button) { previewPress(button, false); });
-      announce("Pronto para receber comandos virtuais.");
+      announce("Ready for virtual controls.");
     });
 
     root.setAttribute("data-boot-state", "ready");

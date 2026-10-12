@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#101218">
-  <meta name="description" content="Prévia estática do simulador RemappingBridge para Raspberry Pi Pico 2 W.">
-  <title>RemappingBridge — Simulador virtual</title>
+  <meta name="description" content="Static preview of the RemappingBridge simulator for Raspberry Pi Pico 2 W.">
+  <title>RemappingBridge — Virtual Simulator</title>
   <link rel="stylesheet" href="./assets/css/app.css">
   <script defer src="./assets/js/app.js"></script>
 </head>
@@ -17,22 +17,22 @@
         <div class="app-identity__icon" aria-hidden="true">RB</div>
         <div>
           <h1 id="simulator-title">RemappingBridge</h1>
-          <p>Simulador virtual <span aria-hidden="true">·</span> Firmware v3.2.3</p>
+          <p>Virtual simulator <span aria-hidden="true">·</span> Firmware v3.2.3</p>
         </div>
-        <span class="phase-chip">WEB-01 <span class="phase-chip__dot" aria-hidden="true"></span> Prévia</span>
+        <span class="phase-chip">WEB-01 <span class="phase-chip__dot" aria-hidden="true"></span> Preview</span>
       </div>
 
-      <div class="device" aria-label="Painel de demonstração do Pico 2 W com LCD e controles">
+      <div class="device" aria-label="Pico 2 W demonstration panel with LCD and controls">
         <div class="device__top">
           <span class="device__brand">REMAPPING<span>BRIDGE</span></span>
-          <div class="device__lights" aria-label="Dispositivo virtual; nenhum Pico conectado">
+          <div class="device__lights" aria-label="Virtual device; no physical Pico is connected">
             <span class="device__light" aria-hidden="true"></span>
             <span>VIRTUAL DEVICE</span>
           </div>
         </div>
 
         <div class="lcd-housing">
-          <div class="lcd-preview" role="img" aria-label="Prévia textual de nove linhas: SEARCHING FIRST MOUSE, instruções de uso do joystick e das teclas do HAT; a renderização fiel do LCD virá no WEB-02.">
+          <div class="lcd-preview" role="img" aria-label="Nine-line text preview: SEARCHING FIRST MOUSE, joystick and HAT button instructions. A faithful LCD renderer is planned for WEB-02.">
             <div class="lcd-preview__shine" aria-hidden="true"></div>
             <pre class="lcd-preview__rows" aria-hidden="true"><span class="lcd-preview__title">SEARCHING FIRST MOUSE</span>
 PRESS TO LEARN KEYS
@@ -49,22 +49,22 @@ WHILE WAIT CONNECTION
         <div class="hardware-controls">
           <fieldset class="hat-group hat-group--joystick">
             <legend>JOYSTICK</legend>
-            <div class="joy-cluster" aria-label="Joystick virtual">
-              <button type="button" class="hat-button joy joy--up" data-control="JOY_UP" aria-label="Joystick para cima" title="Joystick para cima"><span aria-hidden="true">▲</span></button>
-              <button type="button" class="hat-button joy joy--left" data-control="JOY_LEFT" aria-label="Joystick para a esquerda" title="Joystick para a esquerda"><span aria-hidden="true">◀</span></button>
-              <button type="button" class="hat-button joy joy--press" data-control="JOY_PRESS" aria-label="Pressionar joystick" title="Pressionar joystick"><span aria-hidden="true">●</span></button>
-              <button type="button" class="hat-button joy joy--right" data-control="JOY_RIGHT" aria-label="Joystick para a direita" title="Joystick para a direita"><span aria-hidden="true">▶</span></button>
-              <button type="button" class="hat-button joy joy--down" data-control="JOY_DOWN" aria-label="Joystick para baixo" title="Joystick para baixo"><span aria-hidden="true">▼</span></button>
+            <div class="joy-cluster" aria-label="Virtual joystick">
+              <button type="button" class="hat-button joy joy--up" data-control="JOY_UP" aria-label="Joystick up" title="Joystick up"><span aria-hidden="true">▲</span></button>
+              <button type="button" class="hat-button joy joy--left" data-control="JOY_LEFT" aria-label="Joystick left" title="Joystick left"><span aria-hidden="true">◀</span></button>
+              <button type="button" class="hat-button joy joy--press" data-control="JOY_PRESS" aria-label="Press joystick" title="Press joystick"><span aria-hidden="true">●</span></button>
+              <button type="button" class="hat-button joy joy--right" data-control="JOY_RIGHT" aria-label="Joystick right" title="Joystick right"><span aria-hidden="true">▶</span></button>
+              <button type="button" class="hat-button joy joy--down" data-control="JOY_DOWN" aria-label="Joystick down" title="Joystick down"><span aria-hidden="true">▼</span></button>
             </div>
           </fieldset>
 
           <fieldset class="hat-group hat-group--keys">
             <legend>KEYS</legend>
-            <div class="action-cluster" aria-label="Botões do HAT virtual">
-              <button type="button" class="hat-button action-key action-key--a" data-control="KEY_A" aria-label="Tecla A">A</button>
-              <button type="button" class="hat-button action-key action-key--x" data-control="KEY_X" aria-label="Tecla X">X</button>
-              <button type="button" class="hat-button action-key action-key--b" data-control="KEY_B" aria-label="Tecla B">B</button>
-              <button type="button" class="hat-button action-key action-key--y" data-control="KEY_Y" aria-label="Tecla Y">Y</button>
+            <div class="action-cluster" aria-label="Virtual HAT buttons">
+              <button type="button" class="hat-button action-key action-key--a" data-control="KEY_A" aria-label="Key A">A</button>
+              <button type="button" class="hat-button action-key action-key--x" data-control="KEY_X" aria-label="Key X">X</button>
+              <button type="button" class="hat-button action-key action-key--b" data-control="KEY_B" aria-label="Key B">B</button>
+              <button type="button" class="hat-button action-key action-key--y" data-control="KEY_Y" aria-label="Key Y">Y</button>
             </div>
           </fieldset>
         </div>
@@ -75,20 +75,20 @@ WHILE WAIT CONNECTION
         </div>
       </div>
 
-      <section class="session-panel" aria-label="Estado da prévia">
+      <section class="session-panel" aria-label="Preview status">
         <div class="session-panel__heading">
           <div>
-            <span class="eyebrow">SESSÃO VIRTUAL</span>
-            <h2>Teste os controles</h2>
+            <span class="eyebrow">VIRTUAL SESSION</span>
+            <h2>Try the controls</h2>
           </div>
-          <button type="button" class="button-reset" data-reset aria-label="Zerar histórico de controles">Limpar <span aria-hidden="true">↺</span></button>
+          <button type="button" class="button-reset" data-reset aria-label="Clear the control history">Clear <span aria-hidden="true">↺</span></button>
         </div>
         <div class="event-preview">
           <span class="event-preview__pulse" aria-hidden="true"></span>
-          <p class="event-preview__message" aria-live="polite" aria-atomic="true" data-feedback>Pronto para receber comandos virtuais.</p>
-          <output class="event-preview__counter" data-count aria-label="Número de comandos">00</output>
+          <p class="event-preview__message" aria-live="polite" aria-atomic="true" data-feedback>Ready for virtual controls.</p>
+          <output class="event-preview__counter" data-count aria-label="Number of commands">00</output>
         </div>
-        <p class="session-panel__note">Nesta primeira etapa, os botões apenas registram a entrada. A navegação, o Bluetooth simulado e o renderer fiel serão acrescentados nos próximos gates. Nenhum dispositivo físico é acessado.</p>
+        <p class="session-panel__note">At this stage, the buttons only record virtual input. Navigation, simulated Bluetooth and faithful LCD rendering will be added in later gates. No physical device is accessed.</p>
       </section>
     </section>
   </main>
