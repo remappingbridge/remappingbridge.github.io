@@ -26,7 +26,7 @@ Following operator acceptance of WEB-02, **Gentle** is the default and is slight
 
 Use **https://remappingbridge.github.io/** to test the actual site. Choose **Connected demo**; use joystick Up/Down, X for Help, B for Back and Y for Lock. To unlock, press and release any HAT control once. Choose **Saved mouse search** to test B → Retry and A → Retry Search.
 
-Open **https://remappingbridge.github.io/tests/** to run the **73 browser-only regression checks**, including all WEB-02 color/geometry snapshots and WEB-03 input, Help, Lock, release and mouse-context tests. These tests run directly in Firefox/Chromium without npm, Node, a custom website Actions build, bundlers, third-party CDNs or a backend. Do not claim the live browser checks have passed without observing the displayed result. The GitHub Pages branch deploy must also report success after new changes.
+Open **https://remappingbridge.github.io/tests/** to run the **80 browser-only regression checks**, including all WEB-02 color/geometry snapshots and WEB-03 input, Help, Lock, release and mouse-context tests. These tests run directly in Firefox/Chromium without npm, Node, a custom website Actions build, bundlers, third-party CDNs or a backend. Do not claim the live browser checks have passed without observing the displayed result. The GitHub Pages branch deploy must also report success after new changes.
 
 ## Files
 
@@ -38,7 +38,7 @@ assets/js/lcd-renderer.js     240x240 firmware bitmap rasterizer and palette
 assets/js/hat-interaction.js  Virtual press/release, Help, Lock state engine
 assets/js/app.js              Keyboard/pointer/touch mapping and Canvas binding
 tests/index.html              Browser-native test harness
-tests/runner.js               73 Canvas/HAT/Help/Lock regression assertions
+tests/runner.js               80 Canvas/HAT/Help/Lock regression assertions
 tests/fixtures/              Fixed per-pixel RGBA hashes and colors
 README.md                     Project documentation
 LICENSE                       GNU AGPLv3 preserved
