@@ -1,4 +1,4 @@
-/* WEB-06 — per-mouse profile/Movement model and sticky HAT user interface.
+/* WEB-07 — firmware 12-combination / 30-shortcut editor and sticky HAT corners.
  * Virtual pairing is browser-only; no actual BLE/HID hardware is accessed.
  */
 (function () {
@@ -8,9 +8,9 @@
     uiBaseline:"v3.2.3",
     commit:"69a640d9767ec7198572eb9b5073ed71f8f3d202",
     uiBaselineCommit:"f38c5fd15c68ea9a36d3b05912727788d7b98e81",
-    gate:"WEB-06",lcdMode:"Canvas 240x240 RGB565 glyph preview",
+    gate:"WEB-07",lcdMode:"Canvas 240x240 RGB565 glyph preview",
     framebufferImplemented:true,hatInteractionImplemented:true,
-    uxImplemented:true,bluetoothImplemented:false,virtualMiceImplemented:true,profilesImplemented:true,maxWebBrightnessPercent:100
+    uxImplemented:true,bluetoothImplemented:false,virtualMiceImplemented:true,profilesImplemented:true,shortcutsImplemented:true,maxWebBrightnessPercent:100
   });
   var LABELS=Object.freeze({
     JOY_UP:"JOY UP",JOY_DOWN:"JOY DOWN",JOY_LEFT:"JOY LEFT",
@@ -188,6 +188,26 @@
     function onEngineEvent(event){
       paint();
       if(event.kind==="mice-updated")return;
+      if(event.kind==="set-shortcut"||event.kind==="reset-shortcut"){
+        var mstate=mice.snapshot(),id=mstate.connectedId||mstate.frontId;
+        if(!id){
+          announce("Pair or select a saved virtual mouse before saving a shortcut.");
+          return;
+        }
+        var profile=mice.profileFor(id),combo=event.payload.combination,choice=event.payload.shortcut;
+        if(hat.comboUnavailable(combo,profile.targets)){
+          announce("This combination is unavailable: the same mouse button is the Modifier.");
+          return;
+        }
+        profile.shortcuts[combo]=choice;
+        try{
+          var result=mice.applyProfile(id,profile);
+          if(result.kind==="profile-applied")
+            engine.confirmShortcut(combo,choice);
+        }catch(error){announce("Shortcut not applied: "+error.message);}
+        return;
+      }
+
       if(["apply-custom","apply-passthrough","apply-movement","reset-movement"].indexOf(event.kind)>=0){
         var target=mice.snapshot().connectedId||mice.snapshot().frontId;
         if(!target){
@@ -245,6 +265,13 @@
         case "page":announce("Moved to another option page.");break;
         case "draft-target":announce("Target saved as a draft only. Press A on EDIT CUSTOM to apply the full virtual profile.");break;
         case "applied":announce("Virtual profile applied to the selected mouse. No host HID sent.");break;
+        case "shortcut-applied":
+          announce(event.payload.shortcut===0?
+            "Selected virtual shortcut reset to NOT CUSTOMIZED; saved locally.":
+            "Virtual shortcut "+hat.shortcutNames[event.payload.shortcut]+" applied to combination "+
+            hat.combinationNames[event.payload.combination]+". No host HID sent.");
+          break;
+        case "unavailable":announce("This combination is UNAVAILABLE because that mouse button is the Modifier.");break;
         case "inspect":announce("Inspecting canonical firmware screen: "+event.state.screen+".");break;
         case "commit-pending":announce("Preview only: "+event.control+" will be simulated in a later gate. No settings saved.");break;
         case "scenario":announce("Virtual state: "+hat.templates[event.state.screen][0]+".");break;
