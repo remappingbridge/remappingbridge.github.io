@@ -225,7 +225,7 @@ function createEngine(listener){
     if(savedCount)savedPage=(savedPage+(id==="JOY_LEFT"?savedCount-1:1))%savedCount;
     return emit("page",id);
    }
-   if(id==="JOY_PRESS"&&savedCount){removeTargetId=savedMice[savedPage].id;go("REMOVE_THIS");return emit("access",id);}
+   if(id==="JOY_PRESS"&&savedCount){removeTargetId=savedMice[savedPage]?savedMice[savedPage].id:null;go("REMOVE_THIS");return emit("access",id);}
   }
   if(screen==="REMOVE_THIS"&&id==="KEY_A")return removeTargetId?emit("remove-request",removeTargetId):emit("no-action",id);
   if(screen==="APPLY_PASSTHROUGH"&&id==="KEY_A")return applyVisualPlaceholder("APPLY_PASSTHROUGH");
