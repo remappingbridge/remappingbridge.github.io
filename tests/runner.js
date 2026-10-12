@@ -325,7 +325,7 @@ function run(){
   ed.inspect("LEFT_WILL_BECOME");
   var willFrame=P.frame(ed.snapshot(),L);
   check("Draft modifier does not turn uncommitted candidate cyan",
-    willFrame.cells[6][1].tone!==L.tones.CURRENT&&willFrame.cells[1][1].tone===L.tones.CURRENT);
+    willFrame.cells[6][1].tone!==L.tones.CURRENT&&willFrame.cells[6][1].tone!==L.tones.SELECTED_CURRENT&&willFrame.cells[1][1].tone===L.tones.SELECTED_CURRENT);
   ed.inspect("EDIT_CUSTOM");
   var applyCustom=press(ed,"KEY_A");
   check("Edit Custom A emits an explicit commit request with draft target data",
