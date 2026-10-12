@@ -16,6 +16,16 @@ var SCENARIOS=Object.freeze(["first","connected","saved"]);
 var HELP=new Set(source.ids.filter(function(id){return id.startsWith("HELP_")||id.endsWith("_HELP");}));
 var SOURCE=Object.freeze(["LEFT","RIGHT","MIDDLE","FORWARD","BACKWARD"]);
 var TARGET=Object.freeze(["LEFT","RIGHT","MIDDLE","FORWARD","BACKWARD","MODIFIER"]);
+var SHORTCUT_NAMES=Object.freeze(["NOT CUSTOMIZED","COPY","CUT","SELECT ALL","PASTE","UNDO","REDO","ESCAPE","SPACE","ENTER/RETURN","BACKSPACE","DELETE","RENAME","FULL SCREEN","SCREENSHOT FULL","SCREENSHOT AREA","REFRESH","FIND","SAVE","PLAY/PAUSE","NEXT TRACK","PREVIOUS TRACK","VOLUME UP","VOLUME DOWN","MUTE","HOME SCREEN/PAGE","ZOOM IN","ZOOM OUT","RESET ZOOM","BRIGHTNESS UP","BRIGHTNESS DOWN"]);
+var COMBINATION_NAMES=Object.freeze(["MODIFIER RELEASED","MOD + MIDDLE","MOD + LEFT CLICK","MOD + RIGHT CLICK",
+ "MOD + FORWARD","MOD + BACKWARD","MOD + WHEEL UP","MOD + WHEEL DOWN",
+ "MOD + MOVE LEFT","MOD + MOVE RIGHT","MOD + MOVE UP","MOD + MOVE DOWN"]);
+function comboUnavailable(id,targets){
+ var modifier=targets.indexOf(5);
+ return ({1:2,2:0,3:1,4:3,5:4})[id]===modifier;
+}
+function shortcutsActive(kind,targets){return kind==="CUSTOM"&&targets.indexOf(5)!==-1;}
+
 var NUM=Object.freeze({HOME:4,HOME_SEARCHING:2,HOME_RETRY:2,MOUSE_OPTIONS:3,MOVEMENT_OPTIONS:3,
  EDIT_CUSTOM:5,HORIZONTAL_SLOW_DPI:4,HORIZONTAL_FAST_DPI:4,VERTICAL_SLOW_DPI:4,
  VERTICAL_FAST_DPI:4,ROTATION:4});
@@ -42,7 +52,7 @@ function createEngine(listener){
    connectedId:connectedId,frontId:frontId,connectedName:connectedName,removeTargetId:removeTargetId,
    connected:connected,activeProfile:activeProfile,customSource:customSource,
    customTargets:Object.freeze(customTargets.slice()),appliedTargets:Object.freeze(appliedTargets.slice()),customDirty:customDirty,profileOwner:profileOwner,
-   modifierSource:customTargets.indexOf(5),
+   modifierSource:appliedTargets.indexOf(5),modifierShortcutsActive:shortcutsActive(activeProfile,appliedTargets),
    movement:Object.freeze(Object.assign({},movement)),editingCombination:editingCombination,
    shortcuts:Object.freeze(shortcuts.slice()),lastOutcome:lastOutcome});
  }
@@ -191,16 +201,36 @@ function createEngine(listener){
    return emit("no-action",id);
   }
   if(isCombo(screen)){
-   var cp=Number(screen.split("_")[1]);
-   if(id==="JOY_LEFT"||id==="JOY_RIGHT"){go("COMBINATIONS_"+((cp-1+(id==="JOY_LEFT"?5:1))%6+1),selection);return emit("page",id);}
-   if(id==="JOY_PRESS"){editingCombination=(cp-1)*2+selection;go("SHORTCUTS_1");return emit("access",id);}
-   if(id==="KEY_A")return applyVisualPlaceholder("RESET_SHORTCUT");
+   var cp=Number(screen.split("_")[1]),combo=(cp-1)*2+selection;
+   if(id==="JOY_LEFT"||id==="JOY_RIGHT"){
+    go("COMBINATIONS_"+((cp-1+(id==="JOY_LEFT"?5:1))%6+1),selection);
+    return emit("page",id);
+   }
+   if(id==="KEY_A"){
+    if(comboUnavailable(combo,appliedTargets))return emit("unavailable",id);
+    if(shortcuts[combo]===0)return emit("no-action",id);
+    return emit("reset-shortcut",id,{combination:combo,shortcut:0});
+   }
+   if(id==="JOY_PRESS"){
+    if(comboUnavailable(combo,appliedTargets))return emit("unavailable",id);
+    editingCombination=combo;
+    var assigned=shortcuts[combo]||1;
+    go("SHORTCUTS_"+(1+Math.floor((assigned-1)/6)),(assigned-1)%6);
+    return emit("access",id);
+   }
    if(id==="KEY_X")return emit("no-action",id);
   }
   if(isShortcut(screen)){
    var sp=Number(screen.split("_")[1]);
-   if(id==="JOY_LEFT"||id==="JOY_RIGHT"){go("SHORTCUTS_"+((sp-1+(id==="JOY_LEFT"?4:1))%5+1),selection);return emit("page",id);}
-   if(id==="KEY_A")return applyVisualPlaceholder("SET_SHORTCUT");
+   if(id==="JOY_LEFT"||id==="JOY_RIGHT"){
+    var next=(sp-1+(id==="JOY_LEFT"?4:1))%5,chosen=shortcuts[editingCombination];
+    var focus=selection;
+    if(chosen>0&&Math.floor((chosen-1)/6)===next)focus=(chosen-1)%6;
+    go("SHORTCUTS_"+(next+1),focus);
+    return emit("page",id);
+   }
+   if(id==="KEY_A")
+    return emit("set-shortcut",id,{combination:editingCombination,shortcut:(sp-1)*6+selection+1});
    if(id==="JOY_PRESS"||id==="KEY_X")return emit("no-action",id);
   }
   if(options()&&id==="JOY_UP"){selection=(selection+options()-1)%options();return emit("selection",id);}
@@ -290,6 +320,14 @@ function createEngine(listener){
   if(screen==="APPLY_PASSTHROUGH"&&id==="KEY_A")return emit("apply-passthrough",id);
   return emit("no-action",id);
  }
+ function confirmShortcut(combination,shortcut){
+  if(!Number.isInteger(combination)||combination<0||combination>=12||
+     !Number.isInteger(shortcut)||shortcut<0||shortcut>30)
+    throw new RangeError("Invalid shortcut commit");
+  shortcuts[combination]=shortcut;
+  go("COMBINATIONS_"+(Math.floor(combination/2)+1),combination%2);
+  return emit("shortcut-applied",null,{combination:combination,shortcut:shortcut});
+ }
  function confirmApply(kind){
   if(kind==="custom")go("MOUSE_OPTIONS",1);
   else if(kind==="passthrough")go("PASSTHROUGH_APPLIED");
@@ -302,12 +340,13 @@ function createEngine(listener){
  }
  return Object.freeze({
   press:press,release:release,cancelAll:cancelAll,setScenario:setScenario,
-  inspect:inspect,syncMice:syncMice,confirmApply:confirmApply,snapshot:snapshot,isHelp:help,optionCount:options
+  inspect:inspect,syncMice:syncMice,confirmApply:confirmApply,confirmShortcut:confirmShortcut,snapshot:snapshot,isHelp:help,optionCount:options
  });
 }
 window.RemappingBridgeHAT=Object.freeze({
  controls:C,scenarios:SCENARIOS,screens:S,
  templates:T,ids:source.ids,sourceBlob:source.firmwareBlob,createEngine:createEngine,
- isCombo:isCombo,isShortcut:isShortcut,isWill:isWill,isDpi:isDpi,optionCount:countFor
+ isCombo:isCombo,isShortcut:isShortcut,isWill:isWill,isDpi:isDpi,optionCount:countFor,
+ shortcutNames:SHORTCUT_NAMES,combinationNames:COMBINATION_NAMES,comboUnavailable:comboUnavailable,shortcutsActive:shortcutsActive
 });
 }());
