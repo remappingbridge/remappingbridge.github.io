@@ -10,7 +10,7 @@ var U=window.RemappingBridgeHAT;
 function copyRows(id){return catalog.get(id).rows.slice();}
 function title(frame,row,tone,lcd){lcd.setToneSpan(frame,row,0,21,tone);}
 function replace(frame,row,value,tone,lcd){
- var text=String(value);
+ var text=String(value).normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toUpperCase();
  for(var col=0;col<21;col++){frame.cells[row][col].character=text[col]||" ";frame.cells[row][col].tone=tone;}
 }
 function firstHint(rows){
