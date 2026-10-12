@@ -392,3 +392,12 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
   .device__corner-status{font-size:7px}
   .hat-meta__specs{font-size:7px}
 }
+
+/* On narrow layouts, reserve slim corner-label bands outside the LCD
+ * perimeter so the upper-left brand and lower-left status cannot cover
+ * display pixels even when the browser is zoomed. */
+@media(max-width:540px) {
+ .device.device--sticky {padding-top:14px;padding-bottom:14px;}
+ .device__corner-brand {top:3px}
+ .device__corner-status {bottom:3px}
+}
