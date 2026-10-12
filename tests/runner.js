@@ -12,6 +12,11 @@
     }
     function same(a,b){return a.length===b.length && a.every(function(n,i){return n===b[i];});}
     function throws(fn){try{fn();return false;}catch(_){return true;}}
+    function fnv32(bytes){
+      var h=2166136261;
+      for(var i=0;i<bytes.length;i++) h=Math.imul(h^bytes[i],16777619)>>>0;
+      return h.toString(16).padStart(8,"0");
+    }
 
     check("English document locale",document.documentElement.lang==="en");
     check("LCD Canvas renderer exported",!!lcd && typeof lcd.rasterize==="function");
@@ -66,6 +71,13 @@
             lcd.separatorY(lcd.newFrame(rows,{hintStartRow:6}))===151 &&
             same(pixel(lcd.rasterize(lcd.newFrame(Array(9).fill(""),{hintStartRow:6}),"soft"),0,0),[0,0,0,255])&&
             same(pixel(lcd.rasterize(lcd.newFrame(Array(9).fill(""),{hintStartRow:6}),"soft"),0,239),[25,11,29,255]));
+      check("Original 240x240 RGBA frame matches full visual golden",fnv32(original)==="a8e6a495");
+      check("Soft 240x240 RGBA frame matches full visual golden",fnv32(soft)==="913aca55");
+      check("Gentle 240x240 RGBA frame matches full visual golden",fnv32(gentle)==="a9662a35");
+      check("Pressed KEY A state matches all-background golden fingerprints",
+            fnv32(lcd.rasterize(lcd.previewFrame(rows,"KEY_A"),"original"))==="2e7041d5"&&
+            fnv32(lcd.rasterize(lcd.previewFrame(rows,"KEY_A"),"soft"))==="942df955"&&
+            fnv32(lcd.rasterize(lcd.previewFrame(rows,"KEY_A"),"gentle"))==="244450f5");
       check("Original firmware magenta is exact RGB565 (#080008)",
             same(pixel(original,0,0),[8,0,8,255]));
       check("Soft and Gentle adjust ONLY the web background",
