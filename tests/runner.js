@@ -11,6 +11,7 @@
     }
 
     check("Bootstrap API exports without dependencies", !!api && typeof api.boot === "function");
+    check("Test page declares English", document.documentElement.lang === "en");
     if (api) {
       var info = api.getBootstrapInfo();
       check("Firmware source pinned to v3.2.3", info.version === "v3.2.3" &&
@@ -52,6 +53,7 @@
             root.getAttribute("data-boot-state") === "ready");
 
       buttons[0].click();
+      check("Control feedback is in English", feedback.textContent.indexOf("demo input recorded.") >= 0);
       check("JOY UP produces feedback without firmware navigation", counter.textContent === "01" &&
             feedback.textContent.indexOf("JOY UP") >= 0);
 
@@ -62,6 +64,7 @@
       reset.click();
       check("Clear button restores state and counter", counter.textContent === "00" &&
             feedback.textContent === "Ready for virtual controls.");
+      check("Clear message is not Portuguese", !/pronto|comandos virtuais|limpar/i.test(feedback.textContent));
 
       buttons[0].dispatchEvent(new Event("pointerdown"));
       check("Press changes visual feedback only", buttons[0].classList.contains("is-pressed"));
