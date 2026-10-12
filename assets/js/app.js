@@ -1,4 +1,4 @@
-/* WEB-05 — canonical LCD, HAT, simulated mouse bonds and local persistence.
+/* WEB-06 — per-mouse profile/Movement model and sticky HAT user interface.
  * Virtual pairing is browser-only; no actual BLE/HID hardware is accessed.
  */
 (function () {
@@ -8,9 +8,9 @@
     uiBaseline:"v3.2.3",
     commit:"69a640d9767ec7198572eb9b5073ed71f8f3d202",
     uiBaselineCommit:"f38c5fd15c68ea9a36d3b05912727788d7b98e81",
-    gate:"WEB-05",lcdMode:"Canvas 240x240 RGB565 glyph preview",
+    gate:"WEB-06",lcdMode:"Canvas 240x240 RGB565 glyph preview",
     framebufferImplemented:true,hatInteractionImplemented:true,
-    uxImplemented:true,bluetoothImplemented:false,virtualMiceImplemented:true,maxWebBrightnessPercent:100
+    uxImplemented:true,bluetoothImplemented:false,virtualMiceImplemented:true,profilesImplemented:true,maxWebBrightnessPercent:100
   });
   var LABELS=Object.freeze({
     JOY_UP:"JOY UP",JOY_DOWN:"JOY DOWN",JOY_LEFT:"JOY LEFT",
@@ -66,14 +66,15 @@
     var mouseSelect=root.querySelector("[data-mouse-id]");
     var mouseCount=root.querySelector("[data-mouse-count]");
     var mouseConnection=root.querySelector("[data-mouse-connection]");
+    var profileStatus=root.querySelector("[data-profile-summary]");
     var mousePersistence=root.querySelector("[data-mouse-persistence]");
     var mousePending=root.querySelector("[data-mouse-pending]");
     var mouseLog=root.querySelector("[data-virtual-log]");
     var labButtons=Array.prototype.slice.call(root.querySelectorAll("[data-lab-action]"));
     if(!lcd||!hat||!catalog||!projector||!virtual||!canvas||!feedback||!count||!clear||!screenLabel||!inspector||
-       !mouseName||!mouseSelect||!mouseCount||!mouseConnection||!mousePersistence||!mousePending||!mouseLog||labButtons.length!==10||
+       !mouseName||!mouseSelect||!mouseCount||!mouseConnection||!profileStatus||!mousePersistence||!mousePending||!mouseLog||labButtons.length!==10||
        catalog.ids.length!==45||buttons.length!==9||scenarios.length!==3||
-       !isValidPreview(INITIAL))throw new Error("WEB-03: invalid DOM/renderer contract");
+       !isValidPreview(INITIAL))throw new Error("WEB-06: invalid DOM/renderer contract");
 
     var seen=new Set();
     buttons.forEach(function(b){
@@ -120,30 +121,13 @@
       buttons.forEach(function(b){
         b.classList.toggle("is-pressed",state.held.indexOf(b.getAttribute("data-control"))!==-1);
       });
-      mouseSelect.addEventListener("change",function(){
-      if(engine.snapshot().locked)return;
-      var id=mouseSelect.value;
-      if(id)mice.selectFront(id);
-    });
-    labButtons.forEach(function(button){
-      button.addEventListener("click",function(){
-        if(engine.snapshot().locked)return;
-        var action=button.getAttribute("data-lab-action");
-        try{
-          if(action==="pair")mice.beginPair(mouseName.value);
-          else if(action==="search")mice.beginSearch(mouseSelect.value);
-          else if(action==="success")mice.complete(true);
-          else if(action==="fail")mice.complete(false);
-          else if(action==="timeout")mice.advance(mice.timeoutTicks);
-          else if(action==="cancel")mice.cancel("operator");
-          else if(action==="disconnect")mice.disconnect();
-          else if(action==="remove")mice.remove(mouseSelect.value);
-          else if(action==="reboot")mice.reboot();
-          else if(action==="reset")mice.reset();
-        }catch(error){announce("Virtual lab: "+error.message);}
+      scenarios.forEach(function(b){
+        b.disabled=state.locked;
+        var selected=b.getAttribute("data-scenario")===state.scenario;
+        b.classList.toggle("is-selected",selected);
+        b.setAttribute("aria-pressed",selected?"true":"false");
       });
-    });
-    scenarios.forEach(function(b){b.disabled=state.locked;});
+
     }
     function announce(message){
       feedback.textContent=message;count.textContent=String(taps).padStart(2,"0");
@@ -154,6 +138,12 @@
       var connected=state.mice.find(function(m){return m.id===state.connectedId;});
       mouseConnection.textContent=connected?"Connected: "+connected.name:"Disconnected";
       mousePersistence.textContent=state.durable?"Saved in this browser":"Memory only — storage unavailable";
+      var focused=state.mice.find(function(m){return m.id===(state.connectedId||state.frontId);});
+      var p=focused&&focused.profile;
+      profileStatus.textContent=p?
+        "Profile: "+p.kind+" · H "+(p.movement.horizontal/4)+"x · V "+
+        (p.movement.vertical/4)+"x · "+(p.movement.rotation*90)+"°":
+        "Profile: no saved mouse selected";
       mousePending.textContent=state.pending?
         "Pending "+(state.pending.mode==="pair"?"pairing":"saved search")+
         " for "+state.pending.name+" (tick "+state.clock+"/"+state.pending.dueAt+").":
@@ -198,6 +188,30 @@
     function onEngineEvent(event){
       paint();
       if(event.kind==="mice-updated")return;
+      if(["apply-custom","apply-passthrough","apply-movement","reset-movement"].indexOf(event.kind)>=0){
+        var target=mice.snapshot().connectedId||mice.snapshot().frontId;
+        if(!target){
+          announce("Pair or select a saved virtual mouse before applying settings.");
+          return;
+        }
+        var profile=mice.profileFor(target);
+        if(event.kind==="apply-custom"){
+          profile.kind="CUSTOM";
+          profile.targets=event.payload.targets.slice();
+        }else if(event.kind==="apply-passthrough"){
+          profile.kind="PASSTHROUGH";
+        }else{
+          profile.movement=Object.assign({},event.payload.movement);
+        }
+        try{
+          var committed=mice.applyProfile(target,profile);
+          if(committed.kind==="profile-applied")
+            engine.confirmApply(event.kind==="apply-custom"?"custom":
+              event.kind==="apply-passthrough"?"passthrough":"movement");
+        }catch(error){announce("Profile not applied: "+error.message);}
+        return;
+      }
+
       if(event.kind==="lock"||event.kind==="unlock")renderMice();
       if(event.kind==="remove-request"){mice.remove(event.control);return;}
       if(event.kind==="access"&&event.state.screen==="PAIR_MOUSE"){
@@ -229,6 +243,8 @@
         case "selection":announce(label+" — focused menu option changed.");break;
         case "access":announce("Opened "+hat.templates[event.state.screen][0].slice(0,21)+".");break;
         case "page":announce("Moved to another option page.");break;
+        case "draft-target":announce("Target saved as a draft only. Press A on EDIT CUSTOM to apply the full virtual profile.");break;
+        case "applied":announce("Virtual profile applied to the selected mouse. No host HID sent.");break;
         case "inspect":announce("Inspecting canonical firmware screen: "+event.state.screen+".");break;
         case "commit-pending":announce("Preview only: "+event.control+" will be simulated in a later gate. No settings saved.");break;
         case "scenario":announce("Virtual state: "+hat.templates[event.state.screen][0]+".");break;
@@ -277,6 +293,29 @@
         // Native accessibility click (Space/Enter on focused button)
         // and programmatic click go through this single press/release path.
         if(!hadPointer)tap(id);
+      });
+    });
+      mouseSelect.addEventListener("change",function(){
+      if(engine.snapshot().locked)return;
+      var id=mouseSelect.value;
+      if(id)mice.selectFront(id);
+    });
+    labButtons.forEach(function(button){
+      button.addEventListener("click",function(){
+        if(engine.snapshot().locked)return;
+        var action=button.getAttribute("data-lab-action");
+        try{
+          if(action==="pair")mice.beginPair(mouseName.value);
+          else if(action==="search")mice.beginSearch(mouseSelect.value);
+          else if(action==="success")mice.complete(true);
+          else if(action==="fail")mice.complete(false);
+          else if(action==="timeout")mice.advance(mice.timeoutTicks);
+          else if(action==="cancel")mice.cancel("operator");
+          else if(action==="disconnect")mice.disconnect();
+          else if(action==="remove")mice.remove(mouseSelect.value);
+          else if(action==="reboot")mice.reboot();
+          else if(action==="reset")mice.reset();
+        }catch(error){announce("Virtual lab: "+error.message);}
       });
     });
     scenarios.forEach(function(b){

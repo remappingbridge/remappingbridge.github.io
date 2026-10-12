@@ -1,4 +1,4 @@
-/* WEB-05 — native browser tests: 45 source screens and local virtual bonds,
+/* WEB-06 — browser tests: canonical screen routes, virtual profiles and Movement,
  * per-pixel framebuffer, focus and navigation. No npm, CDN, server or BLE.
  */
 (function(){
@@ -19,7 +19,7 @@ function run(){
  check("Canvas, model, 45 screens, projector and local mouse module exported",!!L&&!!H&&!!S&&!!P&&!!W&&!!V);
  if(L&&H&&S&&P&&W&&V){
   var info=W.getBootstrapInfo();
-  check("Latest official v3.2.4 source and WEB-05",info.gate==="WEB-05"&&info.version==="v3.2.4"&&info.uiBaseline==="v3.2.3");
+  check("Latest official v3.2.4 source and WEB-06",info.gate==="WEB-06"&&info.version==="v3.2.4"&&info.uiBaseline==="v3.2.3");
   check("Firmware renderer is 240x240 with 9x21 logical grid",L.geometry.width===240&&L.geometry.height===240&&L.geometry.rows===9&&L.geometry.columns===21);
   check("Physical C glyphs are 5x7 scaled twofold",L.geometry.glyphWidth===10&&L.geometry.glyphHeight===14&&L.glyphRow("A",0)===14);
   check("All six semantic RGB565 foreground colors retained",L.rgb565.MAGENTA===0xf81f&&L.rgb565.CYAN===0x07ff&&L.rgb565.CYAN_FOCUSED===0xd7ff&&L.rgb565.OFF_WHITE_YELLOW===0xffb8);
@@ -274,6 +274,124 @@ function run(){
   eng.inspect("SAVED_DEVICES");
   check("Saved Devices selection renders the restored front mouse name",
     P.frame(eng.snapshot(),L).cells[1].map(function(x){return x.character;}).join("").indexOf(withRemoved.mice[0].name.toUpperCase())>=0);
+  // WEB-06: Custom/MODIFIER and Movement states persist per virtual bond.
+  var ps=memoryStore(),profiles=V.create({storage:ps});
+  profiles.beginPair("Mouse Alpha");profiles.complete(true);
+  var alpha=profiles.snapshot().connectedId;
+  profiles.beginPair("Mouse Beta");profiles.complete(true);
+  var beta=profiles.snapshot().connectedId;
+  check("New virtual mice start with isolated PASSTHROUGH profiles",
+    profiles.profileFor(alpha).kind==="PASSTHROUGH"&&profiles.profileFor(beta).kind==="PASSTHROUGH");
+  var originalB=profiles.profileFor(beta);
+  var alphaProfile=profiles.profileFor(alpha);
+  alphaProfile.kind="CUSTOM";alphaProfile.targets=[5,1,2,3,4];
+  alphaProfile.movement={horizontal:8,vertical:3,rotation:1};
+  var alphaEvent=profiles.applyProfile(alpha,alphaProfile);
+  check("Custom and Movement values atomically apply only to Mouse Alpha",
+    alphaEvent.kind==="profile-applied"&&profiles.profileFor(alpha).targets[0]===5&&
+    profiles.profileFor(alpha).movement.horizontal===8&&profiles.profileFor(beta).kind==="PASSTHROUGH");
+  var invalid=profiles.profileFor(alpha);
+  invalid.targets=[5,5,2,3,4];
+  check("Two simultaneously assigned Modifier targets are rejected",
+    throws(function(){profiles.applyProfile(alpha,invalid);})&&
+    same(profiles.profileFor(alpha).targets,[5,1,2,3,4]));
+  var invalidGain=profiles.profileFor(beta);
+  invalidGain.movement.horizontal=7;
+  check("Invalid DPI gain outside 0.25x..3x source scale is rejected",
+    throws(function(){profiles.applyProfile(beta,invalidGain);}));
+  var betaProfile=profiles.profileFor(beta);
+  betaProfile.kind="CUSTOM";betaProfile.targets=[0,1,2,5,4];
+  betaProfile.movement={horizontal:2,vertical:12,rotation:3};
+  profiles.applyProfile(beta,betaProfile);
+  check("Distinct saved Mouse Beta supports Forward Modifier and 270 degree rotation",
+    profiles.profileFor(beta).targets[3]===5&&profiles.profileFor(beta).movement.rotation===3);
+  var ed=H.createEngine();
+  ed.syncMice(profiles.snapshot(),"initialized");
+  check("Connecting Beta rehydrates its own applied profile and movement",
+    ed.snapshot().activeProfile==="CUSTOM"&&ed.snapshot().movement.horizontal===2&&
+    ed.snapshot().movement.vertical===12&&ed.snapshot().customTargets[3]===5);
+  ed.inspect("EDIT_CUSTOM");
+  press(ed,"JOY_PRESS");
+  check("LEFT target chooser defaults to currently applied LEFT setting",
+    ed.snapshot().screen==="LEFT_WILL_BECOME"&&ed.snapshot().selection===0);
+  for(var ix=0;ix<5;ix++)press(ed,"JOY_DOWN");
+  press(ed,"KEY_A");
+  check("New Modifier draft displaces Forward modifier to Forward identity",
+    ed.snapshot().screen==="EDIT_CUSTOM"&&
+    same(ed.snapshot().customTargets,[5,1,2,3,4])&&ed.snapshot().customDirty);
+  var appliedMenu=P.frame(Object.assign({},ed.snapshot(),{screen:"MOUSE_OPTIONS",selection:2}),L);
+  check("MNT-12 modifier row stays applied cyan while unrelated draft is pending",
+    appliedMenu.cells[3][1].tone===L.tones.SELECTED_CURRENT&&ed.snapshot().customDirty);
+  check("Applied modifiers remain unchanged until Custom APPLY",
+    same(ed.snapshot().appliedTargets,[0,1,2,5,4])&&ed.snapshot().activeProfile==="CUSTOM"&&
+    profiles.profileFor(beta).targets[3]===5);
+  ed.inspect("LEFT_WILL_BECOME");
+  var canceled=H.createEngine();
+  canceled.syncMice(profiles.snapshot(),"initialized");
+  canceled.inspect("EDIT_CUSTOM");
+  press(canceled,"JOY_PRESS");
+  for(var k=0;k<5;k++)press(canceled,"JOY_DOWN");
+  press(canceled,"KEY_A");
+  press(canceled,"KEY_B");
+  check("B exits EDIT CUSTOM and cancels unapplied target draft",
+    canceled.snapshot().screen==="MOUSE_OPTIONS"&&!canceled.snapshot().customDirty&&
+    same(canceled.snapshot().customTargets,canceled.snapshot().appliedTargets));
+  var willFrame=P.frame(ed.snapshot(),L);
+  check("Draft modifier does not turn uncommitted candidate cyan",
+    willFrame.cells[6][1].tone!==L.tones.CURRENT&&willFrame.cells[6][1].tone!==L.tones.SELECTED_CURRENT&&willFrame.cells[1][1].tone===L.tones.SELECTED_CURRENT);
+  ed.inspect("EDIT_CUSTOM");
+  var applyCustom=press(ed,"KEY_A");
+  check("Edit Custom A emits an explicit commit request with draft target data",
+    applyCustom.kind==="apply-custom"&&same(applyCustom.payload.targets,[5,1,2,3,4]));
+  betaProfile=profiles.profileFor(beta);betaProfile.targets=applyCustom.payload.targets;
+  profiles.applyProfile(beta,betaProfile);ed.syncMice(profiles.snapshot(),"profile-applied");ed.confirmApply("custom");
+  check("Custom APPLY persists new modifier, clears dirty state and returns to Remapping Options",
+    profiles.profileFor(beta).targets[0]===5&&!ed.snapshot().customDirty&&
+    ed.snapshot().screen==="MOUSE_OPTIONS"&&ed.snapshot().selection===1);
+  ed.inspect("MOVEMENT_OPTIONS");
+  var toVertical=press(ed,"JOY_DOWN");
+  press(ed,"JOY_PRESS");
+  check("Vertical DPI opens FAST page for applied 3x gain",
+    ed.snapshot().screen==="VERTICAL_FAST_DPI"&&ed.snapshot().selection===3);
+  var page=press(ed,"JOY_LEFT");
+  check("DPI left/right switches between FAST and SLOW groups",page.kind==="page"&&ed.snapshot().screen==="VERTICAL_SLOW_DPI");
+  ed.inspect("ROTATION");
+  ed.press("JOY_DOWN");ed.release("JOY_DOWN");
+  var rotationCmd=press(ed,"KEY_A");
+  check("Rotation A emits 90-degree delta without mutating stored state",
+    rotationCmd.kind==="apply-movement"&&rotationCmd.payload.movement.rotation===1&&
+    profiles.profileFor(beta).movement.rotation===3);
+  betaProfile=profiles.profileFor(beta);betaProfile.movement=rotationCmd.payload.movement;
+  profiles.applyProfile(beta,betaProfile);ed.syncMice(profiles.snapshot(),"profile-applied");ed.confirmApply("movement");
+  check("Movement Apply updates only selected mouse and returns to Movement Options",
+    ed.snapshot().screen==="MOVEMENT_OPTIONS"&&profiles.profileFor(beta).movement.rotation===1&&
+    profiles.profileFor(alpha).movement.rotation===1);
+  var resetCmd=press(ed,"KEY_A");
+  check("Movement Reset All requests neutral H/V and zero rotation",
+    resetCmd.kind==="reset-movement"&&same(resetCmd.payload.movement,{horizontal:4,vertical:4,rotation:0}));
+  profiles.resetMovement(beta);ed.syncMice(profiles.snapshot(),"profile-applied");ed.confirmApply("movement");
+  check("Reset Movement preserves Custom mapping and Alpha's independent gains",
+    same(profiles.profileFor(beta).targets,[5,1,2,3,4])&&profiles.profileFor(beta).kind==="CUSTOM"&&
+    same(profiles.profileFor(beta).movement,{horizontal:4,vertical:4,rotation:0})&&
+    profiles.profileFor(alpha).movement.horizontal===8);
+  var refreshed=V.create({storage:ps});
+  check("Reload preserves both independent mouse profiles and custom targets",
+    refreshed.profileFor(alpha).movement.horizontal===8&&
+    refreshed.profileFor(beta).movement.horizontal===4&&
+    same(refreshed.profileFor(beta).targets,[5,1,2,3,4]));
+  refreshed.beginSearch(alpha);refreshed.complete(true);
+  var alphaEngine=H.createEngine();alphaEngine.syncMice(refreshed.snapshot(),"connected");
+  check("Reconnect Alpha restores its own horizontal 2x and vertical 0.75x",
+    alphaEngine.snapshot().movement.horizontal===8&&alphaEngine.snapshot().movement.vertical===3&&
+    alphaEngine.snapshot().customTargets[0]===5);
+  var mode=refreshed.profileFor(alpha);mode.kind="PASSTHROUGH";
+  refreshed.applyProfile(alpha,mode);
+  check("Applying PASSTHROUGH changes active profile but retains per-mouse draft targets",
+    refreshed.profileFor(alpha).kind==="PASSTHROUGH"&&refreshed.profileFor(alpha).targets[0]===5);
+  refreshed.remove(beta);
+  check("Deleting Beta removes its independent profile without touching Alpha",
+    !refreshed.profileFor(beta)&&refreshed.profileFor(alpha).targets[0]===5);
+
   // End of independent virtual model tests.
 
   // Real Canvas2D DOM integration tests run on the browser, not just pure data.
@@ -298,6 +416,7 @@ function run(){
   ["count","connection","persistence","pending"].forEach(function(attr){
     var el=document.createElement("span");el.setAttribute("data-mouse-"+attr,"");root.appendChild(el);
   });
+  var profileView=document.createElement("span");profileView.setAttribute("data-profile-summary","");root.appendChild(profileView);
   var eventsList=document.createElement("ol");eventsList.setAttribute("data-virtual-log","");root.appendChild(eventsList);
   var labActions=["pair","search","success","fail","timeout","cancel","disconnect","remove","reboot","reset"];
   var lab=labActions.map(function(id){var b=document.createElement("button");b.setAttribute("data-lab-action",id);root.appendChild(b);return b;});
@@ -331,9 +450,42 @@ function run(){
    nameInput.value="Test Work Mouse";lab[0].click();
    check("Pair button starts a local pairing attempt",W.getVirtualMice().pending.name==="Test Work Mouse");
    lab[2].click();
+   check("Profile summary initially shows the selected virtual mouse",profileView.textContent.indexOf("PASSTHROUGH")>=0);
    check("Pair success adds a saved virtual mouse and shows first connected screen",
      W.getVirtualMice().mice.length===1&&W.getVirtualMice().connectedId!==null&&
      W.getSession().screen==="MOUSE_SAVED");
+   // End-to-end HAT-to-persisted-profile integration through app.js handlers.
+   scenarios[1].click();
+   keys[2].click(); // HOME > MOUSE_OPTIONS
+   keys[4].click();keys[2].click(); // CUSTOM
+   keys[2].click(); // LEFT WILL BECOME
+   for(var buttonStep=0;buttonStep<5;buttonStep++)keys[4].click();
+   keys[5].click(); // draft Modifier
+   check("End-to-end Custom draft is not persisted until second A",
+     W.getSession().screen==="EDIT_CUSTOM"&&W.getSession().customDirty&&
+     W.getVirtualMice().mice[0].profile.kind==="PASSTHROUGH");
+   keys[5].click(); // apply custom
+   check("End-to-end Custom APPLY stores one Modifier and returns to MOUSE OPTIONS",
+     W.getVirtualMice().mice[0].profile.kind==="CUSTOM"&&
+     W.getVirtualMice().mice[0].profile.targets[0]===5&&
+     W.getSession().screen==="MOUSE_OPTIONS");
+   keys[6].click(); // home
+   keys[4].click();keys[2].click(); // movement
+   keys[2].click(); // horizontal slow
+   keys[3].click(); // fast
+   keys[4].click();keys[5].click(); // fast 1.5x apply
+   check("End-to-end Horizontal DPI commit persists 1.5x via A",
+     W.getSession().screen==="MOVEMENT_OPTIONS"&&
+     W.getVirtualMice().mice[0].profile.movement.horizontal===6);
+   keys[4].click();keys[4].click();keys[2].click(); // rotation
+   keys[4].click();keys[5].click(); // 90 degree apply
+   check("End-to-end Rotation commit persists 90 degrees",
+     W.getVirtualMice().mice[0].profile.movement.rotation===1);
+   keys[5].click(); // Reset All on MOVEMENT_OPTIONS
+   check("End-to-end Reset Movement keeps applied Custom profile intact",
+     W.getVirtualMice().mice[0].profile.movement.horizontal===4&&
+     W.getVirtualMice().mice[0].profile.movement.rotation===0&&
+     W.getVirtualMice().mice[0].profile.kind==="CUSTOM");
    lab[6].click();
    check("Disconnect button preserves saved device but returns saved search",
      W.getVirtualMice().connectedId===null&&W.getSession().screen==="HOME_SEARCHING");
@@ -343,6 +495,13 @@ function run(){
    lab[1].click();lab[2].click();
    check("Saved search success reconnects the same saved ID",
      W.getVirtualMice().mice.length===1&&W.getVirtualMice().connectedId===W.getVirtualMice().frontId);
+   var eventsBeforeListenerCheck=W.getVirtualMice().events.length;
+   lab[1].click();
+   var eventsAfterOneClick=W.getVirtualMice().events.length;
+   lab[5].click();
+   check("One Mouse Lab button click produces exactly one event despite repeated rendering",
+     eventsAfterOneClick===eventsBeforeListenerCheck+1&&
+     W.getVirtualMice().events.length===eventsBeforeListenerCheck+2);
    lab[7].click();
    check("Removing connected mouse restores FIRST without stale bonds",
      W.getVirtualMice().mice.length===0&&W.getSession().screen==="SEARCHING_FIRST");
@@ -357,7 +516,7 @@ function run(){
  var ok=tests.filter(function(t){return t.pass;}).length;
  summary.textContent=ok+"/"+tests.length+" checks passed.";
  summary.className=ok===tests.length?"pass":"fail";
- window.__WEB05_TEST_RESULT__={passed:ok,total:tests.length};
+ window.__WEB06_TEST_RESULT__={passed:ok,total:tests.length};
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});
 else run();

@@ -24,18 +24,10 @@
           <h1 id="simulator-title">RemappingBridge</h1>
           <p>Virtual simulator <span aria-hidden="true">·</span> LCD UX v3.2.4</p>
         </div>
-        <span class="phase-chip">WEB-05 <span class="phase-chip__dot" aria-hidden="true"></span> Preview</span>
+        <span class="phase-chip">WEB-06 <span class="phase-chip__dot" aria-hidden="true"></span> Preview</span>
       </div>
 
-      <div class="device" aria-label="Pico 2 W demonstration panel with LCD and controls">
-        <div class="device__top">
-          <span class="device__brand">REMAPPING<span>BRIDGE</span></span>
-          <div class="device__lights" aria-label="Virtual device; no physical Pico is connected">
-            <span class="device__light" aria-hidden="true"></span>
-            <span>VIRTUAL DEVICE</span>
-          </div>
-        </div>
-
+      <div class="device device--sticky" data-sticky-hat aria-label="Pico 2 W demonstration panel with LCD and controls">
         <div class="hat-face" aria-label="Virtual Pico LCD HAT: joystick left, LCD center, A B X Y vertically on right">
             <fieldset class="hat-group hat-group--joystick">
               <legend>JOYSTICK</legend>
@@ -65,11 +57,15 @@
                 <button type="button" class="hat-button action-key action-key--y" data-control="KEY_Y" aria-label="Key Y">Y</button>
               </div>
             </fieldset>
-        </div>
-        <div class="device__base" aria-hidden="true">
-          <span>PICO 2 W</span>
-          <span>LCD · 240 × 240</span>
-          <span>HAT · 9 CONTROLS</span>
+          <aside class="hat-meta" aria-label="Virtual HAT identification">
+            <div class="hat-meta__brand">REMAPPING<span>BRIDGE</span></div>
+            <div class="hat-meta__status"><span class="hat-meta__light" aria-hidden="true"></span> VIRTUAL DEVICE</div>
+            <div class="hat-meta__specs">
+              <span>PICO 2 W</span>
+              <span>LCD 240 × 240</span>
+              <span>9 HAT CONTROLS</span>
+            </div>
+          </aside>
         </div>
       </div>
 
@@ -109,6 +105,7 @@
         <div class="mouse-lab__status" aria-live="polite">
           <span data-mouse-count>0 / 8 saved</span>
           <span data-mouse-connection>Disconnected</span>
+          <span data-profile-summary>Profile: no saved mouse selected</span>
           <span data-mouse-persistence>Checking local storage</span>
         </div>
         <div class="mouse-lab__fields">
@@ -142,7 +139,7 @@
           <summary>Virtual event history</summary>
           <ol data-virtual-log aria-label="Local virtual connection events"></ol>
         </details>
-        <p class="mouse-lab__note">Up to eight virtual mice are saved only in this browser when storage is available. Pairing, reconnection and removal are entirely simulated; profiles and shortcut editing remain in later gates.</p>
+        <p class="mouse-lab__note">Up to eight virtual mice are saved only in this browser when storage is available. Pairing, reconnection and removal are entirely simulated; Custom Remapping and Movement are edited through the virtual HAT; Modifier Shortcuts remain in a later gate.</p>
       </section>
 
       <section class="session-panel" aria-label="Preview status">

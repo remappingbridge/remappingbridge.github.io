@@ -271,3 +271,86 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
   .mouse-lab__fields { grid-template-columns:1fr; }
   .mouse-lab__heading { flex-wrap:wrap; }
 }
+
+/* WEB-06 — HAT always remains visible while configuration panels scroll.
+ * The device itself is sticky, not fixed: it reserves document space and
+ * never overlaps the next panel at its original location.
+ */
+.workspace { display:block; min-height:100vh; padding:12px clamp(10px,2vw,26px) 42px; }
+.simulator { width:min(100%,920px); margin-inline:auto; gap:14px; }
+.device.device--sticky {
+  position:sticky; top:8px; z-index:30; align-self:start;
+  padding:11px 15px; border-radius:22px;
+  background:linear-gradient(150deg,#343847 0%,#242634 100%);
+  box-shadow:0 8px 34px #05050cce, inset 0 1px 0 #ffffff1b;
+  isolation:isolate;
+}
+/* Constrain metadata to exactly the LCD-row footprint, not an extra
+ * header/footer. Three HAT controls can shift left to make room. */
+.hat-face {
+  --hat-lcd:214px;
+  display:grid;
+  grid-template-columns:minmax(92px,122px) minmax(0,var(--hat-lcd)) 48px minmax(116px,145px);
+  gap:clamp(8px,1.4vw,14px);
+  justify-content:center;align-items:center;margin:0 auto;width:100%;
+}
+.lcd-housing { padding:4px; border-radius:10px; }
+.lcd-preview { border-radius:5px; }
+.hat-group legend { padding:0; height:0; overflow:hidden; position:absolute; width:1px; clip-path:inset(50%); white-space:nowrap; }
+.hat-group { min-width:0; }
+.joy-cluster { max-width:119px; gap:3px; }
+.action-cluster {
+  width:46px;
+  /* Equal to the visible screen square, not the housing's outer edge. */
+  height:calc(var(--hat-lcd) - 8px);
+  display:grid; grid-template-columns:1fr; grid-template-rows:repeat(4,minmax(0,1fr));
+  gap:7px;
+}
+.action-key {
+  width:46px; min-height:0; height:100%;
+  border-radius:13px; font-size:17px;
+}
+.hat-meta {
+  display:flex; flex-direction:column; justify-content:space-between; gap:6px;
+  height:calc(var(--hat-lcd) - 8px); max-height:calc(var(--hat-lcd) - 8px);
+  min-width:0; align-self:center; overflow:hidden;
+  color:#c5c4d2; font-size:10px; line-height:1.4;
+}
+.hat-meta__brand { font-weight:850; letter-spacing:.07em; font-size:11px; overflow-wrap:anywhere; color:#f6f7fd; }
+.hat-meta__brand span { color:var(--magenta); }
+.hat-meta__status { display:flex; gap:7px; align-items:center; letter-spacing:.05em; font-weight:700; }
+.hat-meta__light { display:inline-block;flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:#e6ac6b;box-shadow:0 0 8px #e6ac6b80; }
+.hat-meta__specs { display:grid;gap:5px;color:#aaaec3;font-size:10px;letter-spacing:.025em; }
+.hat-meta__specs span { display:block; }
+@media(max-width:700px) {
+ .hat-face { --hat-lcd:clamp(138px,30vw,205px);grid-template-columns:minmax(69px,90px) minmax(0,var(--hat-lcd)) 43px minmax(85px,110px);gap:6px; }
+ .device.device--sticky{padding:9px 10px;top:4px;border-radius:15px}
+ .joy-cluster{max-width:90px;gap:2px}
+ .action-cluster{width:42px;height:calc(var(--hat-lcd) - 8px);gap:4px}
+ .action-key{width:42px;min-height:0;border-radius:11px;font-size:15px}
+ .hat-meta{height:calc(var(--hat-lcd) - 8px);max-height:calc(var(--hat-lcd) - 8px);font-size:9px}
+ .hat-meta__brand{font-size:9px;letter-spacing:0}
+ .hat-meta__specs{font-size:9px}
+}
+@media(max-width:540px) {
+ .workspace{padding:7px 7px 28px}
+ .simulator{gap:10px}
+ .hat-face{--hat-lcd:clamp(125px,38vw,172px);grid-template-columns:minmax(58px,84px) minmax(0,var(--hat-lcd)) 39px minmax(0,74px);gap:4px;}
+ .device.device--sticky{padding:6px 5px;top:2px}
+ .lcd-housing{padding:3px}
+ .joy-cluster{max-width:84px;gap:1px}
+ .joy{font-size:12px}
+ .action-cluster{width:38px;height:calc(var(--hat-lcd) - 6px);gap:3px}
+ .action-key{width:38px;border-radius:9px;font-size:14px}
+ .hat-meta{height:calc(var(--hat-lcd) - 6px);max-height:calc(var(--hat-lcd) - 6px);gap:3px}
+ .hat-meta__brand{font-size:8px;overflow-wrap:anywhere}
+ .hat-meta__status{font-size:8px;gap:3px}
+ .hat-meta__specs{font-size:8px;gap:3px}
+}
+@media(max-width:370px) {
+ .hat-face{--hat-lcd:clamp(115px,36vw,135px);grid-template-columns:minmax(51px,68px) minmax(0,var(--hat-lcd)) 36px minmax(45px,65px);gap:3px}
+ .action-cluster,.action-key{width:35px}
+ .hat-meta__brand{font-size:7px}
+ .hat-meta__status{font-size:7px}
+ .hat-meta__specs{font-size:7px}
+}

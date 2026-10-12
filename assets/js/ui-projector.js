@@ -76,7 +76,7 @@ function projection(state,lcd){
  if(id==="MOUSE_OPTIONS"){
   setCellRow(frame,1,muted,lcd);setCellRow(frame,2,muted,lcd);setCellRow(frame,3,muted,lcd);
   setCellRow(frame,state.activeProfile==="CUSTOM"?2:1,now,lcd);
-  if(state.activeProfile==="CUSTOM"&&state.modifierSource>=0)setCellRow(frame,3,now,lcd);
+  if(state.activeProfile==="CUSTOM"&&(state.appliedTargets||state.customTargets).indexOf(5)>=0)setCellRow(frame,3,now,lcd);
  }
  if(id==="EDIT_CUSTOM"){
   var labels=["LEFT","RIGHT","MIDDLE","FORWARD","BACKWARD","MODIFIER"];
@@ -86,7 +86,7 @@ function projection(state,lcd){
  }
  if(U.isWill(id)){
   for(var w=1;w<=6;w++)setCellRow(frame,w,muted,lcd);
-  setCellRow(frame,state.customTargets[state.customSource]+1,now,lcd);
+  setCellRow(frame,(state.appliedTargets||state.customTargets)[state.customSource]+1,now,lcd);
  }
  if(U.isCombo(id)){
   var page=Number(id.split("_")[1])-1;
