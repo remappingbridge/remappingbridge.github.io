@@ -181,7 +181,13 @@ function createEngine(listener){
    if(isShortcut(screen)){go("COMBINATIONS_"+(Math.floor(editingCombination/2)+1),editingCombination%2);return emit("back",id);}
    if(isWill(screen)){go("EDIT_CUSTOM",customSource);return emit("back",id);}
    if(screen===S.RETRY)return emit("no-action",id);
-   if(screen!==S.HOME&&screen!==S.SEARCH&&screen!==S.FIRST){go(backTarget());return emit("back",id);}
+   if(screen!==S.HOME&&screen!==S.SEARCH&&screen!==S.FIRST){
+    if(screen==="EDIT_CUSTOM"){
+     // KEY B cancels unapplied edits; only a confirmed Apply changes storage.
+     customTargets=appliedTargets.slice();customDirty=false;
+    }
+    go(backTarget());return emit("back",id);
+   }
    return emit("no-action",id);
   }
   if(isCombo(screen)){
