@@ -319,10 +319,23 @@ function run(){
   check("New Modifier draft displaces Forward modifier to Forward identity",
     ed.snapshot().screen==="EDIT_CUSTOM"&&
     same(ed.snapshot().customTargets,[5,1,2,3,4])&&ed.snapshot().customDirty);
+  var appliedMenu=P.frame(Object.assign({},ed.snapshot(),{screen:"MOUSE_OPTIONS",selection:2}),L);
+  check("MNT-12 modifier row stays applied cyan while unrelated draft is pending",
+    appliedMenu.cells[3][1].tone===L.tones.SELECTED_CURRENT&&ed.snapshot().customDirty);
   check("Applied modifiers remain unchanged until Custom APPLY",
     same(ed.snapshot().appliedTargets,[0,1,2,5,4])&&ed.snapshot().activeProfile==="CUSTOM"&&
     profiles.profileFor(beta).targets[3]===5);
   ed.inspect("LEFT_WILL_BECOME");
+  var canceled=H.createEngine();
+  canceled.syncMice(profiles.snapshot(),"initialized");
+  canceled.inspect("EDIT_CUSTOM");
+  press(canceled,"JOY_PRESS");
+  for(var k=0;k<5;k++)press(canceled,"JOY_DOWN");
+  press(canceled,"KEY_A");
+  press(canceled,"KEY_B");
+  check("B exits EDIT CUSTOM and cancels unapplied target draft",
+    canceled.snapshot().screen==="MOUSE_OPTIONS"&&!canceled.snapshot().customDirty&&
+    same(canceled.snapshot().customTargets,canceled.snapshot().appliedTargets));
   var willFrame=P.frame(ed.snapshot(),L);
   check("Draft modifier does not turn uncommitted candidate cyan",
     willFrame.cells[6][1].tone!==L.tones.CURRENT&&willFrame.cells[6][1].tone!==L.tones.SELECTED_CURRENT&&willFrame.cells[1][1].tone===L.tones.SELECTED_CURRENT);
@@ -450,6 +463,9 @@ function run(){
    lab[1].click();lab[2].click();
    check("Saved search success reconnects the same saved ID",
      W.getVirtualMice().mice.length===1&&W.getVirtualMice().connectedId===W.getVirtualMice().frontId);
+   check("Mouse Lab listeners register just once despite repeated Canvas painting",
+     lab[0].handlers.click.length===1&&lab[1].handlers.click.length===1&&
+     mouseSelect.handlers.change.length===1);
    lab[7].click();
    check("Removing connected mouse restores FIRST without stale bonds",
      W.getVirtualMice().mice.length===0&&W.getSession().screen==="SEARCHING_FIRST");
