@@ -1,160 +1,249 @@
-/* WEB-02: native 240x240 LCD Canvas; no build tools or hardware access.
- * This is a bitmap rendering preview, NOT the firmware UX/navigation model. */
+/* WEB-03 — English-only, browser-native HAT/Help/Lock integration.
+ * The full 45-screen UX and real BLE/HID are intentionally out of scope.
+ */
 (function () {
   "use strict";
-
-  var FIRMWARE = Object.freeze({
-    name: "RemappingBridge",
-    version: "v3.2.4",
-    uiBaseline: "v3.2.3",
-    commit: "69a640d9767ec7198572eb9b5073ed71f8f3d202",
-    uiBaselineCommit: "f38c5fd15c68ea9a36d3b05912727788d7b98e81",
-    gate: "WEB-02",
-    lcdMode: "Canvas 240x240 RGB565 glyph preview",
-    framebufferImplemented: true,
-    uxImplemented: false,
-    bluetoothImplemented: false,
-    maxWebBrightnessPercent: 100
+  var FIRMWARE=Object.freeze({
+    name:"RemappingBridge",version:"v3.2.4",
+    uiBaseline:"v3.2.3",
+    commit:"69a640d9767ec7198572eb9b5073ed71f8f3d202",
+    uiBaselineCommit:"f38c5fd15c68ea9a36d3b05912727788d7b98e81",
+    gate:"WEB-03",lcdMode:"Canvas 240x240 RGB565 glyph preview",
+    framebufferImplemented:true,hatInteractionImplemented:true,
+    uxImplemented:false,bluetoothImplemented:false,maxWebBrightnessPercent:100
   });
-
-  var CONTROL_LABELS = Object.freeze({
-    JOY_UP: "JOY UP",
-    JOY_DOWN: "JOY DOWN",
-    JOY_LEFT: "JOY LEFT",
-    JOY_RIGHT: "JOY RIGHT",
-    JOY_PRESS: "JOY PRESS",
-    KEY_A: "KEY A",
-    KEY_B: "KEY B",
-    KEY_X: "KEY X",
-    KEY_Y: "KEY Y"
+  var LABELS=Object.freeze({
+    JOY_UP:"JOY UP",JOY_DOWN:"JOY DOWN",JOY_LEFT:"JOY LEFT",
+    JOY_RIGHT:"JOY RIGHT",JOY_PRESS:"JOY PRESS",
+    KEY_A:"KEY A",KEY_B:"KEY B",KEY_X:"KEY X",KEY_Y:"KEY Y"
   });
-
-  var FIRST_SCREEN_TEMPLATE = Object.freeze([
-    "SEARCHING FIRST MOUSE",
-    "PRESS TO LEARN KEYS",
-    "WHILE WAIT CONNECTION",
-    "       JOY UP",
-    "  JOY    JOY    JOY",
-    "  LEFT  PRESS  RIGHT",
-    "      JOY DOWN",
-    " KEY A         KEY X",
-    " KEY B         KEY Y"
+  var KEYBOARD=Object.freeze({
+    ArrowUp:"JOY_UP",ArrowDown:"JOY_DOWN",ArrowLeft:"JOY_LEFT",
+    ArrowRight:"JOY_RIGHT",Enter:"JOY_PRESS"," ":"JOY_PRESS",
+    a:"KEY_A",b:"KEY_B",x:"KEY_X",y:"KEY_Y"
+  });
+  var INITIAL=Object.freeze([
+    "SEARCHING FIRST MOUSE","PRESS TO LEARN KEYS","WHILE WAIT CONNECTION",
+    "       JOY UP","  JOY    JOY    JOY","  LEFT  PRESS  RIGHT",
+    "      JOY DOWN"," KEY A         KEY X"," KEY B         KEY Y"
   ]);
-
-  function isValidPreview(rows) {
-    return Array.isArray(rows) && rows.length === 9 && rows.every(function (row) {
-      return typeof row === "string" && row.length <= 21;
+  function isValidPreview(rows){
+    return Array.isArray(rows)&&rows.length===9&&rows.every(function(s){
+      return typeof s==="string"&&s.length<=21;
     });
   }
-
-  function getBootstrapInfo() {
-    return FIRMWARE;
+  function controlLabel(value){
+    return Object.prototype.hasOwnProperty.call(LABELS,value)?LABELS[value]:null;
   }
-
-  function controlLabel(value) {
-    return Object.prototype.hasOwnProperty.call(CONTROL_LABELS, value)
-      ? CONTROL_LABELS[value]
-      : null;
+  function isEditable(target){
+    if(!target)return false;
+    if(target.isContentEditable)return true;
+    var tag=(target.tagName||"").toUpperCase();
+    return /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(tag);
   }
-
-  function boot(doc) {
-    if (doc.documentElement && doc.documentElement.lang !== "en") {
+  function keyControl(key){
+    var canonical=typeof key==="string"&&key.length===1?key.toLowerCase():key;
+    return Object.prototype.hasOwnProperty.call(KEYBOARD,canonical)?KEYBOARD[canonical]:null;
+  }
+  var currentEngine=null;
+  function boot(doc){
+    if(doc.documentElement&&doc.documentElement.lang!=="en")
       throw new Error("RemappingBridge pages must declare English (lang=en)");
-    }
+    var root=doc.querySelector("[data-app-root]");
+    if(!root)return false;
+    var lcd=window.RemappingBridgeLCD,hat=window.RemappingBridgeHAT;
+    var canvas=root.querySelector("[data-lcd-canvas]");
+    var feedback=root.querySelector("[data-feedback]");
+    var count=root.querySelector("[data-count]");
+    var clear=root.querySelector("[data-reset]");
+    var buttons=Array.prototype.slice.call(root.querySelectorAll("[data-control]"));
+    var palettes=Array.prototype.slice.call(root.querySelectorAll("[data-backdrop]"));
+    var scenarios=Array.prototype.slice.call(root.querySelectorAll("[data-scenario]"));
+    var screenLabel=root.querySelector("[data-screen-label]");
+    if(!lcd||!hat||!canvas||!feedback||!count||!clear||!screenLabel||
+       buttons.length!==9||palettes.length!==3||scenarios.length!==3||
+       !isValidPreview(INITIAL))throw new Error("WEB-03: invalid DOM/renderer contract");
 
-    var root = doc.querySelector("[data-app-root]");
-    if (!root) return false;
-
-    var feedback = root.querySelector("[data-feedback]");
-    var countOutput = root.querySelector("[data-count]");
-    var reset = root.querySelector("[data-reset]");
-    var buttons = Array.prototype.slice.call(root.querySelectorAll("[data-control]"));
-    var canvas = root.querySelector("[data-lcd-canvas]");
-    var backdropButtons = Array.prototype.slice.call(root.querySelectorAll("[data-backdrop]"));
-    var lcd = window.RemappingBridgeLCD;
-    if (!feedback || !countOutput || !reset || !canvas || !lcd ||
-        buttons.length !== 9 || backdropButtons.length !== 3 ||
-        !isValidPreview(FIRST_SCREEN_TEMPLATE)) {
-      throw new Error("WEB-01: invalid HTML/bootstrap contract");
-    }
-
-    var seen = new Set();
-    buttons.forEach(function (button) {
-      var control = button.getAttribute("data-control");
-      if (!controlLabel(control) || seen.has(control)) {
-        throw new Error("WEB-01: duplicated/invalid HAT control: " + control);
-      }
-      seen.add(control);
+    var seen=new Set();
+    buttons.forEach(function(b){
+      var id=b.getAttribute("data-control");
+      if(!controlLabel(id)||seen.has(id))throw new Error("WEB-03: invalid HAT control");
+      seen.add(id);
     });
+    var backdrop="gentle",taps=0;
+    var engine=hat.createEngine(onEngineEvent);
+    currentEngine=engine;
+    var buttonById={};
+    buttons.forEach(function(button){buttonById[button.getAttribute("data-control")]=button;});
+    var keyboardDown=new Map();
+    var pointerClickConsumed=new Set();
+    var blackFrame=lcd.newFrame(Array(9).fill(""),{hintStartRow:9});
 
-    var taps = 0;
-    var backdrop = "soft";
-    var activePress = null;
-    function paint() {
-      lcd.render(canvas, lcd.previewFrame(FIRST_SCREEN_TEMPLATE, activePress), backdrop);
+    function currentFrame(state){
+      if(state.screen===hat.screens.FIRST)
+        return lcd.previewFrame(INITIAL,state.held.length?state.held[0]:null);
+      var template=hat.templates[state.screen];
+      if(!template)throw new Error("Unsupported WEB-03 screen");
+      var helping=engine.isHelp();
+      var hints=helping?8:state.screen===hat.screens.HOME?6:5;
+      var frame=lcd.newFrame(template,{hintStartRow:hints});
+      if(helping){
+        for(var y=1;y<8;y++)lcd.setToneSpan(frame,y,0,21,lcd.tones.STATIC);
+      } else {
+        var options=engine.optionCount();
+        for(var row=1;row<=options;row++){
+          lcd.setToneSpan(frame,row,0,21,lcd.tones.ACTIONABLE);
+        }
+        if(options){
+          var focused=1+state.selection;
+          lcd.setToneSpan(frame,focused,0,21,lcd.tones.EMPHASIZED);
+          frame.cells[focused][0].character="|";
+          frame.cells[focused][0].tone=lcd.tones.EMPHASIZED;
+        }
+      }
+      return frame;
     }
-    backdropButtons.forEach(function (button) {
-      var choice = button.getAttribute("data-backdrop");
-      if (!Object.prototype.hasOwnProperty.call(lcd.backdrops, choice))
-        throw new Error("WEB-02: invalid LCD backdrop");
-      button.addEventListener("click", function () {
-        backdrop = choice;
-        backdropButtons.forEach(function (option) {
-          var selected = option.getAttribute("data-backdrop") === backdrop;
-          option.classList.toggle("is-selected", selected);
-          option.setAttribute("aria-pressed", selected ? "true" : "false");
+    function paint(){
+      var state=engine.snapshot();
+      lcd.render(canvas,state.locked?blackFrame:currentFrame(state),backdrop);
+      canvas.setAttribute("aria-label",state.locked?
+        "Virtual LCD locked. Press and release one HAT control to unlock.":
+        "Virtual 240 by 240 firmware LCD: "+hat.templates[state.screen][0]+
+        ". No physical mouse is connected.");
+      root.setAttribute("data-demo-screen",state.screen);
+      root.setAttribute("data-locked",state.locked?"true":"false");
+      screenLabel.textContent=state.locked?"LCD LOCKED":hat.templates[state.screen][0];
+      buttons.forEach(function(b){
+        b.classList.toggle("is-pressed",state.held.indexOf(b.getAttribute("data-control"))!==-1);
+      });
+      scenarios.forEach(function(b){b.disabled=state.locked;});
+    }
+    function announce(message){
+      feedback.textContent=message;count.textContent=String(taps).padStart(2,"0");
+    }
+    function onEngineEvent(event){
+      paint();
+      var label=controlLabel(event.control)||"HAT";
+      switch(event.kind){
+        case "press":case "repeat":case "ignored":case "cancel":return;
+        case "lock":announce("LCD locked. Press and release any HAT control to unlock.");break;
+        case "unlock":announce("LCD unlocked. The unlock control was consumed.");break;
+        case "help":announce("Help opened. B returns; Y locks the LCD.");break;
+        case "back":announce("Returned from Help.");break;
+        case "help-ignored":announce("Help: only B returns and Y locks.");break;
+        case "selection":announce(label+" — focused menu option changed.");break;
+        case "route-pending":announce("This menu route is planned for WEB-04.");break;
+        case "scenario":announce("Virtual state: "+hat.templates[event.state.screen][0]+".");break;
+        case "didactic":announce(label+" — tutorial input; no menu action.");break;
+        case "retry":announce("Virtual saved-mouse search restarted.");break;
+        case "cancel-search":announce("Virtual saved-mouse search canceled.");break;
+        default:announce(label+" — no action on this screen.");
+      }
+      if(event.control&&event.kind!=="ignored"&&event.kind!=="press"&&
+         event.kind!=="repeat"&&event.kind!=="cancel") {
+        taps++;count.textContent=String(taps).padStart(2,"0");
+      }
+    }
+    function tap(id){engine.press(id);engine.release(id);}
+    function cancelHeld(){
+      keyboardDown.clear();
+      engine.cancelAll();
+      buttons.forEach(function(b){b.classList.remove("is-pressed");});
+      paint();
+    }
+    buttons.forEach(function(b){
+      var id=b.getAttribute("data-control"),hadPointer=false;
+      b.addEventListener("pointerdown",function(event){
+        hadPointer=true;
+        if(event&&typeof b.setPointerCapture==="function"&&event.pointerId!==undefined){
+          try{b.setPointerCapture(event.pointerId);}catch(_){}
+        }
+        engine.press(id);
+      });
+      b.addEventListener("pointerup",function(){
+        if(!hadPointer)return;
+        hadPointer=false;
+        engine.release(id);
+        pointerClickConsumed.add(id);
+      });
+      b.addEventListener("pointercancel",function(){hadPointer=false;cancelHeld();});
+      b.addEventListener("lostpointercapture",function(){
+        if(hadPointer){hadPointer=false;cancelHeld();}
+      });
+      b.addEventListener("blur",function(){if(hadPointer){hadPointer=false;cancelHeld();}});
+      b.addEventListener("click",function(event){
+        if(pointerClickConsumed.has(id)&&event&&event.detail>0){
+          pointerClickConsumed.delete(id);return;
+        }
+        pointerClickConsumed.delete(id);
+        // Native accessibility click (Space/Enter on focused button)
+        // and programmatic click go through this single press/release path.
+        if(!hadPointer)tap(id);
+      });
+    });
+    palettes.forEach(function(b){
+      var name=b.getAttribute("data-backdrop");
+      if(!Object.prototype.hasOwnProperty.call(lcd.backdrops,name))
+        throw new Error("WEB-03: invalid backdrop");
+      b.addEventListener("click",function(){
+        backdrop=name;
+        palettes.forEach(function(p){
+          var selected=p.getAttribute("data-backdrop")===name;
+          p.classList.toggle("is-selected",selected);
+          p.setAttribute("aria-pressed",selected?"true":"false");
         });
         paint();
       });
     });
-    function announce(message) {
-      feedback.textContent = message;
-      countOutput.textContent = String(taps).padStart(2, "0");
-    }
-    function previewPress(button, state) {
-      button.classList.toggle("is-pressed", state);
-      var control = button.getAttribute("data-control");
-      if (state) activePress = control;
-      else if (activePress === control) activePress = null;
-      paint();
-    }
-    buttons.forEach(function (button) {
-      button.addEventListener("pointerdown", function () { previewPress(button, true); });
-      ["pointerup", "pointercancel", "pointerleave", "blur"].forEach(function (eventName) {
-        button.addEventListener(eventName, function () { previewPress(button, false); });
-      });
-      button.addEventListener("click", function () {
-        taps += 1;
-        announce(controlLabel(button.getAttribute("data-control")) + " — demo input recorded.");
+    scenarios.forEach(function(b){
+      var name=b.getAttribute("data-scenario");
+      if(hat.scenarios.indexOf(name)===-1)throw new Error("WEB-03: invalid scenario");
+      b.addEventListener("click",function(){
+        if(engine.snapshot().locked)return;
+        engine.setScenario(name);
+        scenarios.forEach(function(p){
+          var selected=p.getAttribute("data-scenario")===name;
+          p.classList.toggle("is-selected",selected);
+          p.setAttribute("aria-pressed",selected?"true":"false");
+        });
       });
     });
-
-    reset.addEventListener("click", function () {
-      taps = 0;
-      buttons.forEach(function (button) { button.classList.remove("is-pressed"); });
-      activePress = null;
-      paint();
-      announce("Ready for virtual controls.");
+    doc.addEventListener("keydown",function(event){
+      if(event.ctrlKey||event.altKey||event.metaKey||isEditable(event.target))return;
+      var id=keyControl(event.key);
+      if(!id)return;
+      if(typeof event.preventDefault==="function")event.preventDefault();
+      if(event.repeat||keyboardDown.has(event.key))return;
+      keyboardDown.set(event.key,id);engine.press(id);
     });
-
+    doc.addEventListener("keyup",function(event){
+      var id=keyboardDown.get(event.key);
+      if(!id)return;
+      if(typeof event.preventDefault==="function")event.preventDefault();
+      keyboardDown.delete(event.key);
+      engine.release(id);
+    });
+    doc.addEventListener("visibilitychange",function(){
+      if(doc.visibilityState==="hidden")cancelHeld();
+    });
+    if(typeof window.addEventListener==="function")
+      window.addEventListener("blur",cancelHeld);
+    clear.addEventListener("click",function(){
+      cancelHeld();taps=0;announce("Ready for virtual controls.");
+    });
     paint();
-    root.setAttribute("data-lcd-renderer", "canvas-240x240");
-    root.setAttribute("data-boot-state", "ready");
+    root.setAttribute("data-lcd-renderer","canvas-240x240");
+    root.setAttribute("data-boot-state","ready");
     return true;
   }
-
-  // A tiny hook for the future browser-only harness; not a backend/API.
-  window.RemappingBridgeWeb = Object.freeze({
-    getBootstrapInfo: getBootstrapInfo,
-    controlLabel: controlLabel,
-    isValidPreview: isValidPreview,
-    firstScreenTemplate: FIRST_SCREEN_TEMPLATE,
-    boot: boot
+  window.RemappingBridgeWeb=Object.freeze({
+    getBootstrapInfo:function(){return FIRMWARE;},
+    controlLabel:controlLabel,keyControl:keyControl,isEditable:isEditable,
+    isValidPreview:isValidPreview,firstScreenTemplate:INITIAL,
+    getSession:function(){return currentEngine?currentEngine.snapshot():null;},
+    boot:boot
   });
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", function () { boot(document); }, { once: true });
-  } else {
-    boot(document);
-  }
+  if(document.readyState==="loading")
+    document.addEventListener("DOMContentLoaded",function(){boot(document);},{once:true});
+  else boot(document);
 }());
