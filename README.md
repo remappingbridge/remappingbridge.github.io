@@ -24,7 +24,7 @@ python3 -m http.server 8000
 
 Open `http://localhost:8000/`. The LCD shows a native Canvas bitmap. Try Original, Soft, and Gentle backdrops, press a HAT key to highlight its label in white, and release it. The counter increases for each click; **Clear** resets it to `00`.
 
-The self-contained browser test harness is `tests/index.html` (35 checks), also available at `http://localhost:8000/tests/`. It does not require Node.js, npm, a bundler, CDN, or a project-owned GitHub Actions workflow. Results must be checked in a real browser; the presence of the harness alone does not prove a passing browser run.
+The self-contained browser test harness is `tests/index.html` (39 checks), also available at `http://localhost:8000/tests/`. It does not require Node.js, npm, a bundler, CDN, or a project-owned GitHub Actions workflow. Results must be checked in a real browser; the presence of the harness alone does not prove a passing browser run.
 
 ## Files
 
@@ -35,7 +35,7 @@ assets/css/app.css    Responsive styling and rounded controls
 assets/js/lcd-renderer.js  Native 5x7 bitmap font and 240x240 software framebuffer
 assets/js/app.js      Canvas preview, bootstrap, and HAT feedback
 tests/index.html      Browser-only test page
-tests/runner.js       35 browser-only glyph/geometry/color/Canvas/HAT tests
+tests/runner.js       39 browser-only glyph/geometry/color/Canvas/HAT tests
 README.md             Repository documentation
 LICENSE               Existing GNU AGPLv3 license
 ```
