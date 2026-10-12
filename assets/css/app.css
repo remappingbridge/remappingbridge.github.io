@@ -552,3 +552,57 @@ button:disabled { opacity:.54;cursor:not-allowed; }
  .diagnostics details {padding:10px;}
  .diagnostics__exports button {flex:1 1 115px;}
 }
+
+/* WEB-09 revision: saved search LEFT, new pairing RIGHT. Keep the respective
+ * start buttons directly beside their input and outcomes on the next line. */
+.mouse-lab__workflows {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;align-items:stretch;
+}
+.mouse-lab__workflow {
+  display:flex;flex-direction:column;min-width:0;
+  gap:10px;padding:14px;border:1px solid #565067;border-radius:16px;
+  background:#222432;
+}
+.mouse-lab__workflow label {
+  color:#e0e3f0;font-size:13px;font-weight:750;
+}
+.mouse-lab__control-row {
+  display:flex;flex-wrap:nowrap;align-items:stretch;gap:8px;min-width:0;
+}
+.mouse-lab__control-row input,.mouse-lab__control-row select {
+  flex:1 1 auto;min-width:0;width:0;min-height:44px;
+  padding:9px;border:1px solid #626078;border-radius:12px;
+  color:#f6f2ff;background:#252433;font-size:13px;
+}
+.mouse-lab__control-row button {
+  flex:0 0 auto;align-self:stretch;
+}
+.mouse-lab__outcomes {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+  margin-top:auto;
+}
+.mouse-lab__workflow button,.mouse-lab__factory button {
+  padding:10px 9px;min-height:44px;border:1px solid #64596e;
+  border-radius:12px;background:#393143;color:#f8f1ff;
+  font-size:12px;font-weight:750;
+}
+.mouse-lab__workflow button:hover,.mouse-lab__factory button:hover {background:#4a3a57;}
+.mouse-lab__workflow button:disabled {opacity:.5;cursor:not-allowed;}
+.mouse-lab__factory {
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;
+  margin-top:16px;padding:13px 14px;border:1px solid #75616b;
+  border-radius:15px;background:#292431;
+}
+.mouse-lab__factory button {border-color:#af7d94;background:#553344;}
+.mouse-lab__factory p {flex:1 1 260px;margin:0;color:#d7bec9;font-size:12px;line-height:1.5;}
+@media (max-width:740px) {
+  .mouse-lab__workflows {grid-template-columns:minmax(0,1fr);}
+}
+@media (max-width:380px) {
+  .mouse-lab__workflow {padding:10px;}
+  .mouse-lab__control-row {flex-wrap:wrap;}
+  .mouse-lab__control-row input,.mouse-lab__control-row select {width:100%;flex-basis:100%;}
+  .mouse-lab__control-row button {width:100%;}
+  .mouse-lab__outcomes {grid-template-columns:1fr;}
+}

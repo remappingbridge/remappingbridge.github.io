@@ -12,7 +12,7 @@ var S=Object.freeze({
  HOME_HELP:"HELP_HOME_CONNECTED",SEARCH_HELP:"HOME_SEARCHING_HELP",RETRY_HELP:"HOME_RETRY_HELP"
 });
 var C=Object.freeze(["JOY_UP","JOY_DOWN","JOY_LEFT","JOY_RIGHT","JOY_PRESS","KEY_A","KEY_B","KEY_X","KEY_Y"]);
-var SCENARIOS=Object.freeze(["first","connected","saved"]);
+var SCENARIOS=Object.freeze(["first","connected","saved","first-connected","home-connected"]);
 var HELP=new Set(source.ids.filter(function(id){return id.startsWith("HELP_")||id.endsWith("_HELP");}));
 var SOURCE=Object.freeze(["LEFT","RIGHT","MIDDLE","FORWARD","BACKWARD"]);
 var TARGET=Object.freeze(["LEFT","RIGHT","MIDDLE","FORWARD","BACKWARD","MODIFIER"]);
@@ -43,7 +43,7 @@ function createEngine(listener){
  var customSource=0,customTargets=[0,1,2,3,4],appliedTargets=[0,1,2,3,4],customDirty=false,profileOwner=null;
  var movement={horizontal:4,vertical:4,rotation:0},editingCombination=0;
  var shortcuts=Array(12).fill(0),dpiSelection=[0,0,0,0],lastOutcome=null;
- function home(){return scenario==="first"?S.FIRST:scenario==="saved"?S.SEARCH:S.HOME;}
+ function home(){return scenario==="first"?S.FIRST:scenario==="saved"?S.SEARCH:scenario==="first-connected"?"MOUSE_SAVED":S.HOME;}
  function options(){return countFor(screen);}
  function snapshot(){
   return Object.freeze({scenario:scenario,screen:screen,selection:selection,locked:locked,
@@ -63,7 +63,7 @@ function createEngine(listener){
  function setScenario(name){
   if(SCENARIOS.indexOf(name)===-1)throw new RangeError("Unknown scenario");
   if(locked)return emit("locked");
-  scenario=name;savedCount=name==="first"?0:1;connected=name==="connected";
+  scenario=name;savedCount=name==="first"?0:1;connected=name==="connected"||name==="first-connected"||name==="home-connected";
   savedPage=0;go(home());held.clear();returnScreen=null;returnSelection=0;armed=null;lastOutcome=null;
   return emit("scenario");
  }

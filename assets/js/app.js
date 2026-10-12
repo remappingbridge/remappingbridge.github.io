@@ -89,7 +89,7 @@
        !diagnosticCanvas||!diagnosticScenario||!diagnosticRun||!diagnosticHash||
        !diagnosticContext||!diagnosticRef||!diagnosticBounds||!diagnosticCopy||
        !diagnosticEvents||!diagnosticFeedback||diagnosticExports.length!==3||touchButtons.length!==9||
-       !mouseName||!mouseSelect||!mouseCount||!mouseConnection||!profileStatus||!mousePersistence||!mousePending||!mouseLog||labButtons.length!==10||
+       !mouseName||!mouseSelect||!mouseCount||!mouseConnection||!profileStatus||!mousePersistence||!mousePending||!mouseLog||labButtons.length!==12||
        catalog.ids.length!==45||buttons.length!==9||scenarios.length!==3||
        !isValidPreview(INITIAL))throw new Error("WEB-09: invalid DOM/renderer contract");
 
@@ -195,9 +195,11 @@
       });
       labButtons.forEach(function(b){
         var action=b.getAttribute("data-lab-action");
-        var needsPending=action==="success"||action==="fail"||action==="cancel";
+        var neededMode=action.indexOf("pair-")===0?"pair":action.indexOf("search-")===0?"saved":null;
+        var needsPending=action==="cancel"||neededMode!==null;
         var needsSaved=action==="search"||action==="remove";
-        b.disabled=(needsPending&&!state.pending)||(needsSaved&&!state.mice.length)||engine.snapshot().locked;
+        b.disabled=(needsPending&&(!state.pending||(neededMode&&state.pending.mode!==neededMode)))||
+          (needsSaved&&!state.mice.length)||engine.snapshot().locked;
       });
     }
     function diagnosticsTimeline(){
@@ -498,14 +500,21 @@
         try{
           if(action==="pair")mice.beginPair(mouseName.value);
           else if(action==="search")mice.beginSearch(mouseSelect.value);
-          else if(action==="success")mice.complete(true);
-          else if(action==="fail")mice.complete(false);
+          else if(action==="pair-success"&&mice.snapshot().pending&&mice.snapshot().pending.mode==="pair")mice.complete(true);
+          else if(action==="pair-fail"&&mice.snapshot().pending&&mice.snapshot().pending.mode==="pair")mice.complete(false);
+          else if(action==="search-success"&&mice.snapshot().pending&&mice.snapshot().pending.mode==="saved")mice.complete(true);
+          else if(action==="search-fail"&&mice.snapshot().pending&&mice.snapshot().pending.mode==="saved")mice.complete(false);
           else if(action==="timeout")mice.advance(mice.timeoutTicks);
           else if(action==="cancel")mice.cancel("operator");
           else if(action==="disconnect")mice.disconnect();
           else if(action==="remove")mice.remove(mouseSelect.value);
           else if(action==="reboot")mice.reboot();
-          else if(action==="reset")mice.reset();
+          else if(action==="reset"){
+            if(typeof window.confirm==="function"&&
+              !window.confirm("Factory reset? Delete every saved virtual mouse, profile and event, and return to Searching First Mouse?"))return;
+            cancelHeld();
+            mice.reset();
+          }
         }catch(error){announce("Virtual lab: "+error.message);}
       });
     });
