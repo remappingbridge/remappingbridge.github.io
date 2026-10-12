@@ -238,14 +238,38 @@
       catch(error){diagnosticFeedback.textContent="Scenario failed: "+error.message;}
     });
     diagnosticCanvas.setAttribute("tabindex","0");
+    function inspectDiagnostic(x,y){
+      diagnostics.inspectPixel(x,y);renderDiagnostic();
+    }
     diagnosticCanvas.addEventListener("click",function(event){
-      if(!diagnostics.snapshot())return;
-      if(!diagnosticCanvas.getBoundingClientRect)return;
+      if(!diagnostics.snapshot()||!diagnosticCanvas.getBoundingClientRect)return;
       var rect=diagnosticCanvas.getBoundingClientRect();
       if(!rect.width||!rect.height)return;
       var x=Math.floor((event.clientX-rect.left)*240/rect.width);
       var y=Math.floor((event.clientY-rect.top)*240/rect.height);
-      diagnostics.inspectPixel(x,y);renderDiagnostic();
+      inspectDiagnostic(x,y);
+    });
+    // Fully keyboard-operable Inspector, no mouse pointer required.
+    // It consumes keyboard arrows so HAT navigation is not accidentally run.
+    diagnosticCanvas.addEventListener("keydown",function(event){
+      if(!diagnostics.snapshot())return;
+      var key=event.key;
+      if(["Enter"," ","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(key)<0)return;
+      if(event.preventDefault)event.preventDefault();
+      if(event.stopPropagation)event.stopPropagation();
+      var snap=diagnostics.snapshot(),pick=snap.selection;
+      var row=pick?pick.row:0,col=pick?pick.column:0;
+      if(key==="ArrowUp")row=(row+8)%9;
+      if(key==="ArrowDown")row=(row+1)%9;
+      if(key==="ArrowLeft")col=(col+20)%21;
+      if(key==="ArrowRight")col=(col+1)%21;
+      var frame=diagnostics.frame(),cell=frame.cells[row][col];
+      if(cell.character===" "){
+        // Find first meaningful glyph of this row. Avoid selecting empty LCD.
+        col=frame.cells[row].findIndex(function(c){return c.character!==" ";});
+      }
+      if(col>=0)inspectDiagnostic(lcd.geometry.textX+col*lcd.geometry.charAdvance,
+        lcd.textY(frame,row));
     });
     function copyText(value){
       if(typeof navigator!=="undefined"&&navigator.clipboard&&navigator.clipboard.writeText)
@@ -286,7 +310,8 @@
       if(a.style)a.style.display="none";
       root.appendChild(a);a.click();
       if(a.remove)a.remove();
-      if(url&&URL.revokeObjectURL)URL.revokeObjectURL(url);
+      if(url&&URL.revokeObjectURL&&typeof setTimeout==="function")
+        setTimeout(function(){URL.revokeObjectURL(url);},1000);
     }
     diagnosticExports.forEach(function(button){
       button.addEventListener("click",function(){
