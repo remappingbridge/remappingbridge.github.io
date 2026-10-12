@@ -1,53 +1,57 @@
 # RemappingBridge — Web Simulator
 
-This repository hosts the **English-only**, single-page static web simulator for [RemappingBridge](https://github.com/remappingbridge/remappingbridge), built for the Raspberry Pi Pico 2 W and Waveshare Pico-LCD-1.3.
+Single-page, **English-only** browser simulator of the [RemappingBridge firmware](https://github.com/remappingbridge/remappingbridge) on a Raspberry Pi Pico 2 W with Waveshare Pico-LCD-1.3 HAT. The website is static HTML, CSS and native JavaScript, without npm, bundler, external CDN, backend, or custom site build workflow.
 
-## Current status
+**WEB-01, WEB-02 and WEB-03 accepted by the operator. WEB-04 is a production-browser candidate, not yet accepted.**
 
-**WEB-01 and WEB-02 accepted. WEB-03 is a candidate for production-browser review.**
+## Production simulator
 
-The simulator now renders a native **240×240 Canvas** using firmware-authentic **5×7 bitmap glyphs**, 9 rows, 21 columns, 2× glyph scaling, semantic RGB565 colors, and didactic/standard spacing. The fixed source is the firmware **v3.2.4 renderer**, byte-identical to v3.2.3. The foreground title magenta, yellow body, gray actions, white focus and cyan states remain unchanged.
+**[Open the simulator](https://remappingbridge.github.io/)** · **[Run browser tests](https://remappingbridge.github.io/tests/)**
 
-### WEB-03: HAT input, Help and Lock
+The physical-HAT-inspired arrangement is a **smaller LCD centered between a left-hand joystick and four A/B/X/Y buttons stacked vertically on the right**. The `LCD BACKGROUND` selector is gone, so the web LCD **always uses Gentle `#300c39`**. No change has been made to the magenta titles or other firmware foreground colors.
 
-- Virtual joystick (Up/Down/Left/Right/Press), A/B/X/Y buttons, and keyboard shortcuts (**arrow keys**, **Enter**/**Space**, **A/B/X/Y**) are implemented with native browser events. Keyboard shortcuts do not intercept input, text areas, selects, buttons or editable fields, or override Ctrl/Alt/Meta combinations.
-- A key/button activates on **release**, not press. Long holds and keyboard auto-repeat do not trigger duplicate actions. Pointer cancel, lost release, window blur and hidden-tab transitions safely cancel held input instead of triggering it.
-- The initial **SEARCHING FIRST MOUSE** tutorial remains didactic: its HAT legends highlight while pressed, and **Y does not lock it**, matching the firmware's original rule.
-- Three **explicit virtual contexts** help test the interaction architecture without simulated BLE state: **First mouse**, **Connected demo** and **Saved mouse search**. They show the source HOME and HELP text templates; the Connected demo title **DEMO MOUSE** is visibly fake, never evidence of a real Bluetooth connection.
-- On HOME, arrow/joystick Up and Down wrap the focused option and draw the **MNT-13 `|` selection marker** in column zero. **X** opens the corresponding Help; **B** returns with the prior selection. On Help, only **B** returns and **Y** locks; other controls have no action. Searching Help returns to Retry on B; Retry **A** restarts the virtual search.
-- **Y** locks the virtual display only on allowed screens, painting a completely black 240×240 Canvas. The first held-and-released control **unlocks, restores the relevant HOME, and is consumed**; it cannot open a menu or trigger another action. The scenario selectors are disabled while locked.
-- **Full 45-screen navigation and real menu commands belong to WEB-04.** MENU/Movement, Saved Devices, Pair New, profile management and BLE persistence are **not implemented** here. JOY PRESS on an unfinished route displays an explicit "planned for WEB-04" message.
+The virtual display is exactly **240×240 logical pixels**, with native 5×7 source bitmaps scaled 2×, 9 rows×21 columns, source-defined text positioning, the RGB565 semantic palette and the MNT-13 single pipe `|` marking the selected option. A two-line COMBINATIONS option places the pipe on its **second line**. CSS scales the 240×240 bitmap for the screen without changing the logical resolution.
 
-### Revised web-only magenta background
+### WEB-04: canonical firmware screens
 
-Following operator acceptance of WEB-02, **Gentle** is the default and is slightly more vivid, less gray: **`#300c39`**, replacing `#28142c`. For comparison, **Original** `#080008` and **Soft** `#190b1d` remain selectable on the same page. Only the dark-magenta *background* differs; firmware title/foreground colors, glyph geometry, and physical firmware are unchanged. The web preview does not offer brightness above 100%.
+The `assets/js/screens.js` catalog contains all **45 screen templates** taken directly from [firmware v3.2.4](https://github.com/remappingbridge/remappingbridge/releases/tag/v3.2.4), which has identical LCD/UX C source Git blobs to v3.2.3. Literal source strings longer than 21 columns are deliberately preserved in the catalog and clipped only when projected, just as firmware `blu2usb_ui_frame_set_text()` does.
 
-## Production-browser verification
+The virtual HAT supports release-based keyboard/pointer input, contextual Help (X), Back (B), Lock (Y), focus navigation with Up/Down, and left/right paging through six COMBINATIONS pages, five SHORTCUTS pages and Movement DPI pages. The HOME choices route to REMAPPING OPTIONS, MOVEMENT OPTIONS, SAVED DEVICES and PAIR NEW MOUSE. Available templates include Custom/Will Become, Pair Retry/Help, Saved Devices/Remove, first-mouse tutorial and device-help screens.
 
-Use **https://remappingbridge.github.io/** to test the actual site. Choose **Connected demo**; use joystick Up/Down, X for Help, B for Back and Y for Lock. To unlock, press and release any HAT control once. Choose **Saved mouse search** to test B → Retry and A → Retry Search.
+Three explicit visual contexts—**First mouse**, **Connected demo** and **Saved mouse search**—make it possible to explore menus without a physical mouse or fake Bluetooth pairing. Connected demo deliberately uses the title `DEMO MOUSE`. For auditing every template, expand **Inspect all 45 firmware screens** under the demo-state controls; this inspector is hidden by default and does not imply a real device connection.
 
-Open **https://remappingbridge.github.io/tests/** to run the **80 browser-only regression checks**, including all WEB-02 color/geometry snapshots and WEB-03 input, Help, Lock, release and mouse-context tests. These tests run directly in Firefox/Chromium without npm, Node, a custom website Actions build, bundlers, third-party CDNs or a backend. Do not claim the live browser checks have passed without observing the displayed result. The GitHub Pages branch deploy must also report success after new changes.
+**Limitations:** WEB-04 is a visual/navigation simulator, **not an operational BLE/USB firmware emulator**. It does **not** pair Bluetooth mice, persist per-device profiles, apply remapping/movement/shortcut changes, remove real bonds, update firmware or emit HID. Commands requiring saved-state transactions return explicit preview-only feedback. Complete mock BLE/persistence is reserved for WEB-05; Movement and Custom behavior for WEB-06; Modifier Shortcut assignments and color predicates for WEB-07. It does not impersonate hardware, and no physical UF2 or firmware tag is modified.
 
-## Files
+## Validate in your production browser
+
+Open **https://remappingbridge.github.io/** and select **Connected demo**. Press the HAT's joystick (or Enter/Space) to open Remapping Options. Use Up/Down to change the selected option and B to go back. In Remapping Options choose Modifier Shortcuts to navigate the six COMBINATIONS and five SHORTCUTS pages. Press X on HOME/Movement options to open Help and B to return; Y locks the LCD, and the first release of a key unlocks without executing another action.
+
+The **[browser-only regression suite](https://remappingbridge.github.io/tests/)** checks the 45 templates and rasterizations, 240×240 geometry, all original font/color invariants, revised physical HAT input, Help/Lock and canonical routes. The test suite contains **90 assertions**, which passed in an isolated JavaScript DOM/Canvas smoke environment during implementation; the **actual production-browser result still requires operator observation**.
+
+Keyboard mappings: arrows→joystick directions, Enter/Space→joystick press, A/B/X/Y→the matching keys. Global keyboard shortcuts are suppressed while an input, select, button or editable element has focus and while Control/Alt/Meta is held. Focus and pointer cancellation release held inputs safely.
+
+## Repository layout
 
 ```text
-index.html                    One English-language public application page
-.nojekyll                     GitHub Pages static files, no Jekyll transform
-assets/css/app.css            Rounded responsive UI, visible keyboard focus
-assets/js/lcd-renderer.js     240x240 firmware bitmap rasterizer and palette
-assets/js/hat-interaction.js  Virtual press/release, Help, Lock state engine
-assets/js/app.js              Keyboard/pointer/touch mapping and Canvas binding
-tests/index.html              Browser-native test harness
-tests/runner.js               80 Canvas/HAT/Help/Lock regression assertions
-tests/fixtures/              Fixed per-pixel RGBA hashes and colors
+index.html                    English-language single app
+.nojekyll                     Static GitHub Pages branch deployment
+assets/css/app.css            Physical-HAT layout and responsive styles
+assets/js/screens.js          All 45 firmware source screen templates
+assets/js/hat-interaction.js  HAT release-driven 45-screen route model
+assets/js/ui-projector.js     Semantic rows, colors, focus and dynamic labels
+assets/js/lcd-renderer.js     Physical 5x7 font and 240x240 RGBA Canvas
+assets/js/app.js              Browser events, scenario controls and rendering
+tests/index.html              Browser-only tests, no npm or build
+tests/runner.js               90 screen/navigation/Canvas regression checks
+tests/fixtures/              WEB-02/03 frozen pixel RGBA goldens
 README.md                     Project documentation
-LICENSE                       GNU AGPLv3 preserved
+LICENSE                       GNU AGPLv3, unchanged
 ```
 
-## English-only policy and scope
+## Source, language and license
 
-All interface text, accessible labels, browser tests, documentation, captions and release descriptions in this site and [firmware repository](https://github.com/remappingbridge/remappingbridge) must remain **English**. Literal firmware LCD strings and stable identifiers are preserved, not translated. Neither a language selector nor conventional site navigation is added.
+Firmware tag: **v3.2.4**. Source `src/ux_model/ux_model.c` Git blob `132010179de09ea81f4543e9ca83def09c0a743f`; font/renderer blob `61c4fe3d547ba05c3e24de86518d807047b50a77`. These are the same as v3.2.3, because v3.2.4 changes only a keyboard Zoom In chord.
 
-This site does **not** pair real Bluetooth devices, provide HID to the host, store physical mouse profiles, write firmware, perform flash operations or track users. The firmware source remains CC0 1.0; this site's original license is GNU AGPLv3. No firmware release or UF2 is created by this web gate.
+All public text in the web simulator and firmware repository, including README and GitHub Release descriptions, must remain in **English**. Source LCD strings and identifiers are not rewritten or translated. This site retains **GNU AGPLv3**; firmware source is under **CC0 1.0**. No telemetry or third-party assets are added.
 
-Planning: [WEB-00–WEB-15](https://github.com/remappingbridge/planner/tree/main/web-simulator-readme). Desktop reference: [mouse-ui](https://github.com/remappingbridge/mouse-ui). The full v3 UX transition matrix and virtual Bluetooth come in later gates.
+Gated development and accepted evidence: [WEB-00–WEB-15](https://github.com/remappingbridge/planner/tree/main/web-simulator-readme). Reference visual simulator: [mouse-ui](https://github.com/remappingbridge/mouse-ui).

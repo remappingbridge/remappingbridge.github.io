@@ -59,50 +59,64 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
 .device__brand span { color: var(--magenta); }
 .device__lights { display:flex; align-items: center; gap: 8px; color: #b6b9c6; font-size: 10px; letter-spacing: .065em; font-weight:700; }
 .device__light { border-radius: 50%; width: 9px; height: 9px; background: #e6ac6b; box-shadow: 0 0 0 4px #e6ac6b20, 0 0 15px #e6ac6b40; }
+/* WEB-04: physical HAT arrangement, compact 240x240 logical LCD. */
+.hat-face {
+  display: grid;
+  grid-template-columns: minmax(0, 144px) minmax(0, 238px) 56px;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 2vw, 23px);
+  width: 100%;
+  margin: 4px auto;
+}
 .lcd-housing {
-  max-width: 565px; margin: 0 auto;
-  padding: clamp(11px, 2.2vw, 22px);
-  border-radius: 24px; background: linear-gradient(130deg, #0c0c12, #17171e);
+  width: 100%; min-width: 0;
+  padding: clamp(6px, .9vw, 10px); border-radius: 18px;
+  background: linear-gradient(130deg, #0c0c12, #17171e);
   box-shadow: inset 0 1px 6px #000, 0 2px 0 #61667865;
 }
 .lcd-preview {
-  position: relative; isolation: isolate; overflow: hidden; container-type: inline-size;
-  aspect-ratio: 1 / 1; width: 100%;
-  border: 1px solid #5d2964; border-radius: 8px;
-  display: grid; place-items: center; background: #180719;
-  box-shadow: inset 0 0 80px #260a288a, 0 0 38px #db3bb30b;
+  position: relative; width: 100%; aspect-ratio: 1;
+  border: 1px solid #5d2964; border-radius: 7px;
+  overflow: hidden; background: #300c39;
+  box-shadow: inset 0 0 22px #260a2880, 0 0 30px #db3bb30b;
 }
-
-
-
-.hardware-controls {
-  display: grid; grid-template-columns: 1fr 1fr;
-  justify-items: center; align-items: center; gap: clamp(12px, 3vw, 40px);
-  max-width: 560px; margin: clamp(20px, 3.5vw, 32px) auto 12px;
+.hat-group { border:0; min-width:0; min-inline-size:0; padding:0; margin:0; }
+.hat-group legend {
+  width:100%; text-align:center; padding:0 0 10px;
+  letter-spacing:.12em; font-size:10px; font-weight:800; color:#b1b5c5;
 }
-.hat-group { border: 0; padding: 0; margin: 0; min-width: 0; }
-.hat-group legend { width: 100%; padding: 0 0 13px; text-align: center; letter-spacing: .17em; font-size: 11px; font-weight:800; color: #b1b5c5; }
-.joy-cluster { display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); gap: 6px; width: clamp(155px, 27vw, 224px); aspect-ratio: 1; }
+.joy-cluster {
+  display:grid; grid-template:repeat(3,minmax(0,1fr)) / repeat(3,minmax(0,1fr));
+  width:100%; max-width:144px; aspect-ratio:1; gap:3px;
+}
 .hat-button {
-  border: 1px solid #717889; color: var(--bright);
-  background: linear-gradient(160deg, #656b7b, #3e4454);
-  border-radius: 16px; box-shadow: 0 4px 0 #161820, inset 0 1px 1px #ffffff2e;
-  font-weight: 900; user-select: none; transition: background .12s, box-shadow .12s, transform .12s;
+  border:1px solid #717889; color:var(--bright);
+  background:linear-gradient(160deg,#656b7b,#3e4454);
+  border-radius:12px; box-shadow:0 4px 0 #161820,inset 0 1px 1px #ffffff2e;
+  font-weight:900; user-select:none;
+  transition:background .12s,box-shadow .12s,transform .12s;
 }
-.hat-button:hover { background: linear-gradient(150deg, #777f91, #495061); }
-.hat-button:active, .hat-button.is-pressed { transform: translateY(3px); box-shadow: 0 1px 0 #151821, inset 0 1px 5px #0a0b1090; background: #545a69; }
-.joy { min-width: 0; min-height: 0; font-size: clamp(16px, 2.3vw, 24px); }
-.joy--up { grid-area: 1 / 2; border-radius: 15px 15px 9px 9px; }
-.joy--left { grid-area: 2 / 1; border-radius: 15px 9px 9px 15px; }
-.joy--press { grid-area: 2 / 2; border-radius: 999px; color: #f6c2ed; font-size: 19px; }
-.joy--right { grid-area: 2 / 3; border-radius: 9px 15px 15px 9px; }
-.joy--down { grid-area: 3 / 2; border-radius: 9px 9px 15px 15px; }
-.action-cluster { display:grid; grid-template-columns:repeat(2,1fr); grid-template-rows:repeat(2,1fr); gap:clamp(12px,2vw,22px); width: clamp(142px, 24vw, 198px); aspect-ratio: 1; }
-.action-key { width:100%; border-radius: 999px; font-size: clamp(20px, 3vw, 28px); }
-.action-key--a { color: #b6fbff; }
-.action-key--x { color: #fcb7ee; }
-.action-key--b { color: #e6c3ff; }
-.action-key--y { color: #fdedb5; }
+.hat-button:hover { background:linear-gradient(150deg,#777f91,#495061); }
+.hat-button:active, .hat-button.is-pressed {
+  transform:translateY(2px); box-shadow:0 1px 0 #151821,inset 0 1px 5px #0a0b1090;
+  background:#545a69;
+}
+.joy { min-width:0; min-height:0; font-size:clamp(14px,1.8vw,20px); }
+.joy--up {grid-area:1/2;border-radius:12px 12px 6px 6px}
+.joy--left {grid-area:2/1;border-radius:12px 6px 6px 12px}
+.joy--press {grid-area:2/2;border-radius:50%;color:#f6c2ed;font-size:17px}
+.joy--right {grid-area:2/3;border-radius:6px 12px 12px 6px}
+.joy--down {grid-area:3/2;border-radius:6px 6px 12px 12px}
+.action-cluster {
+  display:grid;grid-template-columns:1fr;grid-template-rows:repeat(4,1fr);
+  width:52px; height:228px; gap:7px;
+}
+.action-key {width:100%; min-height:44px; border-radius:50%; font-size:19px;}
+.action-key--a{color:#b6fbff}
+.action-key--b{color:#e6c3ff}
+.action-key--x{color:#fcb7ee}
+.action-key--y{color:#fdedb5}
 .device__base {
   margin: 26px 4px 0; padding-top: 14px; border-top: 1px solid #ffffff17;
   font-weight: 750; font-size: 10px; letter-spacing: .1em; color: #a0a6b6;
@@ -125,36 +139,32 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
 .event-preview__message { color:#e5e7f1; font-size:14px; margin:0; flex:1; }
 .event-preview__counter { color:var(--cyan); font-size:24px; font-variant-numeric:tabular-nums; font-weight:800; }
 .session-panel__note { font-size:13px; line-height:1.65; color:#aeb6c7; margin:14px 0 0; }
-@media (max-width: 540px) {
-  .workspace { display:block; padding: 14px; }
-  .app-identity { gap:9px; }
-  .app-identity__icon { flex-basis:44px; height:44px; border-radius:14px; font-size:13px; }
-  .app-identity p { font-size:11px; }
-  .phase-chip { font-size:9px; padding:7px 8px; }
-  .device { padding:15px; }
-  .device__top { flex-wrap:wrap; }
-  .device__brand { font-size:10px; }
-  .device__lights { font-size:9px; }
-  .lcd-housing { padding:10px; border-radius:16px; }
-  .hardware-controls { gap:10px; }
-  .joy-cluster { width:min(37vw,180px); gap:4px; }
-  .action-cluster { width:min(34vw,155px); gap:10px; }
-  .hat-button { border-radius:12px; }
-  .action-key, .joy--press { border-radius:50%; }
-  .device__base { font-size:8px; letter-spacing:.03em; }
+@media (max-width:540px) {
+  .workspace{display:block;padding:10px}
+  .app-identity{gap:9px}
+  .app-identity__icon{flex-basis:44px;height:44px;border-radius:14px;font-size:13px}
+  .app-identity p{font-size:11px}
+  .phase-chip{font-size:9px;padding:7px 8px}
+  .device{padding:10px}
+  .device__top{flex-wrap:wrap}
+  .device__brand{font-size:10px}
+  .device__lights{font-size:9px}
+  .hat-face{grid-template-columns:minmax(0, 1fr) minmax(0, 1.42fr) 44px;gap:6px}
+  .hat-group legend{font-size:8px;letter-spacing:.05em}
+  .joy-cluster{max-width:125px;gap:2px}
+  .joy{font-size:14px}
+  .action-cluster{width:44px;height:190px;gap:4px}
+  .action-key{min-height:44px;font-size:17px}
+  .lcd-housing{padding:6px;border-radius:12px}
+  .device__base{font-size:8px;letter-spacing:.03em}
+}
+@media (max-width:360px) {
+  .hat-face{grid-template-columns:minmax(0, .9fr) minmax(0, 1.4fr) 44px;gap:4px}
+  .joy-cluster{gap:1px}
+  .action-cluster{height:184px;gap:2px}
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior:auto !important; transition-duration:0s !important; animation-duration:0s !important; }
-}
-
-/* Below 400px the HAT groups stack so touch targets remain usable.
- * Full responsive/HiDPI accessibility audits are reserved for WEB-08. */
-@media (max-width: 399px) {
-  .hardware-controls { grid-template-columns: 1fr; gap: 21px; }
-  .joy-cluster { width: 174px; }
-  .action-cluster { width: 164px; }
-  .joy { font-size: 19px; }
-  .action-key { font-size: 23px; }
 }
 
 /* WEB-02: browser scales the logical 240x240 pixels, never re-rasterizes
@@ -168,43 +178,7 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
   max-width: 100%;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  background: #190b1d;
-}
-
-.lcd-settings {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 22px; padding: 16px 20px;
-  background: #20232ced; border: 1px solid #353949; border-radius: 20px;
-}
-.lcd-settings__label { flex: 1; min-width: 0; }
-.lcd-settings__label p {
-  margin: 6px 0 0; color: #aeb6c7; font-size: 12px; line-height: 1.5;
-}
-.backdrop-choices {
-  display: flex; align-items: center; flex-wrap: wrap; gap: 7px;
-}
-.backdrop-choice {
-  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-  min-height: 44px; padding: 7px 11px; border-radius: 14px;
-  border: 1px solid #555b6c; background: #2b3040;
-  color: #e8eaf3; font-size: 12px; font-weight: 700;
-}
-.backdrop-choice:hover { background: #383e4e; }
-.backdrop-choice.is-selected,
-.backdrop-choice[aria-pressed="true"] {
-  border-color: #d682c9; background: #422a49; color: #fff;
-  box-shadow: inset 0 0 0 1px #d682c95e;
-}
-.backdrop-choice__swatch {
-  display: inline-block; width: 15px; height: 15px;
-  flex: 0 0 15px; border: 1px solid #ffffff75; border-radius: 5px;
-}
-.backdrop-choice__swatch--original { background: #080008; }
-.backdrop-choice__swatch--soft { background: #190b1d; }
-.backdrop-choice__swatch--gentle { background: #300c39; }
-@media (max-width: 630px) {
-  .lcd-settings { align-items: flex-start; flex-direction: column; gap: 11px; }
-  .backdrop-choices { width: 100%; }
+  background: #300c39;
 }
 
 /* WEB-03: accessible contextual demo states and release-based HAT feedback. */
@@ -240,3 +214,14 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
   .demo-scenario { flex: 1 1 44%; }
   .demo-scenarios__screen { max-width: 100%; overflow-wrap: anywhere; }
 }
+
+/* WEB-04: extra QA controls are collapsed by default, not a site menu. */
+.screen-inspector{border-top:1px solid #ffffff21;margin-top:15px;padding-top:12px;color:#bfc7d8}
+.screen-inspector summary{cursor:pointer;font-size:12px;font-weight:750;min-height:34px}
+.screen-inspector label{display:block;font-size:12px;margin:8px 0 6px}
+.screen-inspector select{
+  display:block;width:100%;max-width:370px;min-height:44px;
+  color:#f5effe;background:#292337;border:1px solid #77627f;
+  border-radius:11px;padding:7px 10px;font-size:13px
+}
+.screen-inspector p{font-size:11px;line-height:1.5;margin:9px 0 0}
