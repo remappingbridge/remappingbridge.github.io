@@ -9,6 +9,7 @@
   <title>RemappingBridge — Virtual Simulator</title>
   <link rel="stylesheet" href="./assets/css/app.css">
   <script defer src="./assets/js/lcd-renderer.js"></script>
+  <script defer src="./assets/js/hat-interaction.js"></script>
   <script defer src="./assets/js/app.js"></script>
 </head>
 <body>
@@ -20,7 +21,7 @@
           <h1 id="simulator-title">RemappingBridge</h1>
           <p>Virtual simulator <span aria-hidden="true">·</span> LCD UX v3.2.4</p>
         </div>
-        <span class="phase-chip">WEB-02 <span class="phase-chip__dot" aria-hidden="true"></span> Preview</span>
+        <span class="phase-chip">WEB-03 <span class="phase-chip__dot" aria-hidden="true"></span> Preview</span>
       </div>
 
       <div class="device" aria-label="Pico 2 W demonstration panel with LCD and controls">
@@ -35,7 +36,7 @@
         <div class="lcd-housing">
           <div class="lcd-preview">
             <canvas class="lcd-canvas" data-lcd-canvas width="240" height="240"
-              role="img" aria-label="240 by 240 pixel LCD showing SEARCHING FIRST MOUSE, a nine-row physical firmware display. Pressed HAT controls highlight corresponding LCD labels. No real device is connected.">
+              role="img" aria-label="240 by 240 pixel virtual firmware LCD. Controls allow Help and Lock within demonstration HOME scenarios. No physical mouse is connected.">
               SEARCHING FIRST MOUSE — joystick and HAT key labels (Canvas required).
             </canvas>
           </div>
@@ -70,10 +71,26 @@
         </div>
       </div>
 
+      <section class="demo-scenarios" aria-labelledby="demo-scenarios-title">
+        <div class="demo-scenarios__heading">
+          <div>
+            <span class="eyebrow">VIRTUAL LCD CONTEXT</span>
+            <h2 id="demo-scenarios-title">Choose a demo state</h2>
+          </div>
+          <span class="demo-scenarios__screen" data-screen-label aria-live="polite">SEARCHING FIRST MOUSE</span>
+        </div>
+        <div class="demo-scenarios__buttons" role="group" aria-label="Select a virtual mouse state">
+          <button type="button" class="demo-scenario is-selected" data-scenario="first" aria-pressed="true">First mouse</button>
+          <button type="button" class="demo-scenario" data-scenario="connected" aria-pressed="false">Connected demo</button>
+          <button type="button" class="demo-scenario" data-scenario="saved" aria-pressed="false">Saved mouse search</button>
+        </div>
+        <p class="demo-scenarios__note">These are visual test states only. No Bluetooth pairing or stored mouse is created.</p>
+      </section>
+
       <section class="lcd-settings" aria-label="LCD web backdrop">
         <div class="lcd-settings__label">
           <span class="eyebrow">LCD BACKGROUND</span>
-          <p>Compare three dark-magenta tones. Only the web backdrop changes; firmware colors stay untouched.</p>
+          <p>Gentle is now the default, slightly more saturated and less gray. Only the web background changes.</p>
         </div>
         <div class="backdrop-choices" role="group" aria-label="LCD magenta background tone">
           <button class="backdrop-choice" type="button" data-backdrop="original" aria-pressed="false"
@@ -81,13 +98,13 @@
             <span class="backdrop-choice__swatch backdrop-choice__swatch--original" aria-hidden="true"></span>
             Original
           </button>
-          <button class="backdrop-choice is-selected" type="button" data-backdrop="soft" aria-pressed="true"
+          <button class="backdrop-choice" type="button" data-backdrop="soft" aria-pressed="false"
             aria-label="Soft web-only dark magenta">
             <span class="backdrop-choice__swatch backdrop-choice__swatch--soft" aria-hidden="true"></span>
             Soft
           </button>
-          <button class="backdrop-choice" type="button" data-backdrop="gentle" aria-pressed="false"
-            aria-label="Gentle web-only dark magenta">
+          <button class="backdrop-choice is-selected" type="button" data-backdrop="gentle" aria-pressed="true"
+            aria-label="Gentle vivid web-only magenta, less gray">
             <span class="backdrop-choice__swatch backdrop-choice__swatch--gentle" aria-hidden="true"></span>
             Gentle
           </button>
@@ -107,7 +124,7 @@
           <p class="event-preview__message" aria-live="polite" aria-atomic="true" data-feedback>Ready for virtual controls.</p>
           <output class="event-preview__counter" data-count aria-label="Number of commands">00</output>
         </div>
-        <p class="session-panel__note">The LCD now uses the original 5×7 glyph pixels and 240×240 geometry. HAT buttons demonstrate pressed-key highlights; navigation and simulated Bluetooth arrive in later gates. No physical device is accessed.</p>
+        <p class="session-panel__note">Use the arrow keys, Enter or Space, and A/B/X/Y, or click the HAT. A virtual HOME lets you test Help (X), Back (B), and Lock (Y). The first-mouse tutorial remains non-interactive, as on the firmware. Full 45-screen navigation and simulated Bluetooth arrive in later gates. No physical device is accessed.</p>
       </section>
     </section>
   </main>

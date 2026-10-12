@@ -1,5 +1,5 @@
 {
-  "schema": "remappingbridge-web02-lcd-rgba-golden-v1",
+  "schema": "remappingbridge-web03-lcd-rgba-golden-v2",
   "source": "remappingbridge/remappingbridge",
   "firmwareVersion": "v3.2.4",
   "uiBaseline": "v3.2.3",
@@ -27,9 +27,9 @@
       "deviationFromRGB565": true
     },
     "gentle": {
-      "rgb": "#28142c",
-      "previewFNV32": "a9662a35",
-      "pressedKeyAFNV32": "244450f5",
+      "rgb": "#300c39",
+      "previewFNV32": "a19c1e15",
+      "pressedKeyAFNV32": "53515495",
       "deviationFromRGB565": true
     }
   },
@@ -61,9 +61,9 @@
       "x": 0,
       "y": 0,
       "rgba": [
-        40,
-        20,
-        44,
+        48,
+        12,
+        57,
         255
       ]
     },
@@ -121,6 +121,8 @@
     "The font, geometric constants, title/foreground palette, didactic placement and 21-character clipping are copied from firmware C. Pressed controls affect only didactic tint, no screen navigation.",
     "Only the dark-magenta background differs in Soft and Gentle. Original is the RGB565-expanded firmware color.",
     "CSS scales a fixed 240x240 logical canvas with image-rendering pixelated; the source bitmap never grows with devicePixelRatio.",
-    "The operator must select a visually preferred background before WEB-02 is accepted; no production-browser visual test has been performed during this candidate implementation."
-  ]
+    "The operator must select a visually preferred background before WEB-02 is accepted; no production-browser visual test has been performed during this candidate implementation.",
+    "WEB-03 operator-approved direction: default Gentle, with more vivid magenta and less gray. Foreground, font, geometry and all C-source colors remain unchanged."
+  ],
+  "defaultBackground": "gentle"
 }

@@ -201,8 +201,42 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
 }
 .backdrop-choice__swatch--original { background: #080008; }
 .backdrop-choice__swatch--soft { background: #190b1d; }
-.backdrop-choice__swatch--gentle { background: #28142c; }
+.backdrop-choice__swatch--gentle { background: #300c39; }
 @media (max-width: 630px) {
   .lcd-settings { align-items: flex-start; flex-direction: column; gap: 11px; }
   .backdrop-choices { width: 100%; }
+}
+
+/* WEB-03: accessible contextual demo states and release-based HAT feedback. */
+.demo-scenarios {
+  border: 1px solid #3b4050; border-radius: 22px;
+  padding: clamp(17px, 3vw, 23px);
+  background: linear-gradient(120deg, #242332, #1d1f2a);
+}
+.demo-scenarios__heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.demo-scenarios h2 { font-size: 19px; margin: 5px 0 0; }
+.demo-scenarios__screen {
+  font: 750 11px/1.4 ui-monospace, "Courier New", monospace;
+  color: #eaa4ec; padding: 8px 11px; border-radius: 12px;
+  border: 1px solid #5e466c; background: #302537;
+}
+.demo-scenarios__buttons { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 16px; }
+.demo-scenario {
+  background: #303443; color: #ecedfa;
+  border: 1px solid #656b7b; border-radius: 13px;
+  padding: 10px 14px; min-height: 44px;
+  font-size: 13px; font-weight: 750;
+}
+.demo-scenario:hover { background: #424759; }
+.demo-scenario.is-selected {
+  background: #3b2546; border-color: #ec8be5;
+  box-shadow: inset 0 0 0 1px #ec8be572;
+}
+.demo-scenario:disabled { opacity: .48; cursor: not-allowed; }
+.demo-scenarios__note { font-size: 12px; line-height: 1.55; color: #adb5c7; margin: 12px 0 0; }
+[data-locked="true"] .lcd-canvas { background: #000; }
+[data-locked="true"] .event-preview__pulse { background: #f6b7dc; box-shadow: 0 0 14px #f6b7dc24; }
+@media (max-width: 470px) {
+  .demo-scenario { flex: 1 1 44%; }
+  .demo-scenarios__screen { max-width: 100%; overflow-wrap: anywhere; }
 }
