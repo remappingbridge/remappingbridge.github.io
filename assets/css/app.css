@@ -491,3 +491,64 @@ button:disabled { opacity:.54;cursor:not-allowed; }
 @media (prefers-reduced-motion: reduce){
   .device,.display-options,.hat-button,.touch-hat button {animation:none!important;transition:none!important;}
 }
+
+/* WEB-09: operator-approved low-right metadata, leaving physical corners intact. */
+.hat-meta {
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;
+  text-align:right;align-self:center;
+}
+.hat-meta__specs {justify-items:end;text-align:right;justify-content:end;width:100%;}
+.hat-meta__specs span {text-align:right;width:100%;}
+/* The optional WEB-08 display controls have been removed, not hidden.
+ * Mobile accessibility controls from that gate remain available. */
+.diagnostics {min-width:0;}
+.diagnostics details {
+  background:linear-gradient(135deg,#262b39,#1c202c);
+  border:1px solid #4b5062;border-radius:20px;
+  box-shadow:inset 0 1px 0 #ffffff13,0 8px 20px #00000035;
+  padding:16px;
+}
+.diagnostics summary {cursor:pointer;color:#e7edfc;font-size:15px;font-weight:780;min-height:44px;display:flex;align-items:center;}
+.diagnostics summary:focus-visible,.diagnostics button:focus-visible,
+.diagnostics select:focus-visible,.diagnostics canvas:focus-visible {
+  outline:3px solid #a7ffff;outline-offset:3px;
+}
+.diagnostics__body {border-top:1px solid #484f61;padding-top:15px;}
+.diagnostics__notice,.diagnostics__feedback,.diagnostics__selection p {
+  color:#c2cbda;line-height:1.6;font-size:13px;margin:9px 0;
+}
+.diagnostics__scenarios {display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin:14px 0;}
+.diagnostics__scenarios label {display:grid;gap:6px;flex:1 1 220px;font-size:13px;font-weight:720;}
+.diagnostics button,.diagnostics select {
+  min-height:44px;border:1px solid #777e98;color:#f8faff;background:#30394b;
+  border-radius:12px;padding:9px 12px;font:650 13px/1.4 inherit;cursor:pointer;
+}
+.diagnostics button:hover,.diagnostics select:hover {background:#475168;}
+.diagnostics select {width:100%;font-family:inherit;}
+.diagnostics__summary {display:grid;gap:5px;padding:10px;border:1px solid #454b5d;border-radius:12px;background:#171c29;font-size:13px;}
+[data-diagnostic-hash] {font:750 13px/1.6 ui-monospace,monospace;color:#8ef5ed;overflow-wrap:anywhere;}
+[data-diagnostic-context] {color:#c5cbdc;}
+.diagnostics__inspector {display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:18px;margin:16px 0;align-items:start;}
+.diagnostics__preview {background:#090a12;border:2px solid #697185;border-radius:12px;padding:6px;}
+.diagnostics__preview canvas {
+  width:100%;aspect-ratio:1;display:block;image-rendering:pixelated;
+  background:#300c39;cursor:crosshair;touch-action:manipulation;
+}
+.diagnostics__selection {min-width:0;}
+.diagnostics h3 {font-size:15px;margin:0 0 10px;}
+[data-diagnostic-ref] {display:block;overflow-wrap:anywhere;font:700 12px/1.6 ui-monospace,monospace;color:#90f9f5;}
+[data-diagnostic-bounds] {font-variant-numeric:tabular-nums;}
+.diagnostics__exports {display:flex;flex-wrap:wrap;gap:8px;}
+.diagnostics__timeline {margin-top:18px;}
+.diagnostics__timeline ol {margin:8px 0 0;padding:10px 10px 10px 30px;background:#141925;border:1px solid #3e4658;border-radius:10px;max-height:230px;overflow:auto;}
+.diagnostics__timeline li {font:12px/1.6 ui-monospace,monospace;color:#bac5d9;overflow-wrap:anywhere;margin:3px 0;}
+@media(max-width:590px) {
+ .diagnostics__inspector {grid-template-columns:1fr;}
+ .diagnostics__preview {width:min(100%,268px);}
+ .diagnostics {min-width:0;}
+}
+@media(max-width:370px){
+ .hat-meta__specs {justify-items:end;text-align:right;}
+ .diagnostics details {padding:10px;}
+ .diagnostics__exports button {flex:1 1 115px;}
+}
