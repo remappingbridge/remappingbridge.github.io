@@ -56,6 +56,10 @@
   }
 
   function boot(doc) {
+    if (doc.documentElement && doc.documentElement.lang !== "en") {
+      throw new Error("RemappingBridge pages must declare English (lang=en)");
+    }
+
     var root = doc.querySelector("[data-app-root]");
     if (!root) return false;
 
