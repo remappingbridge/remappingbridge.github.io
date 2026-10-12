@@ -14,8 +14,22 @@ function nameOf(s){
  return name;
 }
 function defaults(){return {kind:"PASSTHROUGH",targets:[0,1,2,3,4],movement:{horizontal:4,vertical:4,rotation:0},shortcuts:Array(12).fill(0)};}
+var GAINS=[1,2,3,4,5,6,8,12];
+function validateProfile(p){
+ if(!p||typeof p!=="object"||!["PASSTHROUGH","CUSTOM"].includes(p.kind)||
+  !Array.isArray(p.targets)||p.targets.length!==5||
+  !p.targets.every(n=>Number.isInteger(n)&&n>=0&&n<=5)||
+  p.targets.filter(n=>n===5).length>1||
+  !p.movement||!GAINS.includes(p.movement.horizontal)||!GAINS.includes(p.movement.vertical)||
+  !Number.isInteger(p.movement.rotation)||p.movement.rotation<0||p.movement.rotation>3||
+  !Array.isArray(p.shortcuts)||p.shortcuts.length!==12||
+  !p.shortcuts.every(n=>Number.isInteger(n)&&n>=0&&n<=30))
+  throw new RangeError("Invalid virtual mouse profile");
+ return copy({kind:p.kind,targets:p.targets,movement:p.movement,shortcuts:p.shortcuts});
+}
 function newState(){return {schema:SCHEMA,seq:0,clock:0,mice:[],frontId:null,connectedId:null,events:[]};}
 function isId(s){return typeof s==="string"&&/^mouse-[0-9]{4,9}$/.test(s);}
+function profileSafe(p){try{validateProfile(p);return true;}catch(_){return false;}}
 function validate(raw){
  if(!raw||typeof raw!=="object"||raw.schema!==SCHEMA||
   !Number.isSafeInteger(raw.seq)||raw.seq<0||!Number.isSafeInteger(raw.clock)||raw.clock<0||
@@ -24,17 +38,7 @@ function validate(raw){
  var seen=new Set(),names=new Set();
  for(var m of raw.mice){
   if(!m||!isId(m.id)||seen.has(m.id)||m.name!==nameOf(m.name)||
-     names.has(m.name.toLowerCase())||!m.profile||
-     !["PASSTHROUGH","CUSTOM"].includes(m.profile.kind)||
-     !Array.isArray(m.profile.targets)||m.profile.targets.length!==5||
-     !m.profile.targets.every(n=>Number.isInteger(n)&&n>=0&&n<=5)||
-     !m.profile.movement||!Number.isInteger(m.profile.movement.horizontal)||
-     !Number.isInteger(m.profile.movement.vertical)||!Number.isInteger(m.profile.movement.rotation)||
-     m.profile.movement.horizontal<1||m.profile.movement.horizontal>12||
-     m.profile.movement.vertical<1||m.profile.movement.vertical>12||
-     m.profile.movement.rotation<0||m.profile.movement.rotation>3||
-     !Array.isArray(m.profile.shortcuts)||m.profile.shortcuts.length!==12||
-     !m.profile.shortcuts.every(n=>Number.isInteger(n)&&n>=0&&n<=30))
+     names.has(m.name.toLowerCase())||!m.profile||!profileSafe(m.profile))
       throw new Error("Invalid saved mouse or profile");
   seen.add(m.id);names.add(m.name.toLowerCase());
  }
@@ -130,6 +134,30 @@ function create(options){
   data.connectedId=item.id;data.frontId=item.id;
   return emit("connected","Virtual mouse "+item.name+" reconnected.");
  }
+ function profileFor(id){
+  var item=find(id);return item?copy(item.profile):null;
+ }
+ function applyProfile(id,profile){
+  var target=find(id);
+  if(!target)return emit("not-found","Cannot change a profile without a saved virtual mouse.");
+  var checked=validateProfile(profile);
+  var next=copy(data);
+  var index=next.mice.findIndex(function(m){return m.id===id;});
+  next.mice[index].profile=checked;
+  // Validate and commit the complete profile atomically before broadcasting
+  // a single applied event. If browser storage is blocked, the model clearly
+  // advertises memory-only state instead of falsely promising persistence.
+  data=validate(next);
+  return emit("profile-applied","Applied virtual profile for "+target.name+
+    ". "+checked.kind+"; H "+checked.movement.horizontal/4+"x, V "+
+    checked.movement.vertical/4+"x, rotation "+checked.movement.rotation*90+" degrees.");
+ }
+ function resetMovement(id){
+  var p=profileFor(id);
+  if(!p)return emit("not-found","No selected saved mouse to reset.");
+  p.movement={horizontal:4,vertical:4,rotation:0};
+  return applyProfile(id,p);
+ }
  function disconnect(){
   if(!data.connectedId)return emit("no-connection","No virtual mouse is connected.");
   data.connectedId=null;
@@ -163,8 +191,9 @@ function create(options){
   key:KEY,schema:SCHEMA,maxMice:MAX,timeoutTicks:TIMEOUT,
   snapshot:snapshot,subscribe:listen,beginPair:beginPair,beginSearch:beginSearch,
   advance:advance,complete:complete,cancel:cancel,disconnect:disconnect,
-  selectFront:front,remove:remove,reboot:reboot,reset:reset,validate:validate
+  selectFront:front,remove:remove,reboot:reboot,reset:reset,validate:validate,
+  profileFor:profileFor,applyProfile:applyProfile,resetMovement:resetMovement
  });
 }
-window.RemappingBridgeVirtualMice=Object.freeze({create:create,validate:validate,schema:SCHEMA,key:KEY,maxMice:MAX});
+window.RemappingBridgeVirtualMice=Object.freeze({create:create,validate:validate,validateProfile:validateProfile,defaults:defaults,allowedGains:Object.freeze(GAINS.slice()),schema:SCHEMA,key:KEY,maxMice:MAX});
 }());
