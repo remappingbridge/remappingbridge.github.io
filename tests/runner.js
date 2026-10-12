@@ -600,6 +600,27 @@ function run(){
      W.getVirtualMice().mice[0].profile.movement.horizontal===4&&
      W.getVirtualMice().mice[0].profile.movement.rotation===0&&
      W.getVirtualMice().mice[0].profile.kind==="CUSTOM");
+   // WEB-07 end-to-end: actual browser HAT controls commit and reset.
+   keys[6].click(); // B from Movement to Home
+   keys[2].click(); // HOME -> MOUSE_OPTIONS (selection reset to zero)
+   keys[4].click();keys[4].click();keys[2].click(); // MODIFIER SHORTCUTS
+   check("End-to-end HAT reaches COMBINATIONS 1 OF 6 after applying Custom",
+     W.getSession().screen==="COMBINATIONS_1"&&W.getSession().modifierShortcutsActive);
+   keys[2].click(); // First combination -> SHORTCUTS_1
+   keys[5].click(); // A applies COPY
+   check("End-to-end A assigns COPY to Modifier Released and returns",
+     W.getSession().screen==="COMBINATIONS_1"&&
+     W.getVirtualMice().mice[0].profile.shortcuts[0]===1);
+   keys[5].click(); // A resets combo 0
+   check("End-to-end A resets Modifier Released to NOT CUSTOMIZED",
+     W.getVirtualMice().mice[0].profile.shortcuts[0]===0&&
+     W.getSession().screen==="COMBINATIONS_1");
+   keys[3].click(); // COMBINATIONS_2 first is MOD + LEFT
+   var unavailableScreen=W.getSession().screen;
+   keys[2].click();
+   check("End-to-end unavailable Left Modifier slot cannot enter shortcut editor",
+     unavailableScreen==="COMBINATIONS_2"&&W.getSession().screen===unavailableScreen&&
+     W.getVirtualMice().mice[0].profile.shortcuts[2]===0);
    lab[6].click();
    check("Disconnect button preserves saved device but returns saved search",
      W.getVirtualMice().connectedId===null&&W.getSession().screen==="HOME_SEARCHING");
