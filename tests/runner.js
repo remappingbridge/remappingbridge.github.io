@@ -76,7 +76,7 @@
       check("Firmware press feedback whitens the exact KEY A label",
             frame.cells[7][1].tone===tone.ACTIONABLE&&
             lcd.previewFrame(rows,"KEY_A").cells[7][1].tone===tone.EMPHASIZED&&
-            !same(pixel(soft,20,189),pixel(white,20,189)));
+            !same(pixel(soft,18,189),pixel(white,18,189)));
       check("Leading spaces preserved; LCD text physically clipped at 21",
             lcd.newFrame(["A".repeat(22)].concat(Array(8).fill(""))).cells[0].length===21 &&
             throws(function(){lcd.newFrame(Array(8).fill(""));}));
