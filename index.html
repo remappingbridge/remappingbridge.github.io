@@ -9,7 +9,9 @@
   <title>RemappingBridge — Virtual Simulator</title>
   <link rel="stylesheet" href="./assets/css/app.css">
   <script defer src="./assets/js/lcd-renderer.js"></script>
+  <script defer src="./assets/js/screens.js"></script>
   <script defer src="./assets/js/hat-interaction.js"></script>
+  <script defer src="./assets/js/ui-projector.js"></script>
   <script defer src="./assets/js/app.js"></script>
 </head>
 <body>
@@ -21,7 +23,7 @@
           <h1 id="simulator-title">RemappingBridge</h1>
           <p>Virtual simulator <span aria-hidden="true">·</span> LCD UX v3.2.4</p>
         </div>
-        <span class="phase-chip">WEB-03 <span class="phase-chip__dot" aria-hidden="true"></span> Preview</span>
+        <span class="phase-chip">WEB-04 <span class="phase-chip__dot" aria-hidden="true"></span> Preview</span>
       </div>
 
       <div class="device" aria-label="Pico 2 W demonstration panel with LCD and controls">
@@ -33,36 +35,35 @@
           </div>
         </div>
 
-        <div class="lcd-housing">
-          <div class="lcd-preview">
-            <canvas class="lcd-canvas" data-lcd-canvas width="240" height="240"
-              role="img" aria-label="240 by 240 pixel virtual firmware LCD. Controls allow Help and Lock within demonstration HOME scenarios. No physical mouse is connected.">
-              SEARCHING FIRST MOUSE — joystick and HAT key labels (Canvas required).
-            </canvas>
+        <div class="hat-face" aria-label="Virtual Pico LCD HAT: joystick left, LCD center, A B X Y vertically on right">
+            <fieldset class="hat-group hat-group--joystick">
+              <legend>JOYSTICK</legend>
+              <div class="joy-cluster" aria-label="Virtual joystick">
+                <button type="button" class="hat-button joy joy--up" data-control="JOY_UP" aria-label="Joystick up" title="Joystick up"><span aria-hidden="true">▲</span></button>
+                <button type="button" class="hat-button joy joy--left" data-control="JOY_LEFT" aria-label="Joystick left" title="Joystick left"><span aria-hidden="true">◀</span></button>
+                <button type="button" class="hat-button joy joy--press" data-control="JOY_PRESS" aria-label="Press joystick" title="Press joystick"><span aria-hidden="true">●</span></button>
+                <button type="button" class="hat-button joy joy--right" data-control="JOY_RIGHT" aria-label="Joystick right" title="Joystick right"><span aria-hidden="true">▶</span></button>
+                <button type="button" class="hat-button joy joy--down" data-control="JOY_DOWN" aria-label="Joystick down" title="Joystick down"><span aria-hidden="true">▼</span></button>
+              </div>
+            </fieldset>
+          <div class="lcd-housing">
+            <div class="lcd-preview">
+              <canvas class="lcd-canvas" data-lcd-canvas width="240" height="240"
+                role="img" aria-label="240 by 240 pixel virtual firmware LCD. Controls allow Help and Lock within demonstration HOME scenarios. No physical mouse is connected.">
+                SEARCHING FIRST MOUSE — joystick and HAT key labels (Canvas required).
+              </canvas>
+            </div>
           </div>
-        </div>
-
-        <div class="hardware-controls">
-          <fieldset class="hat-group hat-group--joystick">
-            <legend>JOYSTICK</legend>
-            <div class="joy-cluster" aria-label="Virtual joystick">
-              <button type="button" class="hat-button joy joy--up" data-control="JOY_UP" aria-label="Joystick up" title="Joystick up"><span aria-hidden="true">▲</span></button>
-              <button type="button" class="hat-button joy joy--left" data-control="JOY_LEFT" aria-label="Joystick left" title="Joystick left"><span aria-hidden="true">◀</span></button>
-              <button type="button" class="hat-button joy joy--press" data-control="JOY_PRESS" aria-label="Press joystick" title="Press joystick"><span aria-hidden="true">●</span></button>
-              <button type="button" class="hat-button joy joy--right" data-control="JOY_RIGHT" aria-label="Joystick right" title="Joystick right"><span aria-hidden="true">▶</span></button>
-              <button type="button" class="hat-button joy joy--down" data-control="JOY_DOWN" aria-label="Joystick down" title="Joystick down"><span aria-hidden="true">▼</span></button>
-            </div>
-          </fieldset>
-
-          <fieldset class="hat-group hat-group--keys">
-            <legend>KEYS</legend>
-            <div class="action-cluster" aria-label="Virtual HAT buttons">
-              <button type="button" class="hat-button action-key action-key--a" data-control="KEY_A" aria-label="Key A">A</button>
-              <button type="button" class="hat-button action-key action-key--x" data-control="KEY_X" aria-label="Key X">X</button>
-              <button type="button" class="hat-button action-key action-key--b" data-control="KEY_B" aria-label="Key B">B</button>
-              <button type="button" class="hat-button action-key action-key--y" data-control="KEY_Y" aria-label="Key Y">Y</button>
-            </div>
-          </fieldset>
+  
+  <fieldset class="hat-group hat-group--keys">
+              <legend>KEYS</legend>
+              <div class="action-cluster" aria-label="Virtual HAT buttons">
+                <button type="button" class="hat-button action-key action-key--a" data-control="KEY_A" aria-label="Key A">A</button>
+                <button type="button" class="hat-button action-key action-key--b" data-control="KEY_B" aria-label="Key B">B</button>
+                <button type="button" class="hat-button action-key action-key--x" data-control="KEY_X" aria-label="Key X">X</button>
+                <button type="button" class="hat-button action-key action-key--y" data-control="KEY_Y" aria-label="Key Y">Y</button>
+              </div>
+            </fieldset>
         </div>
         <div class="device__base" aria-hidden="true">
           <span>PICO 2 W</span>
@@ -85,30 +86,12 @@
           <button type="button" class="demo-scenario" data-scenario="saved" aria-pressed="false">Saved mouse search</button>
         </div>
         <p class="demo-scenarios__note">These are visual test states only. No Bluetooth pairing or stored mouse is created.</p>
-      </section>
-
-      <section class="lcd-settings" aria-label="LCD web backdrop">
-        <div class="lcd-settings__label">
-          <span class="eyebrow">LCD BACKGROUND</span>
-          <p>Gentle is now the default, slightly more saturated and less gray. Only the web background changes.</p>
-        </div>
-        <div class="backdrop-choices" role="group" aria-label="LCD magenta background tone">
-          <button class="backdrop-choice" type="button" data-backdrop="original" aria-pressed="false"
-            aria-label="Original firmware dark magenta">
-            <span class="backdrop-choice__swatch backdrop-choice__swatch--original" aria-hidden="true"></span>
-            Original
-          </button>
-          <button class="backdrop-choice" type="button" data-backdrop="soft" aria-pressed="false"
-            aria-label="Soft web-only dark magenta">
-            <span class="backdrop-choice__swatch backdrop-choice__swatch--soft" aria-hidden="true"></span>
-            Soft
-          </button>
-          <button class="backdrop-choice is-selected" type="button" data-backdrop="gentle" aria-pressed="true"
-            aria-label="Gentle vivid web-only magenta, less gray">
-            <span class="backdrop-choice__swatch backdrop-choice__swatch--gentle" aria-hidden="true"></span>
-            Gentle
-          </button>
-        </div>
+        <details class="screen-inspector">
+          <summary>Inspect all 45 firmware screens</summary>
+          <label for="screen-inspector-select">Canonical screen (visual QA only)</label>
+          <select id="screen-inspector-select" data-screen-inspector aria-label="Choose one of the 45 original firmware screen templates"></select>
+          <p>Choose any source screen to inspect its display. HAT navigation normally begins from HOME; no Bluetooth or flash settings are changed.</p>
+        </details>
       </section>
 
       <section class="session-panel" aria-label="Preview status">
@@ -124,7 +107,7 @@
           <p class="event-preview__message" aria-live="polite" aria-atomic="true" data-feedback>Ready for virtual controls.</p>
           <output class="event-preview__counter" data-count aria-label="Number of commands">00</output>
         </div>
-        <p class="session-panel__note">Use the arrow keys, Enter or Space, and A/B/X/Y, or click the HAT. A virtual HOME lets you test Help (X), Back (B), and Lock (Y). The first-mouse tutorial remains non-interactive, as on the firmware. Full 45-screen navigation and simulated Bluetooth arrive in later gates. No physical device is accessed.</p>
+        <p class="session-panel__note">Use the arrow keys, Enter or Space, and A/B/X/Y, or click the HAT. A virtual HOME lets you test Help (X), Back (B), and Lock (Y). The first-mouse tutorial remains non-interactive, as on the firmware. Explore the 45 source screens and menus; saved profiles, applied settings and Bluetooth transactions remain simulated until later gates. No physical device is accessed.</p>
       </section>
     </section>
   </main>
