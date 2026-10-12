@@ -454,6 +454,38 @@ function run(){
    check("Pair success adds a saved virtual mouse and shows first connected screen",
      W.getVirtualMice().mice.length===1&&W.getVirtualMice().connectedId!==null&&
      W.getSession().screen==="MOUSE_SAVED");
+   // End-to-end HAT-to-persisted-profile integration through app.js handlers.
+   scenarios[1].click();
+   keys[2].click(); // HOME > MOUSE_OPTIONS
+   keys[4].click();keys[2].click(); // CUSTOM
+   keys[2].click(); // LEFT WILL BECOME
+   for(var buttonStep=0;buttonStep<5;buttonStep++)keys[4].click();
+   keys[5].click(); // draft Modifier
+   check("End-to-end Custom draft is not persisted until second A",
+     W.getSession().screen==="EDIT_CUSTOM"&&W.getSession().customDirty&&
+     W.getVirtualMice().mice[0].profile.kind==="PASSTHROUGH");
+   keys[5].click(); // apply custom
+   check("End-to-end Custom APPLY stores one Modifier and returns to MOUSE OPTIONS",
+     W.getVirtualMice().mice[0].profile.kind==="CUSTOM"&&
+     W.getVirtualMice().mice[0].profile.targets[0]===5&&
+     W.getSession().screen==="MOUSE_OPTIONS");
+   keys[6].click(); // home
+   keys[4].click();keys[2].click(); // movement
+   keys[2].click(); // horizontal slow
+   keys[3].click(); // fast
+   keys[4].click();keys[5].click(); // fast 1.5x apply
+   check("End-to-end Horizontal DPI commit persists 1.5x via A",
+     W.getSession().screen==="MOVEMENT_OPTIONS"&&
+     W.getVirtualMice().mice[0].profile.movement.horizontal===6);
+   keys[4].click();keys[4].click();keys[2].click(); // rotation
+   keys[4].click();keys[5].click(); // 90 degree apply
+   check("End-to-end Rotation commit persists 90 degrees",
+     W.getVirtualMice().mice[0].profile.movement.rotation===1);
+   keys[5].click(); // Reset All on MOVEMENT_OPTIONS
+   check("End-to-end Reset Movement keeps applied Custom profile intact",
+     W.getVirtualMice().mice[0].profile.movement.horizontal===4&&
+     W.getVirtualMice().mice[0].profile.movement.rotation===0&&
+     W.getVirtualMice().mice[0].profile.kind==="CUSTOM");
    lab[6].click();
    check("Disconnect button preserves saved device but returns saved search",
      W.getVirtualMice().connectedId===null&&W.getSession().screen==="HOME_SEARCHING");
