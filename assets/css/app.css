@@ -201,7 +201,7 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
 }
 .backdrop-choice__swatch--original { background: #080008; }
 .backdrop-choice__swatch--soft { background: #190b1d; }
-.backdrop-choice__swatch--gentle { background: #28142c; }
+.backdrop-choice__swatch--gentle { background: #300c39; }
 @media (max-width: 630px) {
   .lcd-settings { align-items: flex-start; flex-direction: column; gap: 11px; }
   .backdrop-choices { width: 100%; }
