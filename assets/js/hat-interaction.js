@@ -30,7 +30,7 @@ function createEngine(listener){
  var held=new Set(),returnScreen=null,returnSelection=0;
  var savedCount=0,savedPage=0,connected=true,activeProfile="PASSTHROUGH";
  var savedMice=[],connectedId=null,frontId=null,connectedName="DEMO MOUSE",removeTargetId=null;
- var customSource=0,customTargets=[0,1,2,3,4],customDirty=false;
+ var customSource=0,customTargets=[0,1,2,3,4],appliedTargets=[0,1,2,3,4],customDirty=false,profileOwner=null;
  var movement={horizontal:4,vertical:4,rotation:0},editingCombination=0;
  var shortcuts=Array(12).fill(0),dpiSelection=[0,0,0,0],lastOutcome=null;
  function home(){return scenario==="first"?S.FIRST:scenario==="saved"?S.SEARCH:S.HOME;}
@@ -41,13 +41,13 @@ function createEngine(listener){
    returnSelection:returnSelection,savedCount:savedCount,savedPage:savedPage,savedMice:Object.freeze(savedMice.map(function(m){return Object.freeze({id:m.id,name:m.name});})),
    connectedId:connectedId,frontId:frontId,connectedName:connectedName,removeTargetId:removeTargetId,
    connected:connected,activeProfile:activeProfile,customSource:customSource,
-   customTargets:Object.freeze(customTargets.slice()),customDirty:customDirty,
+   customTargets:Object.freeze(customTargets.slice()),appliedTargets:Object.freeze(appliedTargets.slice()),customDirty:customDirty,profileOwner:profileOwner,
    modifierSource:customTargets.indexOf(5),
    movement:Object.freeze(Object.assign({},movement)),editingCombination:editingCombination,
    shortcuts:Object.freeze(shortcuts.slice()),lastOutcome:lastOutcome});
  }
- function emit(kind,control){
-  var e=Object.freeze({kind:kind,control:control||null,state:snapshot()});cb(e);return e;
+ function emit(kind,control,payload){
+  var e=Object.freeze({kind:kind,control:control||null,payload:payload?JSON.parse(JSON.stringify(payload)):null,state:snapshot()});cb(e);return e;
  }
  function go(id,focus){if(!source.get(id))throw new RangeError("Unknown canonical screen "+id);screen=id;selection=focus||0;}
  function setScenario(name){
@@ -64,6 +64,20 @@ function createEngine(listener){
   connected=!!connectedId;
   var current=savedMice.find(function(m){return m.id===connectedId;});
   connectedName=current?current.name:"DEMO MOUSE";
+  var target=value.mice.find(function(m){return m.id===(connectedId||frontId);});
+  var owner=target?target.id:null;
+  if(reason==="initialized"||reason==="profile-applied"||reason==="paired"||
+     reason==="connected"||reason==="removed"||reason==="reset"||reason==="reboot"||
+     owner!==profileOwner){
+    profileOwner=owner;
+    var profile=target&&target.profile;
+    activeProfile=profile?profile.kind:"PASSTHROUGH";
+    appliedTargets=profile?profile.targets.slice():[0,1,2,3,4];
+    customTargets=appliedTargets.slice();customDirty=false;
+    movement=profile?Object.assign({},profile.movement):{horizontal:4,vertical:4,rotation:0};
+    shortcuts=profile?profile.shortcuts.slice():Array(12).fill(0);
+  }
+
   var frontIndex=savedMice.findIndex(function(m){return m.id===frontId;});
   if(frontIndex>=0)savedPage=frontIndex;
   else savedPage=Math.min(savedPage,Math.max(0,savedCount-1));
@@ -201,25 +215,64 @@ function createEngine(listener){
    }
   }
   if(screen==="MOVEMENT_OPTIONS"){
-   if(id==="KEY_A")return applyVisualPlaceholder("RESET_MOVEMENT");
+   if(id==="KEY_A")return emit("reset-movement",id,{movement:{horizontal:4,vertical:4,rotation:0}});
    if(id==="JOY_PRESS"){
     var axis=selection;
     if(axis===2)go("ROTATION",movement.rotation);
-    else go((axis===0?"HORIZONTAL":"VERTICAL")+"_"+((axis===0?movement.horizontal:movement.vertical)>4?"FAST":"SLOW")+"_DPI");
+    else{
+     var horizontal=axis===0,gain=horizontal?movement.horizontal:movement.vertical;
+     var fast=gain>4;
+     var page=(horizontal?"HORIZONTAL":"VERTICAL")+"_"+(fast?"FAST":"SLOW")+"_DPI";
+     var choices=fast?[5,6,8,12]:[4,3,2,1];
+     go(page,Math.max(0,choices.indexOf(gain)));
+    }
     return emit("access",id);
    }
   }
   if(isDpi(screen)||screen==="ROTATION"){
    if(isDpi(screen)&&(id==="JOY_LEFT"||id==="JOY_RIGHT")){
-    var parts=screen.split("_"),fast=parts[1]==="FAST";
-    go(parts[0]+"_"+(fast?"SLOW":"FAST")+"_DPI",dpiSelection[fast?0:1]||0);
+    var parts=screen.split("_"),fast=parts[1]==="FAST",axis=parts[0];
+    dpiSelection[axis+"_"+parts[1]]=selection;
+    var nextFast=!fast;
+    var dest=axis+"_"+(nextFast?"FAST":"SLOW")+"_DPI";
+    var list=nextFast?[5,6,8,12]:[4,3,2,1];
+    var gain=axis==="HORIZONTAL"?movement.horizontal:movement.vertical;
+    var focus=dpiSelection[axis+"_"+(nextFast?"FAST":"SLOW")];
+    if(focus===undefined)focus=Math.max(0,list.indexOf(gain));
+    go(dest,focus);
     return emit("page",id);
    }
-   if(id==="KEY_A")return applyVisualPlaceholder("APPLY_MOVEMENT");
+   if(id==="KEY_A"){
+    var next=Object.assign({},movement);
+    if(screen==="ROTATION")next.rotation=selection;
+    else{
+     var fastDpi=screen.includes("_FAST_");
+     var values=fastDpi?[5,6,8,12]:[4,3,2,1];
+     var key=screen.startsWith("HORIZONTAL")?"horizontal":"vertical";
+     next[key]=values[selection];
+    }
+    return emit("apply-movement",id,{movement:next});
+   }
   }
-  if(screen==="EDIT_CUSTOM"&&id==="JOY_PRESS"){customSource=selection;go(SOURCE[selection]+"_WILL_BECOME",customTargets[selection]);return emit("access",id);}
-  if(isWill(screen)&&id==="KEY_A")return applyVisualPlaceholder("CUSTOM_SET_TARGET");
-  if(screen==="EDIT_CUSTOM"&&id==="KEY_A")return applyVisualPlaceholder("APPLY_CUSTOM");
+  if(screen==="EDIT_CUSTOM"&&id==="JOY_PRESS"){
+   customSource=selection;go(SOURCE[selection]+"_WILL_BECOME",customTargets[selection]);
+   return emit("access",id);
+  }
+  if(isWill(screen)&&id==="KEY_A"){
+   var target=selection;
+   // Only one physical mouse button may be a modifier. Replaced modifiers
+   // restore their native identity (Forward/Backward are not interchanged).
+   if(target===5)for(var i=0;i<customTargets.length;i++){
+    if(i!==customSource&&customTargets[i]===5)customTargets[i]=i;
+   }
+   customTargets[customSource]=target;
+   customDirty=activeProfile!=="CUSTOM"||customTargets.some(function(t,i){return t!==appliedTargets[i];});
+   var source=customSource;
+   go("EDIT_CUSTOM",source);
+   return emit("draft-target",id);
+  }
+  if(screen==="EDIT_CUSTOM"&&id==="KEY_A")
+   return emit("apply-custom",id,{targets:customTargets.slice()});
   if(screen==="SAVED_DEVICES"){
    if(id==="JOY_LEFT"||id==="JOY_RIGHT"){
     if(savedCount)savedPage=(savedPage+(id==="JOY_LEFT"?savedCount-1:1))%savedCount;
@@ -228,8 +281,14 @@ function createEngine(listener){
    if(id==="JOY_PRESS"&&savedCount){removeTargetId=savedMice[savedPage]?savedMice[savedPage].id:null;go("REMOVE_THIS");return emit("access",id);}
   }
   if(screen==="REMOVE_THIS"&&id==="KEY_A")return removeTargetId?emit("remove-request",removeTargetId):emit("no-action",id);
-  if(screen==="APPLY_PASSTHROUGH"&&id==="KEY_A")return applyVisualPlaceholder("APPLY_PASSTHROUGH");
+  if(screen==="APPLY_PASSTHROUGH"&&id==="KEY_A")return emit("apply-passthrough",id);
   return emit("no-action",id);
+ }
+ function confirmApply(kind){
+  if(kind==="custom")go("MOUSE_OPTIONS",1);
+  else if(kind==="passthrough")go("PASSTHROUGH_APPLIED");
+  else if(kind==="movement")go("MOVEMENT_OPTIONS");
+  return emit("applied",null);
  }
  function cancelAll(){
   var had=held.size||armed!==null;held.clear();armed=null;
@@ -237,7 +296,7 @@ function createEngine(listener){
  }
  return Object.freeze({
   press:press,release:release,cancelAll:cancelAll,setScenario:setScenario,
-  inspect:inspect,syncMice:syncMice,snapshot:snapshot,isHelp:help,optionCount:options
+  inspect:inspect,syncMice:syncMice,confirmApply:confirmApply,snapshot:snapshot,isHelp:help,optionCount:options
  });
 }
 window.RemappingBridgeHAT=Object.freeze({
