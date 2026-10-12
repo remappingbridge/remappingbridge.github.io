@@ -675,6 +675,26 @@ function run(){
      W.getDiagnostics().screen==="HOME_RETRY"&&diagnosticContext.textContent.includes("HOME_RETRY"));
    check("Diagnostic COPY refuses nonexistent selection with a clear message",
      (diagnosticCopy.click(),diagnosticFeedback.textContent.includes("Select a character")));
+   var keySelection=new Event("keydown");
+   Object.defineProperty(keySelection,"key",{value:"Enter"});
+   diagnosticCanvas.dispatchEvent(keySelection);
+   check("Keyboard ENTER selects a semantic LCD glyph without pointing",
+     !!W.getDiagnostics().selection&&W.getDiagnostics().selection.id.indexOf("LCD/HOME/ROW_01")===0);
+   check("Semantic inspector exposes exact source coordinates in UI",
+     diagnosticRef.textContent===W.getDiagnostics().selection.id&&
+     diagnosticBounds.textContent.includes("row 1"));
+   diagnosticExportButtons[0].click();
+   check("JSON evidence export is local and produces successful UI confirmation",
+     diagnosticFeedback.textContent.includes("Local JSON evidence downloaded"));
+   diagnosticExportButtons[1].click();
+   check("TXT evidence export is local and produces successful UI confirmation",
+     diagnosticFeedback.textContent.includes("Local TXT evidence downloaded"));
+   diagnosticCanvas.toDataURL=function(){return "data:image/png;base64,UE5H";};
+   diagnosticExportButtons[2].click();
+   check("PNG export uses local 240x240 diagnostic Canvas and a download action",
+     diagnosticFeedback.textContent.includes("Local PNG evidence downloaded")&&
+     diagnosticCanvas.width===240&&diagnosticCanvas.height===240);
+
    scenarios[1].click();
    check("Connected demo selector starts HOME",W.getSession().screen==="HOME");
    keys[1].click(); // JOY LEFT inert on HOME
