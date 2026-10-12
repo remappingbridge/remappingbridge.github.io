@@ -1,0 +1,126 @@
+{
+  "schema": "remappingbridge-web02-lcd-rgba-golden-v1",
+  "source": "remappingbridge/remappingbridge",
+  "firmwareVersion": "v3.2.4",
+  "uiBaseline": "v3.2.3",
+  "sourceFile": "src/renderer/renderer.c",
+  "sourceBlob": "61c4fe3d547ba05c3e24de86518d807047b50a77",
+  "logicalCanvas": {
+    "width": 240,
+    "height": 240,
+    "rgbaBytes": 230400
+  },
+  "frame": "BLU2USB_SCREEN_SEARCHING_FIRST",
+  "pressedControl": "KEY_A",
+  "hashAlgorithm": "FNV-1a 32-bit over 240x240 RGBA bytes in row-major order, uint32 multiplication via Math.imul",
+  "backgrounds": {
+    "original": {
+      "rgb": "#080008",
+      "previewFNV32": "a8e6a495",
+      "pressedKeyAFNV32": "2e7041d5",
+      "deviationFromRGB565": false
+    },
+    "soft": {
+      "rgb": "#190b1d",
+      "previewFNV32": "913aca55",
+      "pressedKeyAFNV32": "942df955",
+      "deviationFromRGB565": true
+    },
+    "gentle": {
+      "rgb": "#28142c",
+      "previewFNV32": "a9662a35",
+      "pressedKeyAFNV32": "244450f5",
+      "deviationFromRGB565": true
+    }
+  },
+  "testSamples": [
+    {
+      "case": "original full background top left",
+      "x": 0,
+      "y": 0,
+      "rgba": [
+        8,
+        0,
+        8,
+        255
+      ]
+    },
+    {
+      "case": "soft full background top left",
+      "x": 0,
+      "y": 0,
+      "rgba": [
+        25,
+        11,
+        29,
+        255
+      ]
+    },
+    {
+      "case": "gentle full background top left",
+      "x": 0,
+      "y": 0,
+      "rgba": [
+        40,
+        20,
+        44,
+        255
+      ]
+    },
+    {
+      "case": "title magenta ink",
+      "x": 9,
+      "y": 8,
+      "rgba": [
+        255,
+        0,
+        255,
+        255
+      ]
+    },
+    {
+      "case": "unpressed KEY A ink",
+      "x": 18,
+      "y": 189,
+      "rgba": [
+        198,
+        195,
+        198,
+        255
+      ]
+    },
+    {
+      "case": "pressed KEY A ink",
+      "x": 18,
+      "y": 189,
+      "rgba": [
+        255,
+        255,
+        255,
+        255
+      ]
+    }
+  ],
+  "layout": {
+    "didacticTextY": [
+      8,
+      39,
+      64,
+      89,
+      114,
+      139,
+      164,
+      189,
+      214
+    ],
+    "standardHintStartRow": 6,
+    "standardSeparatorY": 151
+  },
+  "notes": [
+    "These hashes are generated from the pure JS software RGBA framebuffer, not screenshots of the physical LCD or browser CSS display.",
+    "The font, geometric constants, title/foreground palette, didactic placement and 21-character clipping are copied from firmware C. Pressed controls affect only didactic tint, no screen navigation.",
+    "Only the dark-magenta background differs in Soft and Gentle. Original is the RGB565-expanded firmware color.",
+    "CSS scales a fixed 240x240 logical canvas with image-rendering pixelated; the source bitmap never grows with devicePixelRatio.",
+    "The operator must select a visually preferred background before WEB-02 is accepted; no production-browser visual test has been performed during this candidate implementation."
+  ]
+}
