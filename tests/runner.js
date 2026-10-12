@@ -679,7 +679,7 @@ function run(){
    Object.defineProperty(keySelection,"key",{value:"Enter"});
    diagnosticCanvas.dispatchEvent(keySelection);
    check("Keyboard ENTER selects a semantic LCD glyph without pointing",
-     !!W.getDiagnostics().selection&&W.getDiagnostics().selection.id.indexOf("LCD/HOME/ROW_01")===0);
+     !!W.getDiagnostics().selection&&W.getDiagnostics().selection.id.indexOf("LCD/HOME_RETRY/ROW_01")===0);
    check("Semantic inspector exposes exact source coordinates in UI",
      diagnosticRef.textContent===W.getDiagnostics().selection.id&&
      diagnosticBounds.textContent.includes("row 1"));
