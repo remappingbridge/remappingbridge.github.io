@@ -354,3 +354,41 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
  .hat-meta__status{font-size:7px}
  .hat-meta__specs{font-size:7px}
 }
+
+/* WEB-07: physical-HAT branding in LEFT corners, within LCD row envelope.
+ * Absolute positioning is relative to the sticky device, not the page.
+ * Compact joystick is centered vertically and cannot overlap the corner
+ * labels above and below. Only hardware details remain at far right.
+ */
+.device.device--sticky {position:sticky;}
+.device__corner-brand,.device__corner-status {
+  position:absolute; left:clamp(8px,1.5vw,16px); z-index:2;
+  line-height:1;white-space:nowrap;pointer-events:none;
+}
+.device__corner-brand {
+  top:6px;color:#f6f7fd; font-weight:850;font-size:11px;letter-spacing:.055em;
+}
+.device__corner-brand span {color:var(--magenta);}
+.device__corner-status {
+  bottom:6px;color:#d6d8e5;display:flex;gap:5px;align-items:center;
+  font-size:10px;font-weight:750;letter-spacing:.04em;
+}
+.device__corner-status .hat-meta__light {width:7px;height:7px;flex:0 0 7px;}
+.hat-meta {justify-content:center;}
+.hat-meta__specs {font-size:11px;gap:9px;}
+@media(max-width:700px) {
+  .device__corner-brand{top:4px;font-size:10px;letter-spacing:0}
+  .device__corner-status{bottom:4px;font-size:9px;letter-spacing:0}
+  .hat-meta__specs{font-size:10px;gap:6px}
+}
+@media(max-width:540px) {
+  .device__corner-brand{top:2px;left:5px;font-size:8px}
+  .device__corner-status{bottom:2px;left:5px;font-size:8px;gap:3px}
+  .device__corner-status .hat-meta__light{width:6px;height:6px;flex-basis:6px}
+  .hat-meta__specs{font-size:8px;gap:4px}
+}
+@media(max-width:370px) {
+  .device__corner-brand{font-size:7px}
+  .device__corner-status{font-size:7px}
+  .hat-meta__specs{font-size:7px}
+}
