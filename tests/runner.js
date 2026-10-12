@@ -463,9 +463,13 @@ function run(){
    lab[1].click();lab[2].click();
    check("Saved search success reconnects the same saved ID",
      W.getVirtualMice().mice.length===1&&W.getVirtualMice().connectedId===W.getVirtualMice().frontId);
-   check("Mouse Lab listeners register just once despite repeated Canvas painting",
-     lab[0].handlers.click.length===1&&lab[1].handlers.click.length===1&&
-     mouseSelect.handlers.change.length===1);
+   var eventsBeforeListenerCheck=W.getVirtualMice().events.length;
+   lab[1].click();
+   var eventsAfterOneClick=W.getVirtualMice().events.length;
+   lab[5].click();
+   check("One Mouse Lab button click produces exactly one event despite repeated rendering",
+     eventsAfterOneClick===eventsBeforeListenerCheck+1&&
+     W.getVirtualMice().events.length===eventsBeforeListenerCheck+2);
    lab[7].click();
    check("Removing connected mouse restores FIRST without stale bonds",
      W.getVirtualMice().mice.length===0&&W.getSession().screen==="SEARCHING_FIRST");
