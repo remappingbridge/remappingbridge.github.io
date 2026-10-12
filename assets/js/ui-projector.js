@@ -10,7 +10,7 @@ var U=window.RemappingBridgeHAT;
 function copyRows(id){return catalog.get(id).rows.slice();}
 function title(frame,row,tone,lcd){lcd.setToneSpan(frame,row,0,21,tone);}
 function replace(frame,row,value,tone,lcd){
- var text=String(value);
+ var text=String(value).normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toUpperCase();
  for(var col=0;col<21;col++){frame.cells[row][col].character=text[col]||" ";frame.cells[row][col].tone=tone;}
 }
 function firstHint(rows){
@@ -47,10 +47,11 @@ function projection(state,lcd){
   setCellRow(frame,r,defaultTone,lcd);
  }
  var regular=lcd.tones.STATIC,muted=lcd.tones.ACTIONABLE,now=lcd.tones.CURRENT;
- if(id==="HOME")replace(frame,0,"DEMO MOUSE",lcd.tones.TITLE,lcd);
+ if(id==="HOME")replace(frame,0,state.connectedId?(state.connectedName||"DEMO MOUSE"):"DEMO MOUSE",lcd.tones.TITLE,lcd);
  if(id==="SAVED_DEVICES"){
-  replace(frame,0,state.savedCount?"1 OF "+state.savedCount:"0 OF 0",lcd.tones.TITLE,lcd);
-  replace(frame,1,state.savedCount?"DEMO MOUSE":"UNKNOWN MOUSE",state.connected?now:regular,lcd);
+  replace(frame,0,state.savedCount?(Math.min(state.savedPage+1,state.savedCount)+" OF "+state.savedCount):"0 OF 0",lcd.tones.TITLE,lcd);
+  var shown=state.savedMice&&state.savedMice[state.savedPage];
+  replace(frame,1,shown?shown.name:"UNKNOWN MOUSE",state.connectedId&&shown&&shown.id===state.connectedId?now:regular,lcd);
   replace(frame,2,"PROFILE: "+state.activeProfile,regular,lcd);
   replace(frame,3,"DPI: H "+parseGain(state.movement.horizontal)+" - V "+parseGain(state.movement.vertical),regular,lcd);
   replace(frame,4,"ROTATION: "+(90*state.movement.rotation)+" DEGREE",regular,lcd);
@@ -58,7 +59,8 @@ function projection(state,lcd){
   for(var hr=hint;hr<9;hr++)setCellRow(frame,hr,muted,lcd);
  }
  if(id==="REMOVE_THIS"){
-  replace(frame,1,"DEMO MOUSE",regular,lcd);
+  var remove=state.savedMice&&state.savedMice.find(function(m){return m.id===state.removeTargetId;});
+  replace(frame,1,remove?remove.name:"DEMO MOUSE",regular,lcd);
  }
  if(id==="MOVEMENT_OPTIONS"){
   replace(frame,1," HORIZONTAL DPI "+parseGain(state.movement.horizontal),muted,lcd);

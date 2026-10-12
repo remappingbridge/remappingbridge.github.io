@@ -1,4 +1,4 @@
-/* WEB-04 — native browser regression harness: all 45 canonical templates,
+/* WEB-05 — native browser tests: 45 source screens and local virtual bonds,
  * per-pixel framebuffer, focus and navigation. No npm, CDN, server or BLE.
  */
 (function(){
@@ -6,7 +6,7 @@
 function run(){
  var W=window.RemappingBridgeWeb,L=window.RemappingBridgeLCD;
  var S=window.RemappingBridgeScreens,H=window.RemappingBridgeHAT;
- var P=window.RemappingBridgeProjector;
+ var P=window.RemappingBridgeProjector,V=window.RemappingBridgeVirtualMice;
  var resultNode=document.getElementById("test-results"),summary=document.getElementById("summary");
  var tests=[];
  function check(name,pass){tests.push({name:name,pass:!!pass});}
@@ -16,10 +16,10 @@ function run(){
  function press(e,id){e.press(id);return e.release(id);}
  function throws(fn){try{fn();return false;}catch(_){return true;}}
  check("HTML document language is English",document.documentElement.lang==="en");
- check("Canvas, model, screen catalog and projector are exported",!!L&&!!H&&!!S&&!!P&&!!W);
- if(L&&H&&S&&P&&W){
+ check("Canvas, model, 45 screens, projector and local mouse module exported",!!L&&!!H&&!!S&&!!P&&!!W&&!!V);
+ if(L&&H&&S&&P&&W&&V){
   var info=W.getBootstrapInfo();
-  check("Latest official v3.2.4 source and WEB-04",info.gate==="WEB-04"&&info.version==="v3.2.4"&&info.uiBaseline==="v3.2.3");
+  check("Latest official v3.2.4 source and WEB-05",info.gate==="WEB-05"&&info.version==="v3.2.4"&&info.uiBaseline==="v3.2.3");
   check("Firmware renderer is 240x240 with 9x21 logical grid",L.geometry.width===240&&L.geometry.height===240&&L.geometry.rows===9&&L.geometry.columns===21);
   check("Physical C glyphs are 5x7 scaled twofold",L.geometry.glyphWidth===10&&L.geometry.glyphHeight===14&&L.glyphRow("A",0)===14);
   check("All six semantic RGB565 foreground colors retained",L.rgb565.MAGENTA===0xf81f&&L.rgb565.CYAN===0x07ff&&L.rgb565.CYAN_FOCUSED===0xd7ff&&L.rgb565.OFF_WHITE_YELLOW===0xffb8);
@@ -158,6 +158,124 @@ function run(){
   check("Lost keyup cancellation clears held keys",e.snapshot().held.length===0);
   check("Keyboard arrows/Enter/Space and A/B/X/Y mappings retained",W.keyControl("ArrowDown")==="JOY_DOWN"&&W.keyControl(" ")==="JOY_PRESS"&&W.keyControl("x")==="KEY_X");
   check("Keyboard text fields remain protected",W.isEditable({tagName:"INPUT"})&&W.isEditable({tagName:"SELECT"})&&W.isEditable({tagName:"BUTTON"}));
+  // WEB-05 model: observable deterministic scheduling with no real BLE.
+  function memoryStore(){
+    var records={};
+    return {getItem:function(k){return Object.prototype.hasOwnProperty.call(records,k)?records[k]:null;},
+      setItem:function(k,v){records[k]=String(v);},removeItem:function(k){delete records[k];}};
+  }
+  var store=memoryStore(),virtual=V.create({storage:store});
+  check("Schema and eight-slot maximum are explicit",V.schema==="remappingbridge-virtual-mice-v1"&&V.maxMice===8&&virtual.snapshot().mice.length===0);
+  check("Virtual store starts as durable empty storage",virtual.snapshot().durable&&!virtual.snapshot().recovered);
+  var started=virtual.beginPair("  Office   Mouse  ");
+  check("Pair New starts a logical attempt with normalized name",started.kind==="started"&&virtual.snapshot().pending.name==="Office Mouse");
+  var token=virtual.snapshot().pending.token;
+  virtual.advance(3);
+  check("Manual deterministic clock advances without background timers",virtual.snapshot().clock===3&&virtual.snapshot().pending.token===token);
+  virtual.complete(true,token);
+  check("Successful virtual pairing creates one bond and connects it",
+    virtual.snapshot().mice.length===1&&virtual.snapshot().connectedId===virtual.snapshot().mice[0].id);
+  check("Bond has isolated default profile and movement settings",
+    virtual.snapshot().mice[0].profile.kind==="PASSTHROUGH"&&
+    same(virtual.snapshot().mice[0].profile.targets,[0,1,2,3,4])&&
+    virtual.snapshot().mice[0].profile.shortcuts.length===12);
+  virtual.beginPair("office mouse");
+  check("Pairing same name never creates duplicate virtual device",
+    virtual.snapshot().mice.length===1&&virtual.snapshot().pending===null);
+  var reloaded=V.create({storage:store});
+  check("Reload validates and restores bond, name, profile and sequence",
+    reloaded.snapshot().recovered&&reloaded.snapshot().mice[0].name==="Office Mouse"&&reloaded.snapshot().seq===1);
+  check("Reload restores no pending virtual pairing",reloaded.snapshot().pending===null);
+  virtual.disconnect();
+  check("Disconnect keeps saved bond but clears active mouse",virtual.snapshot().mice.length===1&&virtual.snapshot().connectedId===null);
+  virtual.beginSearch();
+  var stale=virtual.snapshot().pending.token;
+  virtual.cancel("test");
+  virtual.complete(true,stale);
+  check("Canceled pairing result is rejected and cannot reconnect",
+    virtual.snapshot().connectedId===null&&virtual.snapshot().mice.length===1);
+  virtual.beginSearch();
+  var old=virtual.snapshot().pending.token;
+  virtual.beginSearch();
+  virtual.complete(true,old);
+  check("Superseded pairing result does not complete a newer attempt",
+    virtual.snapshot().pending!==null&&virtual.snapshot().connectedId===null);
+  virtual.complete(true);
+  check("Saved-mouse search reconnects only the chosen existing bond",
+    virtual.snapshot().mice.length===1&&virtual.snapshot().connectedId===virtual.snapshot().frontId);
+  virtual.disconnect();
+  virtual.beginSearch();
+  virtual.advance(5);
+  check("Five logical ticks cause timeout without auto-connect",
+    virtual.snapshot().pending===null&&virtual.snapshot().connectedId===null&&
+    virtual.snapshot().events[0].kind==="timeout");
+  virtual.beginSearch();
+  virtual.complete(false);
+  check("Simulated failure preserves all saved bonds",virtual.snapshot().mice.length===1&&virtual.snapshot().connectedId===null);
+  for(var m=2;m<=8;m++){virtual.beginPair("Mouse "+m);virtual.complete(true);}
+  check("Exactly eight different virtual mouse profiles can be saved",virtual.snapshot().mice.length===8);
+  var filled=virtual.beginPair("Overflow Mouse");
+  check("Ninth pair rejected without exceeding capacity",filled.kind==="full"&&virtual.snapshot().mice.length===8);
+  var selected=virtual.snapshot().mice[3].id;
+  virtual.selectFront(selected);
+  check("Front bond selection persists independently of active mouse",
+    virtual.snapshot().frontId===selected&&virtual.snapshot().connectedId!==selected);
+  virtual.beginSearch(selected);virtual.complete(true);
+  check("Search and reconnect switch connected mouse without duplicated bonds",
+    virtual.snapshot().connectedId===selected&&virtual.snapshot().mice.length===8);
+  var savedBefore=virtual.snapshot().mice.length;
+  virtual.remove(selected);
+  check("Removing active mouse clears its connected bond and complete profile",
+    virtual.snapshot().connectedId===null&&virtual.snapshot().mice.length===savedBefore-1&&
+    !virtual.snapshot().mice.some(function(x){return x.id===selected;}));
+  var removeOther=virtual.snapshot().mice[0].id;
+  virtual.remove(removeOther);
+  check("Removing offline mouse preserves disconnected state",virtual.snapshot().mice.length===6&&!virtual.snapshot().connectedId);
+  virtual.reboot();
+  check("Virtual reboot retains bonds while clearing active connection",
+    virtual.snapshot().mice.length===6&&virtual.snapshot().connectedId===null);
+  check("History is local, bounded and stamped by logical clock",
+    virtual.snapshot().events.length<=48&&virtual.snapshot().events.every(function(x){return x.at<=virtual.snapshot().clock;}));
+  var restore=V.create({storage:store});
+  check("Reload after removal preserves the final six distinct bonds",
+    restore.snapshot().mice.length===6&&new Set(restore.snapshot().mice.map(function(x){return x.id;})).size===6);
+  virtual.reset();
+  check("Reset deletes all saved bonds, pairing, connection and front mouse",
+    virtual.snapshot().mice.length===0&&virtual.snapshot().frontId===null&&
+    virtual.snapshot().connectedId===null&&virtual.snapshot().pending===null);
+  var emptyReload=V.create({storage:store});
+  check("Reload after reset is empty without ghost bonds",emptyReload.snapshot().mice.length===0);
+  check("Invalid serialized state is rejected before use",
+    throws(function(){V.validate({schema:V.schema,seq:0,clock:0,mice:[{id:"bad"}],frontId:null,connectedId:null,events:[]});}));
+  var brokenStore={getItem:function(){return "{corrupt";},setItem:function(){throw Error("blocked");},removeItem:function(){throw Error("blocked");}};
+  var broken=V.create({storage:brokenStore});
+  check("Corrupt or disabled local storage degrades safely to memory only",
+    !broken.snapshot().durable&&broken.snapshot().mice.length===0);
+  broken.beginPair("Offline Only");broken.complete(true);
+  check("Memory-only mode allows testing without claiming durable storage",
+    broken.snapshot().mice.length===1&&!broken.snapshot().durable);
+  var mouseEvents=[],tracked=V.create({storage:memoryStore()});
+  var unsubscribe=tracked.subscribe(function(ev){mouseEvents.push(ev.kind);});
+  tracked.beginPair("Tracking");tracked.complete(true);unsubscribe();tracked.disconnect();
+  check("Virtual events expose observable transitions and allow unsubscribing",
+    same(mouseEvents,["started","paired"]));
+  var eng=H.createEngine();eng.syncMice(restore.snapshot(),"initialized");
+  check("Persisted disconnected bonds select HOME SEARCHING on load",
+    eng.snapshot().screen==="HOME_SEARCHING"&&eng.snapshot().savedCount===6);
+  eng.syncMice(restore.snapshot(),"started-saved");
+  check("Saved-mouse simulation enters the searching screen",eng.snapshot().screen==="HOME_SEARCHING");
+  eng.syncMice(restore.snapshot(),"timeout-saved");
+  check("Saved search timeout opens canonical HOME RETRY",eng.snapshot().screen==="HOME_RETRY");
+  eng.syncMice(restore.snapshot(),"started-pair");
+  check("Pair New simulation opens canonical PAIR NEW",eng.snapshot().screen==="PAIR_MOUSE");
+  eng.syncMice(restore.snapshot(),"failed-pair");
+  check("Pair failure opens canonical RETRY PAIR NEW",eng.snapshot().screen==="RETRY_PAIR_NEW");
+  var withRemoved=restore.snapshot();eng.syncMice(withRemoved,"initialized");
+  eng.inspect("SAVED_DEVICES");
+  check("Saved Devices selection renders the restored front mouse name",
+    P.frame(eng.snapshot(),L).cells[1].map(function(x){return x.character;}).join("").indexOf(withRemoved.mice[0].name.toUpperCase())>=0);
+  // End of independent virtual model tests.
+
   // Real Canvas2D DOM integration tests run on the browser, not just pure data.
   var root=document.createElement("div");root.setAttribute("data-app-root","");
   var feedback=document.createElement("p");feedback.setAttribute("data-feedback","");
@@ -174,6 +292,15 @@ function run(){
   var scenarios=["first","connected","saved"].map(function(id){
    var b=document.createElement("button");b.setAttribute("data-scenario",id);root.appendChild(b);return b;
   });
+  var nameInput=document.createElement("input");nameInput.setAttribute("data-mouse-name","");
+  nameInput.value="Demo Mouse";root.appendChild(nameInput);
+  var mouseSelect=document.createElement("select");mouseSelect.setAttribute("data-mouse-id","");root.appendChild(mouseSelect);
+  ["count","connection","persistence","pending"].forEach(function(attr){
+    var el=document.createElement("span");el.setAttribute("data-mouse-"+attr,"");root.appendChild(el);
+  });
+  var eventsList=document.createElement("ol");eventsList.setAttribute("data-virtual-log","");root.appendChild(eventsList);
+  var labActions=["pair","search","success","fail","timeout","cancel","disconnect","remove","reboot","reset"];
+  var lab=labActions.map(function(id){var b=document.createElement("button");b.setAttribute("data-lab-action",id);root.appendChild(b);return b;});
   document.body.appendChild(root);
   var ctx=canvas.getContext("2d");
   check("Native browser Canvas 2D is available",!!ctx);
@@ -200,6 +327,28 @@ function run(){
    check("An unlock action is consumed and returns HOME",!W.getSession().locked&&W.getSession().screen==="HOME");
    reset.click();
    check("Clear resets only counters and pressed state",counter.textContent==="00"&&feedback.textContent==="Ready for virtual controls.");
+   check("Virtual Mouse Lab initialized with no real connected device",W.getVirtualMice().mice.length===0&&!!W.getVirtualMice().schema);
+   nameInput.value="Test Work Mouse";lab[0].click();
+   check("Pair button starts a local pairing attempt",W.getVirtualMice().pending.name==="Test Work Mouse");
+   lab[2].click();
+   check("Pair success adds a saved virtual mouse and shows first connected screen",
+     W.getVirtualMice().mice.length===1&&W.getVirtualMice().connectedId!==null&&
+     W.getSession().screen==="MOUSE_SAVED");
+   lab[6].click();
+   check("Disconnect button preserves saved device but returns saved search",
+     W.getVirtualMice().connectedId===null&&W.getSession().screen==="HOME_SEARCHING");
+   lab[1].click();lab[4].click();
+   check("Advance-to-timeout button shows retry state without spontaneous pairing",
+     W.getVirtualMice().pending===null&&W.getSession().screen==="HOME_RETRY");
+   lab[1].click();lab[2].click();
+   check("Saved search success reconnects the same saved ID",
+     W.getVirtualMice().mice.length===1&&W.getVirtualMice().connectedId===W.getVirtualMice().frontId);
+   lab[7].click();
+   check("Removing connected mouse restores FIRST without stale bonds",
+     W.getVirtualMice().mice.length===0&&W.getSession().screen==="SEARCHING_FIRST");
+   lab[9].click();
+   check("Clear All leaves a valid empty virtual schema",W.getVirtualMice().seq===0&&W.getVirtualMice().mice.length===0);
+
   }
   root.remove();
  }
@@ -208,7 +357,7 @@ function run(){
  var ok=tests.filter(function(t){return t.pass;}).length;
  summary.textContent=ok+"/"+tests.length+" checks passed.";
  summary.className=ok===tests.length?"pass":"fail";
- window.__WEB04_TEST_RESULT__={passed:ok,total:tests.length};
+ window.__WEB05_TEST_RESULT__={passed:ok,total:tests.length};
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});
 else run();

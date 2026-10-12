@@ -225,3 +225,49 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
   border-radius:11px;padding:7px 10px;font-size:13px
 }
 .screen-inspector p{font-size:11px;line-height:1.5;margin:9px 0 0}
+
+/* WEB-05: general HAT instructions OUTSIDE the source LCD. */
+.hat-guide {
+  padding: 12px 18px; border: 1px solid #4a4356; border-radius: 16px;
+  background: #241e30; color: #ede9f5;
+  display: grid; grid-template-columns: 1fr; gap: 7px;
+}
+.hat-guide p { margin: 0; font-size: clamp(14px, 1.5vw, 16px); line-height: 1.55; }
+.hat-guide strong { color: #f5c1ed; font-weight: 850; }
+.hat-guide__note { color: #b7aeca; font-size: 11px !important; }
+.mouse-lab {
+  padding: clamp(18px, 3vw, 25px); border: 1px solid #454151;
+  border-radius: 24px; background: linear-gradient(130deg, #22232e, #1d1b29);
+}
+.mouse-lab__heading { display: flex; gap: 12px; justify-content: space-between; align-items: center; }
+.mouse-lab h2 { margin: 4px 0 0; font-size: 20px; }
+.mouse-lab__tag { color: #dcbde9; background: #352740; border: 1px solid #65516e;
+  border-radius: 99px; padding: 7px 10px; font-size: 11px; font-weight: 750; white-space: nowrap; }
+.mouse-lab__status { display: flex; flex-wrap: wrap; gap: 8px; margin: 15px 0; }
+.mouse-lab__status span { border: 1px solid #49455a; background: #242636;
+  border-radius: 10px; color: #e4e4ee; font-size: 12px; padding: 8px 10px; }
+.mouse-lab__fields { display:grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+.mouse-lab__fields label { display:grid; gap:7px; color:#bbc4d7; font-size:12px; font-weight:750; }
+.mouse-lab__fields input, .mouse-lab__fields select {
+  width:100%; min-width:0; min-height:44px; padding:10px;
+  border:1px solid #626078; border-radius:12px; color:#f6f2ff; background:#252433;
+  font-size:14px;
+}
+.mouse-lab__actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+.mouse-lab__actions button {
+  padding:10px 12px; min-height:44px; border:1px solid #64596e;
+  border-radius:12px; background:#393143; color:#f8f1ff;
+  font-size:12px; font-weight:750;
+}
+.mouse-lab__actions button:hover { background:#4a3a57; }
+.mouse-lab__actions button:disabled { opacity:.5; cursor:not-allowed; }
+.mouse-lab__advanced, .mouse-lab__log { margin-top:13px; border-top:1px solid #ffffff17; padding-top:12px; }
+.mouse-lab summary { color:#f1c9ee; font-size:12px; font-weight:760; cursor:pointer; min-height:28px; }
+.mouse-lab__pending { color:#dedbea; font-size:12px; line-height:1.6; margin:10px 0 0; }
+.mouse-lab__log ol { margin:10px 0 0; padding-left:21px; max-height:215px; overflow:auto; }
+.mouse-lab__log li { color:#c3c4d4; margin:7px 0; font-size:12px; line-height:1.4; }
+.mouse-lab__note { margin:13px 0 0; line-height:1.55; font-size:12px; color:#aeb6c7; }
+@media(max-width:600px) {
+  .mouse-lab__fields { grid-template-columns:1fr; }
+  .mouse-lab__heading { flex-wrap:wrap; }
+}
