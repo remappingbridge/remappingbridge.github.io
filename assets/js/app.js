@@ -121,30 +121,13 @@
       buttons.forEach(function(b){
         b.classList.toggle("is-pressed",state.held.indexOf(b.getAttribute("data-control"))!==-1);
       });
-      mouseSelect.addEventListener("change",function(){
-      if(engine.snapshot().locked)return;
-      var id=mouseSelect.value;
-      if(id)mice.selectFront(id);
-    });
-    labButtons.forEach(function(button){
-      button.addEventListener("click",function(){
-        if(engine.snapshot().locked)return;
-        var action=button.getAttribute("data-lab-action");
-        try{
-          if(action==="pair")mice.beginPair(mouseName.value);
-          else if(action==="search")mice.beginSearch(mouseSelect.value);
-          else if(action==="success")mice.complete(true);
-          else if(action==="fail")mice.complete(false);
-          else if(action==="timeout")mice.advance(mice.timeoutTicks);
-          else if(action==="cancel")mice.cancel("operator");
-          else if(action==="disconnect")mice.disconnect();
-          else if(action==="remove")mice.remove(mouseSelect.value);
-          else if(action==="reboot")mice.reboot();
-          else if(action==="reset")mice.reset();
-        }catch(error){announce("Virtual lab: "+error.message);}
+      scenarios.forEach(function(b){
+        b.disabled=state.locked;
+        var selected=b.getAttribute("data-scenario")===state.scenario;
+        b.classList.toggle("is-selected",selected);
+        b.setAttribute("aria-pressed",selected?"true":"false");
       });
-    });
-    scenarios.forEach(function(b){b.disabled=state.locked;});
+
     }
     function announce(message){
       feedback.textContent=message;count.textContent=String(taps).padStart(2,"0");
@@ -310,6 +293,29 @@
         // Native accessibility click (Space/Enter on focused button)
         // and programmatic click go through this single press/release path.
         if(!hadPointer)tap(id);
+      });
+    });
+      mouseSelect.addEventListener("change",function(){
+      if(engine.snapshot().locked)return;
+      var id=mouseSelect.value;
+      if(id)mice.selectFront(id);
+    });
+    labButtons.forEach(function(button){
+      button.addEventListener("click",function(){
+        if(engine.snapshot().locked)return;
+        var action=button.getAttribute("data-lab-action");
+        try{
+          if(action==="pair")mice.beginPair(mouseName.value);
+          else if(action==="search")mice.beginSearch(mouseSelect.value);
+          else if(action==="success")mice.complete(true);
+          else if(action==="fail")mice.complete(false);
+          else if(action==="timeout")mice.advance(mice.timeoutTicks);
+          else if(action==="cancel")mice.cancel("operator");
+          else if(action==="disconnect")mice.disconnect();
+          else if(action==="remove")mice.remove(mouseSelect.value);
+          else if(action==="reboot")mice.reboot();
+          else if(action==="reset")mice.reset();
+        }catch(error){announce("Virtual lab: "+error.message);}
       });
     });
     scenarios.forEach(function(b){
