@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WEB-07 — Browser HAT, Help and Lock Tests</title>
+  <title>WEB-08 — Browser HAT, Help and Lock Tests</title>
   <style>
     body { max-width: 760px; margin: 2rem auto; padding: 0 1rem; background:#151822; color:#f1f4fc; font:16px/1.65 system-ui,sans-serif; }
     h1 { font-size:1.5rem; } li { margin:.45rem 0; } .pass { color:#86e4b6; } .fail { color:#ff9bad; }
@@ -14,12 +14,13 @@
   <script defer src="../assets/js/hat-interaction.js"></script>
   <script defer src="../assets/js/ui-projector.js"></script>
   <script defer src="../assets/js/virtual-mice.js"></script>
+  <script defer src="../assets/js/display-settings.js"></script>
   <script defer src="../assets/js/app.js"></script>
   <script defer src="./runner.js"></script>
 </head>
 <body>
-  <h1>WEB-07 — Browser Tests</h1>
-  <p>These 194 checks cover 45 canonical LCD screens, fixed Gentle, HAT navigation, pairing/reconnection, separate saved profiles, Custom Modifier draft/apply/cancel, Movement gain/rotation/reset and prior regressions. Shortcut assignments, 12 combo slots, all 30 choices, applied-only colors and the top-left/bottom-left HAT labels are covered by browser tests plus manual layout inspection. Use this page on the production GitHub Pages site; no Node.js, CDN or custom build tools are required.</p>
+  <h1>WEB-08 — Browser Tests</h1>
+  <p>The 226 native browser checks cover all 45 canonical screens, 12 Modifier combinations, 30 shortcuts, virtual profiles and WEB-08 display preferences: brightness 0–100%, remembered brightness across Lock/Unlock, density, persistence and mobile control wiring. Actual sticky layout, 44px mobile tap targets, zoom, screen-reader contrast and narrow viewport visual behavior require manual production-browser checks. Use this page on the production GitHub Pages site; no Node.js, CDN or custom build tools are required.</p>
   <ol id="test-results" aria-live="polite"><li>Running checks…</li></ol>
   <p id="summary"></p>
   <p><a style="color:#a9ddff" href="../index.html">Open simulator</a></p>

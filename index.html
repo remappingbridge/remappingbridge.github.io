@@ -13,19 +13,12 @@
   <script defer src="./assets/js/hat-interaction.js"></script>
   <script defer src="./assets/js/ui-projector.js"></script>
   <script defer src="./assets/js/virtual-mice.js"></script>
+  <script defer src="./assets/js/display-settings.js"></script>
   <script defer src="./assets/js/app.js"></script>
 </head>
 <body>
   <main class="workspace" data-app-root>
-    <section class="simulator" aria-labelledby="simulator-title">
-      <div class="app-identity">
-        <div class="app-identity__icon" aria-hidden="true">RB</div>
-        <div>
-          <h1 id="simulator-title">RemappingBridge</h1>
-          <p>Virtual simulator <span aria-hidden="true">·</span> LCD UX v3.2.4</p>
-        </div>
-        <span class="phase-chip">WEB-07 <span class="phase-chip__dot" aria-hidden="true"></span> Preview</span>
-      </div>
+    <section class="simulator" aria-label="RemappingBridge interactive firmware simulator">
 
       <div class="device device--sticky" data-sticky-hat aria-label="Pico 2 W demonstration panel with LCD and controls">
         <span class="device__corner-brand">REMAPPING<span>BRIDGE</span></span>
@@ -74,6 +67,57 @@
         <p><strong>KEY Y</strong> — Lock the display; press and release any HAT control to unlock and return Home.</p>
         <p class="hat-guide__note">The first-mouse tutorial is demonstration-only; some retry screens also have special key behavior.</p>
       </aside>
+
+      <section class="display-options" aria-labelledby="display-options-title">
+        <div class="display-options__heading">
+          <div>
+            <span class="eyebrow">DISPLAY CONTROLS · WEB-08</span>
+            <h2 id="display-options-title">LCD appearance</h2>
+          </div>
+          <span class="display-options__source">Firmware UI v3.2.4</span>
+        </div>
+        <div class="display-options__grid">
+          <div class="display-options__field">
+            <label for="lcd-brightness">LCD brightness
+              <output for="lcd-brightness" data-brightness-reading>100%</output>
+            </label>
+            <input type="range" id="lcd-brightness" data-lcd-brightness min="0" max="100" step="1"
+              value="100" aria-label="LCD brightness from zero to one hundred percent">
+            <p class="display-options__detail">Effective LCD brightness:
+              <output data-effective-brightness aria-live="polite">100%</output>
+            </p>
+          </div>
+          <div class="display-options__field">
+            <label for="ui-density">Controls and options density</label>
+            <select id="ui-density" data-ui-density aria-label="Choose spacing of lower simulator controls">
+              <option value="compact">Compact</option>
+              <option value="standard" selected>Standard</option>
+              <option value="spacious">Spacious</option>
+            </select>
+            <p class="display-options__detail">Changes spacing, not firmware text or LCD brightness.</p>
+          </div>
+        </div>
+        <p class="display-options__note">Browser-only display controls. Lock makes the LCD effectively 0% bright and restores the saved brightness after unlock. No physical backlight or mouse is accessed. <span data-display-persistence>Checking display preferences</span>.</p>
+      </section>
+
+      <section class="touch-hat" aria-label="Large mobile touch controls">
+        <p class="touch-hat__label">LARGE TOUCH CONTROLS</p>
+        <div class="touch-hat__grid">
+          <div class="touch-hat__joystick" role="group" aria-label="Mobile joystick">
+            <button type="button" data-touch-control="JOY_UP" aria-label="Joystick up">▲</button>
+            <button type="button" data-touch-control="JOY_LEFT" aria-label="Joystick left">◀</button>
+            <button type="button" data-touch-control="JOY_PRESS" aria-label="Press joystick">●</button>
+            <button type="button" data-touch-control="JOY_RIGHT" aria-label="Joystick right">▶</button>
+            <button type="button" data-touch-control="JOY_DOWN" aria-label="Joystick down">▼</button>
+          </div>
+          <div class="touch-hat__keys" role="group" aria-label="Mobile HAT keys">
+            <button type="button" data-touch-control="KEY_A" aria-label="Key A">A</button>
+            <button type="button" data-touch-control="KEY_B" aria-label="Key B">B</button>
+            <button type="button" data-touch-control="KEY_X" aria-label="Key X">X</button>
+            <button type="button" data-touch-control="KEY_Y" aria-label="Key Y">Y</button>
+          </div>
+        </div>
+      </section>
 
       <section class="demo-scenarios" aria-labelledby="demo-scenarios-title">
         <div class="demo-scenarios__heading">
@@ -139,7 +183,7 @@
           <summary>Virtual event history</summary>
           <ol data-virtual-log aria-label="Local virtual connection events"></ol>
         </details>
-        <p class="mouse-lab__note">Up to eight virtual mice are saved only in this browser when storage is available. Pairing, reconnection and removal are entirely simulated; Custom Remapping and Movement are edited through the virtual HAT; Modifier Shortcuts remain in a later gate.</p>
+        <p class="mouse-lab__note">Up to eight virtual mice are saved only in this browser when storage is available. Pairing, reconnection and removal are entirely simulated; Custom Remapping and Movement are edited through the virtual HAT; Modifier Shortcuts are also editable through the HAT.</p>
       </section>
 
       <section class="session-panel" aria-label="Preview status">
@@ -155,7 +199,7 @@
           <p class="event-preview__message" aria-live="polite" aria-atomic="true" data-feedback>Ready for virtual controls.</p>
           <output class="event-preview__counter" data-count aria-label="Number of commands">00</output>
         </div>
-        <p class="session-panel__note">Use the arrow keys, Enter or Space, and A/B/X/Y, or click the HAT. A virtual HOME lets you test Help (X), Back (B), and Lock (Y). The first-mouse tutorial remains non-interactive, as in the firmware. Explore all 45 original screens and use the Virtual Mouse Lab for simulated pairing, reconnection, timeout and removal; real Bluetooth/HID and editing profiles remain outside this gate.</p>
+        <p class="session-panel__note">Use the arrow keys, Enter or Space, and A/B/X/Y, or click the HAT. A virtual HOME lets you test Help (X), Back (B), and Lock (Y). The first-mouse tutorial remains non-interactive, as in the firmware. Explore all 45 original screens and use the Virtual Mouse Lab for simulated pairing, reconnection, timeout and removal; real Bluetooth/HID remain outside this simulator; edits affect only saved virtual mouse profiles.</p>
       </section>
     </section>
   </main>
