@@ -64,7 +64,7 @@
       reset.click();
       check("Clear button restores state and counter", counter.textContent === "00" &&
             feedback.textContent === "Ready for virtual controls.");
-      check("Clear message is not Portuguese", !/pronto|comandos virtuais|limpar/i.test(feedback.textContent));
+      check("Clear message starts with the English Ready label", feedback.textContent.startsWith("Ready"));
 
       buttons[0].dispatchEvent(new Event("pointerdown"));
       check("Press changes visual feedback only", buttons[0].classList.contains("is-pressed"));
