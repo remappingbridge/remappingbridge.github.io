@@ -25,7 +25,8 @@
     if(lcd && api) {
       var info=api.getBootstrapInfo(), g=lcd.geometry, tone=lcd.tones, rows=api.firstScreenTemplate;
       check("Firmware v3.2.4 with unchanged v3.2.3 visual baseline",
-            info.version==="v3.2.4" && info.uiBaseline==="v3.2.3");
+            info.version==="v3.2.4" && info.commit==="69a640d9767ec7198572eb9b5073ed71f8f3d202" &&
+            info.uiBaseline==="v3.2.3" && info.uiBaselineCommit==="f38c5fd15c68ea9a36d3b05912727788d7b98e81");
       check("LCD bitmap implemented; real BLE/UX not yet implemented",
             info.framebufferImplemented && !info.bluetoothImplemented && !info.uxImplemented);
       check("No browser brightness above 100 percent",info.maxWebBrightnessPercent===100);
