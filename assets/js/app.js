@@ -1,5 +1,5 @@
-/* WEB-03 — English-only, browser-native HAT/Help/Lock integration.
- * The full 45-screen UX and real BLE/HID are intentionally out of scope.
+/* WEB-04 — 45 canonical firmware screens, HAT navigation, fixed Gentle LCD.
+ * Real BLE, profile persistence and firmware changes remain out of scope.
  */
 (function () {
   "use strict";
@@ -8,9 +8,9 @@
     uiBaseline:"v3.2.3",
     commit:"69a640d9767ec7198572eb9b5073ed71f8f3d202",
     uiBaselineCommit:"f38c5fd15c68ea9a36d3b05912727788d7b98e81",
-    gate:"WEB-03",lcdMode:"Canvas 240x240 RGB565 glyph preview",
+    gate:"WEB-04",lcdMode:"Canvas 240x240 RGB565 glyph preview",
     framebufferImplemented:true,hatInteractionImplemented:true,
-    uxImplemented:false,bluetoothImplemented:false,maxWebBrightnessPercent:100
+    uxImplemented:true,bluetoothImplemented:false,maxWebBrightnessPercent:100
   });
   var LABELS=Object.freeze({
     JOY_UP:"JOY UP",JOY_DOWN:"JOY DOWN",JOY_LEFT:"JOY LEFT",
@@ -52,16 +52,17 @@
     var root=doc.querySelector("[data-app-root]");
     if(!root)return false;
     var lcd=window.RemappingBridgeLCD,hat=window.RemappingBridgeHAT;
+    var catalog=window.RemappingBridgeScreens,projector=window.RemappingBridgeProjector;
     var canvas=root.querySelector("[data-lcd-canvas]");
     var feedback=root.querySelector("[data-feedback]");
     var count=root.querySelector("[data-count]");
     var clear=root.querySelector("[data-reset]");
     var buttons=Array.prototype.slice.call(root.querySelectorAll("[data-control]"));
-    var palettes=Array.prototype.slice.call(root.querySelectorAll("[data-backdrop]"));
+    var inspector=root.querySelector("[data-screen-inspector]");
     var scenarios=Array.prototype.slice.call(root.querySelectorAll("[data-scenario]"));
     var screenLabel=root.querySelector("[data-screen-label]");
-    if(!lcd||!hat||!canvas||!feedback||!count||!clear||!screenLabel||
-       buttons.length!==9||palettes.length!==3||scenarios.length!==3||
+    if(!lcd||!hat||!catalog||!projector||!canvas||!feedback||!count||!clear||!screenLabel||!inspector||
+       catalog.ids.length!==45||buttons.length!==9||scenarios.length!==3||
        !isValidPreview(INITIAL))throw new Error("WEB-03: invalid DOM/renderer contract");
 
     var seen=new Set();
@@ -70,7 +71,7 @@
       if(!controlLabel(id)||seen.has(id))throw new Error("WEB-03: invalid HAT control");
       seen.add(id);
     });
-    var backdrop="gentle",taps=0;
+    var taps=0;
     var engine=hat.createEngine(onEngineEvent);
     currentEngine=engine;
     var buttonById={};
@@ -80,39 +81,29 @@
     var blackFrame=lcd.newFrame(Array(9).fill(""),{hintStartRow:9});
 
     function currentFrame(state){
-      if(state.screen===hat.screens.FIRST)
-        return lcd.previewFrame(INITIAL,state.held.length?state.held[0]:null);
-      var template=hat.templates[state.screen];
-      if(!template)throw new Error("Unsupported WEB-03 screen");
-      var helping=engine.isHelp();
-      var hints=helping?8:state.screen===hat.screens.HOME?6:5;
-      var frame=lcd.newFrame(template,{hintStartRow:hints});
-      if(helping){
-        for(var y=1;y<8;y++)lcd.setToneSpan(frame,y,0,21,lcd.tones.STATIC);
-      } else {
-        var options=engine.optionCount();
-        for(var row=1;row<=options;row++){
-          lcd.setToneSpan(frame,row,0,21,lcd.tones.ACTIONABLE);
-        }
-        if(options){
-          var focused=1+state.selection;
-          lcd.setToneSpan(frame,focused,0,21,lcd.tones.EMPHASIZED);
-          frame.cells[focused][0].character="|";
-          frame.cells[focused][0].tone=lcd.tones.EMPHASIZED;
-        }
-      }
-      return frame;
+      return projector.frame(state,lcd);
     }
+    catalog.ids.forEach(function(id){
+      var entry=catalog.get(id),option=doc.createElement("option");
+      option.value=id;
+      option.textContent=id.replace(/_/g," ")+" — "+entry.rows[0].slice(0,21);
+      inspector.appendChild(option);
+    });
+    inspector.addEventListener("change",function(){
+      if(engine.snapshot().locked)return;
+      engine.inspect(inspector.value);
+    });
     function paint(){
       var state=engine.snapshot();
-      lcd.render(canvas,state.locked?blackFrame:currentFrame(state),backdrop);
+      lcd.render(canvas,state.locked?blackFrame:currentFrame(state),"gentle");
       canvas.setAttribute("aria-label",state.locked?
         "Virtual LCD locked. Press and release one HAT control to unlock.":
         "Virtual 240 by 240 firmware LCD: "+hat.templates[state.screen][0]+
         ". No physical mouse is connected.");
       root.setAttribute("data-demo-screen",state.screen);
       root.setAttribute("data-locked",state.locked?"true":"false");
-      screenLabel.textContent=state.locked?"LCD LOCKED":hat.templates[state.screen][0];
+      screenLabel.textContent=state.locked?"LCD LOCKED":hat.templates[state.screen][0].slice(0,21);
+      inspector.value=state.screen;
       buttons.forEach(function(b){
         b.classList.toggle("is-pressed",state.held.indexOf(b.getAttribute("data-control"))!==-1);
       });
@@ -132,7 +123,10 @@
         case "back":announce("Returned from Help.");break;
         case "help-ignored":announce("Help: only B returns and Y locks.");break;
         case "selection":announce(label+" — focused menu option changed.");break;
-        case "route-pending":announce("This menu route is planned for WEB-04.");break;
+        case "access":announce("Opened "+hat.templates[event.state.screen][0].slice(0,21)+".");break;
+        case "page":announce("Moved to another option page.");break;
+        case "inspect":announce("Inspecting canonical firmware screen: "+event.state.screen+".");break;
+        case "commit-pending":announce("Preview only: "+event.control+" will be simulated in a later gate. No settings saved.");break;
         case "scenario":announce("Virtual state: "+hat.templates[event.state.screen][0]+".");break;
         case "didactic":announce(label+" — tutorial input; no menu action.");break;
         case "retry":announce("Virtual saved-mouse search restarted.");break;
@@ -181,20 +175,6 @@
         if(!hadPointer)tap(id);
       });
     });
-    palettes.forEach(function(b){
-      var name=b.getAttribute("data-backdrop");
-      if(!Object.prototype.hasOwnProperty.call(lcd.backdrops,name))
-        throw new Error("WEB-03: invalid backdrop");
-      b.addEventListener("click",function(){
-        backdrop=name;
-        palettes.forEach(function(p){
-          var selected=p.getAttribute("data-backdrop")===name;
-          p.classList.toggle("is-selected",selected);
-          p.setAttribute("aria-pressed",selected?"true":"false");
-        });
-        paint();
-      });
-    });
     scenarios.forEach(function(b){
       var name=b.getAttribute("data-scenario");
       if(hat.scenarios.indexOf(name)===-1)throw new Error("WEB-03: invalid scenario");
@@ -241,6 +221,7 @@
     controlLabel:controlLabel,keyControl:keyControl,isEditable:isEditable,
     isValidPreview:isValidPreview,firstScreenTemplate:INITIAL,
     getSession:function(){return currentEngine?currentEngine.snapshot():null;},
+    canonicalScreenCount:45,
     boot:boot
   });
   if(document.readyState==="loading")
