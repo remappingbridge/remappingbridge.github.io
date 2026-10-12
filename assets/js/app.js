@@ -1,15 +1,17 @@
-/* WEB-01: no build tools, no external scripts and no hardware access.
- * This is a STATIC source-text preview, NOT the firmware renderer/UX model. */
+/* WEB-02: native 240x240 LCD Canvas; no build tools or hardware access.
+ * This is a bitmap rendering preview, NOT the firmware UX/navigation model. */
 (function () {
   "use strict";
 
   var FIRMWARE = Object.freeze({
     name: "RemappingBridge",
-    version: "v3.2.3",
-    commit: "f38c5fd15c68ea9a36d3b05912727788d7b98e81",
-    gate: "WEB-01",
-    lcdMode: "static text preview",
-    framebufferImplemented: false,
+    version: "v3.2.4",
+    uiBaseline: "v3.2.3",
+    commit: "69a640d9767ec7198572eb9b5073ed71f8f3d202",
+    uiBaselineCommit: "f38c5fd15c68ea9a36d3b05912727788d7b98e81",
+    gate: "WEB-02",
+    lcdMode: "Canvas 240x240 RGB565 glyph preview",
+    framebufferImplemented: true,
     uxImplemented: false,
     bluetoothImplemented: false,
     maxWebBrightnessPercent: 100
@@ -67,8 +69,12 @@
     var countOutput = root.querySelector("[data-count]");
     var reset = root.querySelector("[data-reset]");
     var buttons = Array.prototype.slice.call(root.querySelectorAll("[data-control]"));
-    if (!feedback || !countOutput || !reset ||
-        buttons.length !== 9 || !isValidPreview(FIRST_SCREEN_TEMPLATE)) {
+    var canvas = root.querySelector("[data-lcd-canvas]");
+    var backdropButtons = Array.prototype.slice.call(root.querySelectorAll("[data-backdrop]"));
+    var lcd = window.RemappingBridgeLCD;
+    if (!feedback || !countOutput || !reset || !canvas || !lcd ||
+        buttons.length !== 9 || backdropButtons.length !== 3 ||
+        !isValidPreview(FIRST_SCREEN_TEMPLATE)) {
       throw new Error("WEB-01: invalid HTML/bootstrap contract");
     }
 
@@ -82,12 +88,35 @@
     });
 
     var taps = 0;
+    var backdrop = "soft";
+    var activePress = null;
+    function paint() {
+      lcd.render(canvas, lcd.previewFrame(FIRST_SCREEN_TEMPLATE, activePress), backdrop);
+    }
+    backdropButtons.forEach(function (button) {
+      var choice = button.getAttribute("data-backdrop");
+      if (!Object.prototype.hasOwnProperty.call(lcd.backdrops, choice))
+        throw new Error("WEB-02: invalid LCD backdrop");
+      button.addEventListener("click", function () {
+        backdrop = choice;
+        backdropButtons.forEach(function (option) {
+          var selected = option.getAttribute("data-backdrop") === backdrop;
+          option.classList.toggle("is-selected", selected);
+          option.setAttribute("aria-pressed", selected ? "true" : "false");
+        });
+        paint();
+      });
+    });
     function announce(message) {
       feedback.textContent = message;
       countOutput.textContent = String(taps).padStart(2, "0");
     }
     function previewPress(button, state) {
       button.classList.toggle("is-pressed", state);
+      var control = button.getAttribute("data-control");
+      if (state) activePress = control;
+      else if (activePress === control) activePress = null;
+      paint();
     }
     buttons.forEach(function (button) {
       button.addEventListener("pointerdown", function () { previewPress(button, true); });
@@ -102,10 +131,14 @@
 
     reset.addEventListener("click", function () {
       taps = 0;
-      buttons.forEach(function (button) { previewPress(button, false); });
+      buttons.forEach(function (button) { button.classList.remove("is-pressed"); });
+      activePress = null;
+      paint();
       announce("Ready for virtual controls.");
     });
 
+    paint();
+    root.setAttribute("data-lcd-renderer", "canvas-240x240");
     root.setAttribute("data-boot-state", "ready");
     return true;
   }

@@ -1,4 +1,4 @@
-/* WEB-01 — static application shell. LCD renderer and full UX belong to WEB-02+. */
+/* WEB-02 — responsive simulator shell + exact 240x240 Canvas bitmap preview. */
 :root {
   color-scheme: dark;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -72,17 +72,9 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
   display: grid; place-items: center; background: #180719;
   box-shadow: inset 0 0 80px #260a288a, 0 0 38px #db3bb30b;
 }
-.lcd-preview__shine {
-  position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: linear-gradient(155deg, #ffffff08, transparent 35%);
-}
-.lcd-preview__rows {
-  margin: 0; padding: 0; width: max-content; max-width: 100%;
-  color: #eee4bb; font-family: "Courier New", ui-monospace, monospace; font-size: 6.8cqw;
-  line-height: 1.38; font-weight: 700; letter-spacing: 0; white-space: pre;
-  text-shadow: 0 0 5px #f6ccdc2b;
-}
-.lcd-preview__title { color: var(--magenta); }
+
+
+
 .hardware-controls {
   display: grid; grid-template-columns: 1fr 1fr;
   justify-items: center; align-items: center; gap: clamp(12px, 3vw, 40px);
@@ -163,4 +155,54 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
   .action-cluster { width: 164px; }
   .joy { font-size: 19px; }
   .action-key { font-size: 23px; }
+}
+
+/* WEB-02: browser scales the logical 240x240 pixels, never re-rasterizes
+ * glyphs via CSS font rendering; preserve bitmap edges under HiDPI/zoom. */
+.lcd-preview { border-radius: 7px; overflow: hidden; }
+.lcd-canvas {
+  display: block;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  background: #190b1d;
+}
+
+.lcd-settings {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 22px; padding: 16px 20px;
+  background: #20232ced; border: 1px solid #353949; border-radius: 20px;
+}
+.lcd-settings__label { flex: 1; min-width: 0; }
+.lcd-settings__label p {
+  margin: 6px 0 0; color: #aeb6c7; font-size: 12px; line-height: 1.5;
+}
+.backdrop-choices {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 7px;
+}
+.backdrop-choice {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 44px; padding: 7px 11px; border-radius: 14px;
+  border: 1px solid #555b6c; background: #2b3040;
+  color: #e8eaf3; font-size: 12px; font-weight: 700;
+}
+.backdrop-choice:hover { background: #383e4e; }
+.backdrop-choice.is-selected,
+.backdrop-choice[aria-pressed="true"] {
+  border-color: #d682c9; background: #422a49; color: #fff;
+  box-shadow: inset 0 0 0 1px #d682c95e;
+}
+.backdrop-choice__swatch {
+  display: inline-block; width: 15px; height: 15px;
+  flex: 0 0 15px; border: 1px solid #ffffff75; border-radius: 5px;
+}
+.backdrop-choice__swatch--original { background: #080008; }
+.backdrop-choice__swatch--soft { background: #190b1d; }
+.backdrop-choice__swatch--gentle { background: #28142c; }
+@media (max-width: 630px) {
+  .lcd-settings { align-items: flex-start; flex-direction: column; gap: 11px; }
+  .backdrop-choices { width: 100%; }
 }

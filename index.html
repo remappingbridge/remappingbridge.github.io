@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark">
   <meta name="theme-color" content="#101218">
-  <meta name="description" content="Static preview of the RemappingBridge simulator for Raspberry Pi Pico 2 W.">
+  <meta name="description" content="240x240 LCD Canvas preview of the RemappingBridge Pico 2 W firmware simulator.">
   <title>RemappingBridge — Virtual Simulator</title>
   <link rel="stylesheet" href="./assets/css/app.css">
+  <script defer src="./assets/js/lcd-renderer.js"></script>
   <script defer src="./assets/js/app.js"></script>
 </head>
 <body>
@@ -17,9 +18,9 @@
         <div class="app-identity__icon" aria-hidden="true">RB</div>
         <div>
           <h1 id="simulator-title">RemappingBridge</h1>
-          <p>Virtual simulator <span aria-hidden="true">·</span> Firmware v3.2.3</p>
+          <p>Virtual simulator <span aria-hidden="true">·</span> LCD UX v3.2.4</p>
         </div>
-        <span class="phase-chip">WEB-01 <span class="phase-chip__dot" aria-hidden="true"></span> Preview</span>
+        <span class="phase-chip">WEB-02 <span class="phase-chip__dot" aria-hidden="true"></span> Preview</span>
       </div>
 
       <div class="device" aria-label="Pico 2 W demonstration panel with LCD and controls">
@@ -32,17 +33,11 @@
         </div>
 
         <div class="lcd-housing">
-          <div class="lcd-preview" role="img" aria-label="Nine-line text preview: SEARCHING FIRST MOUSE, joystick and HAT button instructions. A faithful LCD renderer is planned for WEB-02.">
-            <div class="lcd-preview__shine" aria-hidden="true"></div>
-            <pre class="lcd-preview__rows" aria-hidden="true"><span class="lcd-preview__title">SEARCHING FIRST MOUSE</span>
-PRESS TO LEARN KEYS
-WHILE WAIT CONNECTION
-       JOY UP
-  JOY    JOY    JOY
-  LEFT  PRESS  RIGHT
-      JOY DOWN
- KEY A         KEY X
- KEY B         KEY Y</pre>
+          <div class="lcd-preview">
+            <canvas class="lcd-canvas" data-lcd-canvas width="240" height="240"
+              role="img" aria-label="240 by 240 pixel LCD showing SEARCHING FIRST MOUSE, a nine-row physical firmware display. Pressed HAT controls highlight corresponding LCD labels. No real device is connected.">
+              SEARCHING FIRST MOUSE — joystick and HAT key labels (Canvas required).
+            </canvas>
           </div>
         </div>
 
@@ -75,6 +70,30 @@ WHILE WAIT CONNECTION
         </div>
       </div>
 
+      <section class="lcd-settings" aria-label="LCD web backdrop">
+        <div class="lcd-settings__label">
+          <span class="eyebrow">LCD BACKGROUND</span>
+          <p>Compare three dark-magenta tones. Only the web backdrop changes; firmware colors stay untouched.</p>
+        </div>
+        <div class="backdrop-choices" role="group" aria-label="LCD magenta background tone">
+          <button class="backdrop-choice" type="button" data-backdrop="original" aria-pressed="false"
+            aria-label="Original firmware dark magenta">
+            <span class="backdrop-choice__swatch backdrop-choice__swatch--original" aria-hidden="true"></span>
+            Original
+          </button>
+          <button class="backdrop-choice is-selected" type="button" data-backdrop="soft" aria-pressed="true"
+            aria-label="Soft web-only dark magenta">
+            <span class="backdrop-choice__swatch backdrop-choice__swatch--soft" aria-hidden="true"></span>
+            Soft
+          </button>
+          <button class="backdrop-choice" type="button" data-backdrop="gentle" aria-pressed="false"
+            aria-label="Gentle web-only dark magenta">
+            <span class="backdrop-choice__swatch backdrop-choice__swatch--gentle" aria-hidden="true"></span>
+            Gentle
+          </button>
+        </div>
+      </section>
+
       <section class="session-panel" aria-label="Preview status">
         <div class="session-panel__heading">
           <div>
@@ -88,7 +107,7 @@ WHILE WAIT CONNECTION
           <p class="event-preview__message" aria-live="polite" aria-atomic="true" data-feedback>Ready for virtual controls.</p>
           <output class="event-preview__counter" data-count aria-label="Number of commands">00</output>
         </div>
-        <p class="session-panel__note">At this stage, the buttons only record virtual input. Navigation, simulated Bluetooth and faithful LCD rendering will be added in later gates. No physical device is accessed.</p>
+        <p class="session-panel__note">The LCD now uses the original 5×7 glyph pixels and 240×240 geometry. HAT buttons demonstrate pressed-key highlights; navigation and simulated Bluetooth arrive in later gates. No physical device is accessed.</p>
       </section>
     </section>
   </main>
