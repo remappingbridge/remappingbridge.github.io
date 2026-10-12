@@ -247,6 +247,38 @@
         buttons[6].click(); // B unlock, consumed, must not return Help
         check("Unlock from Help resolves HOME and consumes B",
               !api.getSession().locked && api.getSession().screen===hat.screens.HOME);
+        function browserKey(type,key){
+          var e=new Event(type,{bubbles:true,cancelable:true});
+          Object.defineProperty(e,"key",{value:key});
+          document.dispatchEvent(e);
+        }
+        browserKey("keydown","ArrowDown");
+        check("Global ArrowDown changes highlight on press only, not selection",
+              api.getSession().selection===0&&
+              buttons[1].classList.contains("is-pressed"));
+        browserKey("keydown","ArrowDown");
+        browserKey("keyup","ArrowDown");
+        check("Keyboard repeats are ignored; selection advances once on release",
+              api.getSession().selection===1&&!buttons[1].classList.contains("is-pressed"));
+        browserKey("keydown","x");browserKey("keyup","x");
+        check("Global keyboard X opens Help",
+              api.getSession().screen===hat.screens.HOME_HELP);
+        browserKey("keydown","b");browserKey("keyup","b");
+        check("Global keyboard B restores HOME selection",
+              api.getSession().screen===hat.screens.HOME&&api.getSession().selection===1);
+        browserKey("keydown","y");browserKey("keyup","y");
+        check("Global keyboard Y locks the virtual LCD",
+              api.getSession().locked&&
+              same(Array.from(ctx.getImageData(0,0,1,1).data),[0,0,0,255]));
+        browserKey("keydown"," ");browserKey("keyup"," ");
+        check("Space press/release consumes unlock without launching an option",
+              !api.getSession().locked&&api.getSession().screen===hat.screens.HOME&&
+              api.getSession().selection===0);
+        var countBeforeCancel=counter.textContent;
+        buttons[0].dispatchEvent(new Event("pointerdown"));
+        buttons[0].dispatchEvent(new Event("pointercancel"));
+        check("Pointer cancellation releases held control without a command",
+              api.getSession().held.length===0&&counter.textContent===countBeforeCancel);
       }
       root.remove();
     }
