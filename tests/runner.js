@@ -1,4 +1,4 @@
-/* WEB-06 — browser tests: canonical screen routes, virtual profiles and Movement,
+/* WEB-07 — browser tests: 12 combinations, 30 shortcuts, MNT-12/13 and prior gates,
  * per-pixel framebuffer, focus and navigation. No npm, CDN, server or BLE.
  */
 (function(){
@@ -19,7 +19,7 @@ function run(){
  check("Canvas, model, 45 screens, projector and local mouse module exported",!!L&&!!H&&!!S&&!!P&&!!W&&!!V);
  if(L&&H&&S&&P&&W&&V){
   var info=W.getBootstrapInfo();
-  check("Latest official v3.2.4 source and WEB-06",info.gate==="WEB-06"&&info.version==="v3.2.4"&&info.uiBaseline==="v3.2.3");
+  check("Latest official v3.2.4 source and WEB-07",info.gate==="WEB-07"&&info.version==="v3.2.4"&&info.uiBaseline==="v3.2.3");
   check("Firmware renderer is 240x240 with 9x21 logical grid",L.geometry.width===240&&L.geometry.height===240&&L.geometry.rows===9&&L.geometry.columns===21);
   check("Physical C glyphs are 5x7 scaled twofold",L.geometry.glyphWidth===10&&L.geometry.glyphHeight===14&&L.glyphRow("A",0)===14);
   check("All six semantic RGB565 foreground colors retained",L.rgb565.MAGENTA===0xf81f&&L.rgb565.CYAN===0x07ff&&L.rgb565.CYAN_FOCUSED===0xd7ff&&L.rgb565.OFF_WHITE_YELLOW===0xffb8);
@@ -99,7 +99,7 @@ function run(){
   check("Shortcut pages wrap from 5 to 1",e.snapshot().screen==="SHORTCUTS_1");
   var before=e.snapshot().shortcuts.join(",");
   var preview=press(e,"KEY_A");
-  check("Shortcut apply is explicitly nonpersistent and stays in editor",preview.kind==="commit-pending"&&e.snapshot().shortcuts.join(",")===before&&e.snapshot().screen==="SHORTCUTS_1");
+  check("Shortcut A proposes commit without mutating stored assignments",preview.kind==="set-shortcut"&&preview.payload.combination===1&&preview.payload.shortcut===1&&e.snapshot().shortcuts.join(",")===before&&e.snapshot().screen==="SHORTCUTS_1");
   press(e,"KEY_B");
   check("Shortcut B returns to focused combination page",e.snapshot().screen==="COMBINATIONS_1"&&e.snapshot().selection===1);
   press(e,"KEY_B");
@@ -392,6 +392,120 @@ function run(){
   check("Deleting Beta removes its independent profile without touching Alpha",
     !refreshed.profileFor(beta)&&refreshed.profileFor(alpha).targets[0]===5);
 
+  // WEB-07: all C combination ordinals, 30 native shortcut identities,
+  // MNT-12 applied/draft predicates and MNT-13 second-row markers.
+  check("All 12 canonical combination ordinals in v3.2.4 source order",
+    H.combinationNames.length===12&&H.combinationNames[0]==="MODIFIER RELEASED"&&
+    H.combinationNames[1]==="MOD + MIDDLE"&&H.combinationNames[5]==="MOD + BACKWARD"&&
+    H.combinationNames[11]==="MOD + MOVE DOWN");
+  check("Exact 30 source-defined shortcut names with reserved zero",
+    H.shortcutNames.length===31&&H.shortcutNames[0]==="NOT CUSTOMIZED"&&
+    H.shortcutNames[1]==="COPY"&&H.shortcutNames[25]==="HOME SCREEN/PAGE"&&
+    H.shortcutNames[30]==="BRIGHTNESS DOWN");
+  check("Every canonical shortcut source page maps to six option IDs",
+    Array.from({length:30},function(_,i){
+      var id=i+1,page=1+Math.floor(i/6),row=i%6+1;
+      return S.get("SHORTCUTS_"+page).rows[row].trim()===H.shortcutNames[id];
+    }).every(Boolean));
+  var combStore=memoryStore(),combVirtual=V.create({storage:combStore});
+  combVirtual.beginPair("Combo One");combVirtual.complete(true);
+  var comboId=combVirtual.snapshot().connectedId;
+  var cp=combVirtual.profileFor(comboId);
+  cp.kind="CUSTOM";cp.targets=[0,1,5,3,4]; // MIDDLE is Modifier
+  cp.shortcuts[0]=25;cp.shortcuts[1]=5;
+  combVirtual.applyProfile(comboId,cp);
+  var ce=H.createEngine();ce.syncMice(combVirtual.snapshot(),"initialized");
+  check("Modifier Shortcuts active only for applied Custom + Modifier",
+    ce.snapshot().modifierShortcutsActive&&ce.snapshot().modifierSource===2&&
+    H.shortcutsActive("CUSTOM",cp.targets)&&!H.shortcutsActive("PASSTHROUGH",cp.targets)&&
+    !H.shortcutsActive("CUSTOM",[0,1,2,3,4]));
+  check("Exactly owning MIDDLE combination is unavailable",
+    Array.from({length:12},function(_,i){return H.comboUnavailable(i,cp.targets);})
+      .filter(Boolean).length===1&&H.comboUnavailable(1,cp.targets));
+  var unavailSources=[[5,1,2,3,4],2,[0,5,2,3,4],3,[0,1,2,5,4],4,[0,1,2,3,5],5];
+  check("Unavailable source mapping covers Left, Right, Forward and Backward",
+    H.comboUnavailable(2,[5,1,2,3,4])&&H.comboUnavailable(3,[0,5,2,3,4])&&
+    H.comboUnavailable(4,[0,1,2,5,4])&&H.comboUnavailable(5,[0,1,2,3,5]));
+  ce.inspect("MOUSE_OPTIONS");
+  var activeMenu=P.frame(ce.snapshot(),L);
+  check("MNT-12 applied Custom profile presents Modifier Shortcuts in cyan",
+    activeMenu.cells[3][1].tone===L.tones.CURRENT);
+  ce.inspect("COMBINATIONS_1");
+  var activeFrame=P.frame(ce.snapshot(),L);
+  check("MNT-12 assigned available COMBINATIONS value is focused cyan",
+    activeFrame.cells[2][1].tone===L.tones.SELECTED_CURRENT&&
+    activeFrame.cells[2][0].character==="|");
+  check("MNT-12 UNAVAILABLE cell retains static yellow and exact source word",
+    activeFrame.cells[4].map(function(c){return c.character;}).join("").includes("UNAVAILABLE")&&
+    activeFrame.cells[4][1].tone===L.tones.STATIC);
+  press(ce,"JOY_DOWN");
+  var selectedUnavailable=P.frame(ce.snapshot(),L);
+  check("MNT-13 unavailable combination pipe sits on second value row",
+    selectedUnavailable.cells[4][0].character==="|"&&selectedUnavailable.cells[3][0].character===" "&&
+    selectedUnavailable.cells[4][1].tone===L.tones.STATIC);
+  var previous=ce.snapshot().shortcuts.slice();
+  var forbidden=press(ce,"JOY_PRESS"),forbiddenReset=press(ce,"KEY_A");
+  check("Unavailable combination cannot open editor or reset assignment",
+    forbidden.kind==="unavailable"&&forbiddenReset.kind==="unavailable"&&
+    ce.snapshot().screen==="COMBINATIONS_1"&&same(previous,ce.snapshot().shortcuts));
+  press(ce,"JOY_UP"); // select RELEASED combo 0
+  press(ce,"JOY_PRESS");
+  check("Assigned shortcut automatically opens its own page with focus",
+    ce.snapshot().screen==="SHORTCUTS_5"&&ce.snapshot().selection===0);
+  var shortFrame=P.frame(ce.snapshot(),L);
+  check("Existing assigned shortcut is focused pastel cyan in editor",
+    shortFrame.cells[1][1].tone===L.tones.SELECTED_CURRENT&&shortFrame.cells[1][0].character==="|");
+  press(ce,"JOY_LEFT");
+  check("Shortcut page 5 left goes to page 4",ce.snapshot().screen==="SHORTCUTS_4");
+  press(ce,"JOY_RIGHT");
+  check("Returning to applied shortcut page restores assignment focus",
+    ce.snapshot().screen==="SHORTCUTS_5"&&ce.snapshot().selection===0);
+  press(ce,"JOY_DOWN");
+  var proposed=press(ce,"KEY_A");
+  check("Apply proposes ordinal 26 ZOOM IN without changing saved state before confirmation",
+    proposed.kind==="set-shortcut"&&proposed.payload.combination===0&&proposed.payload.shortcut===26&&
+    ce.snapshot().shortcuts[0]===25&&ce.snapshot().screen==="SHORTCUTS_5");
+  var update=combVirtual.profileFor(comboId);update.shortcuts[proposed.payload.combination]=proposed.payload.shortcut;
+  combVirtual.applyProfile(comboId,update);ce.syncMice(combVirtual.snapshot(),"profile-applied");ce.confirmShortcut(0,26);
+  check("Commit-first shortcut apply returns to original COMBINATIONS selection",
+    ce.snapshot().screen==="COMBINATIONS_1"&&ce.snapshot().selection===0&&
+    ce.snapshot().shortcuts[0]===26);
+  var latest=P.frame(ce.snapshot(),L);
+  check("COMBINATIONS shows full saved ZOOM IN name, not CUSTOMIZED",
+    latest.cells[2].map(function(c){return c.character;}).join("").includes("ZOOM IN"));
+  var resetReq=press(ce,"KEY_A");
+  check("KEY A reset requests shortcut 0 without mutating before persistence",
+    resetReq.kind==="reset-shortcut"&&resetReq.payload.combination===0&&
+    ce.snapshot().shortcuts[0]===26);
+  update=combVirtual.profileFor(comboId);update.shortcuts[0]=0;
+  combVirtual.applyProfile(comboId,update);ce.syncMice(combVirtual.snapshot(),"profile-applied");ce.confirmShortcut(0,0);
+  check("Reset selected combination returns to NOT CUSTOMIZED",
+    ce.snapshot().shortcuts[0]===0&&ce.snapshot().screen==="COMBINATIONS_1"&&
+    P.frame(ce.snapshot(),L).cells[2].map(function(c){return c.character;}).join("").includes("NOT CUSTOMIZED"));
+  var noReset=press(ce,"KEY_A");
+  check("A zero assignment cannot be reset again",noReset.kind==="no-action");
+  var copyChanged=combVirtual.profileFor(comboId);copyChanged.kind="PASSTHROUGH";copyChanged.shortcuts[0]=30;
+  combVirtual.applyProfile(comboId,copyChanged);ce.syncMice(combVirtual.snapshot(),"profile-applied");
+  ce.inspect("MOUSE_OPTIONS");
+  check("Passthrough never colors Modifier Shortcuts cyan with stored Modifier",
+    !ce.snapshot().modifierShortcutsActive&&P.frame(ce.snapshot(),L).cells[3][1].tone!==L.tones.CURRENT);
+  ce.inspect("COMBINATIONS_1");
+  var passFrame=P.frame(ce.snapshot(),L);
+  check("Stored shortcut in Passthrough stays gray (not cyan) on combination",
+    passFrame.cells[2][1].tone!==L.tones.SELECTED_CURRENT&&passFrame.cells[2][1].tone!==L.tones.CURRENT);
+  var persistedComb=V.create({storage:combStore});
+  check("Reload preserves all 12 stored assignments independently from profile kind",
+    persistedComb.profileFor(comboId).shortcuts.length===12&&persistedComb.profileFor(comboId).shortcuts[0]===30);
+  // Draft modifier must not activate the turquoise Modifier Shortcuts indicator.
+  var noModifier=combVirtual.profileFor(comboId);noModifier.kind="CUSTOM";noModifier.targets=[0,1,2,3,4];
+  combVirtual.applyProfile(comboId,noModifier);ce.syncMice(combVirtual.snapshot(),"profile-applied");
+  ce.inspect("EDIT_CUSTOM");press(ce,"JOY_PRESS");
+  for(var i=0;i<5;i++)press(ce,"JOY_DOWN");
+  press(ce,"KEY_A");ce.inspect("MOUSE_OPTIONS");
+  check("Unapplied Modifier draft leaves cyan disabled until Custom Apply",
+    ce.snapshot().customDirty&&!ce.snapshot().modifierShortcutsActive&&
+    P.frame(ce.snapshot(),L).cells[3][1].tone!==L.tones.CURRENT);
+
   // End of independent virtual model tests.
 
   // Real Canvas2D DOM integration tests run on the browser, not just pure data.
@@ -516,7 +630,7 @@ function run(){
  var ok=tests.filter(function(t){return t.pass;}).length;
  summary.textContent=ok+"/"+tests.length+" checks passed.";
  summary.className=ok===tests.length?"pass":"fail";
- window.__WEB06_TEST_RESULT__={passed:ok,total:tests.length};
+ window.__WEB07_TEST_RESULT__={passed:ok,total:tests.length};
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});
 else run();
