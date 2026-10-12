@@ -1,74 +1,68 @@
 # RemappingBridge — Web Simulator
 
-An **English-only**, browser-native single-page simulation of the [RemappingBridge firmware](https://github.com/remappingbridge/remappingbridge) (Raspberry Pi Pico 2 W / Waveshare Pico-LCD-1.3 HAT).
+An **English-only**, static, single-page browser simulator of the [RemappingBridge](https://github.com/remappingbridge/remappingbridge) Pico 2 W and Waveshare Pico-LCD-1.3 firmware.
 
-**WEB-01 through WEB-04 were accepted. WEB-05 is a candidate awaiting the operator's production-browser acceptance.**
+**WEB-01–WEB-05 accepted by the operator. WEB-06 is the current production-browser candidate; operator acceptance is pending.**
 
-## Open in production
+## Production
 
-- **Simulator:** https://remappingbridge.github.io/
-- **Browser tests:** https://remappingbridge.github.io/tests/
+[Open the simulator](https://remappingbridge.github.io/) · [Run browser-only tests](https://remappingbridge.github.io/tests/)
 
-This static project does not use Node.js, npm, bundlers, external CDNs, a backend, telemetry or custom GitHub Actions workflows.
+The site consists solely of HTML/CSS/native JavaScript. No npm, Node.js, bundler, external CDN, service worker, application backend, telemetry, hosted storage, Web Bluetooth or custom Pages build workflow is required.
 
-## LCD, HAT, navigation and the English key guide
+## WEB-06: always-visible, physically compact HAT
 
-The panel imitates the physical HAT: a **left joystick**, **smaller centered LCD**, and **A/B/X/Y in a single vertical column on the right**. The LCD remains an exact **240×240 logical Canvas**, 9×21 text, authentic 5×7 bitmaps, RGB565 semantic foreground colors, and the MNT-13 `|` marker on the second/value line of two-line combination choices. The web-only dark-magenta background is always **Gentle `#300c39`**; there is no background selector.
+The **physical-HAT-inspired simulator is sticky at the top of the viewport**. Scroll through the Virtual Mouse Lab, screen inspector and session options below while the HAT stays in view. It remains a normal document element, not a detached overlay; its viewport offset, rounded border and shadow remain visible.
 
-A concise general English HAT guide appears **immediately below the physical device and outside the LCD**:
+The device has four horizontally aligned regions: **left cross-shaped joystick → reduced 240×240 logical LCD → four narrower, less-rounded A/B/X/Y buttons in a vertical column → right-side Pico / virtual device / LCD metadata**. The previous large brand/header above the simulated HAT and informational footer below it have been moved into the **right column**, vertically bounded by the LCD square. The LCD housing uses narrow padding above/below. Responsive CSS preserves the arrangement at narrower widths, with compact metadata.
 
-> **KEY B** — Go back or cancel on most screens (except Connected Home).
->
-> **KEY Y** — Lock the display; press and release any HAT control to unlock and return Home.
+The renderer preserves the accepted physical 240×240 logical framebuffer, 9×21 text grid, 5×7 source glyphs, RGB565 foreground colors, MNT-13 `|` selection marker and Gentle-only dark-magenta backdrop `#300c39`. The smaller visual size affects CSS presentation only, not firmware pixel data.
 
-A smaller sentence explains that **SEARCHING FIRST MOUSE** is a didactic, non-locking screen and some Retry screens have special controls. This qualified English wording avoids falsely promising a global shortcut on firmware exceptions. Unlock consumes its first press/release, and input acts on release rather than press.
+The English general key guide remains **outside the firmware LCD**, below the sticky device:
+- **KEY B — Go back or cancel on most screens (except Connected Home).**
+- **KEY Y — Lock the display; press and release any HAT control to unlock and return Home.**
 
-All **45 original v3.2.4 firmware screen templates** are available (source `src/ux_model/ux_model.c`, Git blob `132010179de09ea81f4543e9ca83def09c0a743f`). Browse them using joystick/keyboard Help/Back/Lock, or expand **Inspect all 45 firmware screens** for visual QA. The first-mouse tutorial cannot Lock, matching firmware source.
+These directions have important exceptions on the didactic first-mouse tutorial and some Retry screens, noted in the UI.
 
-## WEB-05 — Virtual Mouse Lab
+## WEB-06: Custom profile and Movement editing
 
-The **Virtual Mouse Lab** is a completely local **simulation**, NOT physical Bluetooth pairing.
+The Virtual Mouse Lab from WEB-05 still manages up to **eight** saved virtual mice with stable IDs, independent default profiles, simulated Pair/Search/Disconnect/Remove/Reboot/Timeout, and validated localStorage persistence with a clear memory-only fallback.
 
-Use **Start Pair New**, **Complete Successfully** and **Simulate Failure** to test connection results. Up to **eight** uniquely named virtual mouse identities can be saved; each bond includes an independent default profile container (targets, Movement and shortcut values). Pairing the same name again cannot create duplicate bonds. Each virtual device has a stable ID, name, front-selection state, connected/disconnected state, and per-device data.
+For an actual saved virtual mouse, navigate using the virtual HAT (or keyboard Arrow keys, Enter/Space, A/B/X/Y):
+1. **Connected Home → Remapping Options → Custom Remapping → Edit Custom.** Choose a source mouse button (Left, Right, Middle, Forward or Backward) with joystick Up/Down and Press. In **WILL BECOME**, choose Left/Right/Middle/Forward/Backward/Modifier and press **A** to set a **local draft**, then press **A in EDIT CUSTOM** to apply that profile to the selected virtual mouse. Until final Apply, the stored profile is unchanged and uncommitted values do not get the firmware's Current/Cyan color. Pressing **B from EDIT CUSTOM discards unapplied target drafts**.
+2. At most **one** mouse source can be Modifier at any time. Assigning a second one releases the previous Modifier back to its original identity; Forward and Backward remain distinct, not swapped. A completely applied Custom profile and applied Modifier control the Cyan/Current styling in Remapping Options.
+3. **Remapping Options → Passthrough Default → Apply** switches the selected mouse back to Passthrough. The custom mapping remains stored in its profile for subsequent use; Passthrough must not turn Modifier Shortcuts cyan.
+4. **Connected Home → Movement Options → Horizontal DPI / Vertical DPI / Rotation** allows 0.25×, 0.5×, 0.75×, 1×, 1.25×, 1.5×, 2× and 3× gain, and 0°, 90°, 180°, 270° rotation. Joystick Left/Right switches the Slow/Fast gain pages. **A applies** the chosen value only to the active/selected virtual mouse; B cancels navigation without saving. **A on MOVEMENT OPTIONS** resets H/V to 1× and rotation to 0° without erasing the saved Custom profile or another mouse's Movement settings.
+5. Reconnecting, switching or reloading saved mice restores each mouse's distinct **applied** profile, target mapping and Movement values; draft values are not published as applied or persisted until Apply.
 
-- **Search Saved** reconnects the front/selected previously paired virtual mouse, never inventing a new bond.
-- **Advance to Timeout (+5 ticks)** advances a logical, deterministic clock—no background timers. Timeout opens the matching Retry screen. Failed/canceled/superseded attempts never reconnect an outdated mouse.
-- **Disconnect** preserves saved bonds. **Remove Saved Mouse** removes the selected device and its associated profile, clearing the active connection if necessary. **Reboot Virtual Device** clears the current connection and pending work while retaining bonds.
-- **Clear All Virtual Data** resets saved profiles, bonds, front selection, connection and history. Events are timestamped with logical ticks and maintained in a bounded history. The scenario selector remains available for demonstration-only visual screens.
-- **LocalStorage persistence** uses schema `remappingbridge-virtual-mice-v1`, with validation of the 0–8 device list, profile structure, IDs, names and event history. Reloads preserve valid saved data without duplicating bonds; pending asynchronous connection results are intentionally **not persisted**. If storage is blocked, full or corrupted, the UI clearly says **Memory only — storage unavailable** and allows safe testing without claiming durable storage.
+Pair and connect a virtual mouse in the **Virtual Mouse Lab**, then choose **Connected demo** (or Lock/Unlock from the first-connected tutorial) to navigate from HOME. An unsupported "connected demo" with no saved virtual mouse cannot persist profile changes: it displays an explicit prompt to pair or select a saved mouse. All persistence is **only inside this browser**, never a real RemappingBridge bond or HID action.
 
-On the real device the firmware can discover and bond mice through Bluetooth; **the website does not communicate with BLE, USB or HID**, and cannot alter the Pico. Full simulated Custom Remapping/Movement edits are WEB-06; Modifier Shortcuts assignment semantics are WEB-07. WEB-05 stores separate profile placeholders but does not claim to have implemented those editors.
+**Still pending for WEB-07:** interactive modifier shortcuts/12 combinations and 30 shortcut assignments, including the complete active-color predicates and persisted shortcut edits. WEB-06 does not claim these are operational.
 
-## Browser validation
+## Browser-only verification
 
-Open the [browser test page](https://remappingbridge.github.io/tests/). The **134 regression assertions** cover the original 45 screen rasterizations, Help/Back/Lock, focus, original foreground tones, fixed Gentle, eight bond capacity, first pairing, reconnect, timeout, cancellation/stale response, front-device selection, connected/offline removal, reboot, reset, profile independence, schema validation, reload, disabled storage and live Canvas/UI wiring.
+Open [tests](https://remappingbridge.github.io/tests/) in production Firefox/Chromium. The **160 regression checks** cover all WEB-01–WEB-05 behavior plus the validated Custom/Movement model, modifier uniqueness, cancelled drafts, actual save/reload with two mouse profiles, H/V rotation reset, selected Current/Cyan fidelity and no duplicate lab handlers.
 
-**134/134 passed in an isolated JavaScript V8/DOM/Canvas2D test harness.** This is **not** a statement that a real production Firefox browser has passed; the operator's test is required before WEB-05 is accepted.
+**160/160 checks passed in an isolated JavaScript V8 environment with simulated DOM/Canvas2D.** That is not a claim of a real production-browser pass. Visual scrolling, sticky behavior, browser zoom, button alignment and responsive/touch interaction must be verified and accepted by the operator in the production browser.
 
-To manually test: pair two differently named virtual mice, disconnect, choose one in the Saved mouse list, reconnect, reload the site, browse to Saved Devices, remove the active mouse, trigger a timeout, and clear the virtual database. Check that the general key guide is visible and the LCD uses the same vivid Gentle color.
-
-## Repository files
+## Structure
 
 ```text
-index.html                       One public application page (English)
-assets/css/app.css               Accessible responsive HAT and local lab
-assets/js/lcd-renderer.js        240×240 firmware bitmap/semantic colors
-assets/js/screens.js             45 exact canonical source templates
-assets/js/hat-interaction.js     HAT/Help/Lock + mock saved bond routes
-assets/js/ui-projector.js        Dynamic LCD names, colors and focus
-assets/js/virtual-mice.js        WEB-05 local storage and state model
-assets/js/app.js                 Browser event wiring / local simulation
-tests/index.html                 Browser-only regression runner
-tests/runner.js                  134 checks incl. persistence and UI
-tests/fixtures/                  Frozen RGB frame sample checks
-.nojekyll                        Static Pages without a Jekyll transform
-LICENSE                          Existing GNU AGPLv3 unchanged
+index.html                       English single-app DOM and sticky HAT
+assets/css/app.css               Responsive sticky HAT layout / virtual lab
+assets/js/lcd-renderer.js        v3.2.4 240×240 physical firmware bitmap
+assets/js/screens.js             All 45 canonical 9-row firmware templates
+assets/js/hat-interaction.js     HAT navigation, Custom draft, Movement apply
+assets/js/ui-projector.js        Dynamic bitmap rows / applied-only Cyan
+assets/js/virtual-mice.js        Local virtual bonds, profiles and storage
+assets/js/app.js                 UI bindings and per-mouse profile commits
+tests/index.html                 Native in-browser regression harness
+tests/runner.js                  160 profile, route, model and Canvas tests
+tests/fixtures/                  Physical-font RGBA golden samples
+README.md                        Source and browser testing instructions
+.nojekyll, LICENSE               Static GitHub Pages, AGPLv3 retained
 ```
 
-## License and public language
+Firmware canonical source: v3.2.4 (C UX Git blob `132010179de09ea81f4543e9ca83def09c0a743f`; renderer blob `61c4fe3d547ba05c3e24de86518d807047b50a77`). Firmware code and tags, UF2 assets and real BLE devices are unchanged by WEB-06.
 
-All user-facing website and firmware repository text, README documentation, accessible labels, UI messages, test results and GitHub release descriptions must remain **English**. The source LCD strings are preserved and do not get translated.
-
-The site retains **GNU AGPLv3**, while the firmware UI/source uses **CC0 1.0**. No hardware UF2, firmware tag, release assets or actual pairing information is changed by this gate.
-
-Gated implementation evidence: [WEB-00–WEB-15](https://github.com/remappingbridge/planner/tree/main/web-simulator-readme).
+All public website and firmware documentation/labels/release descriptions must remain **English**. Site license stays **GNU AGPLv3**. See [WEB-00–WEB-15 gate planning](https://github.com/remappingbridge/planner/tree/main/web-simulator-readme).
