@@ -232,7 +232,7 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
   background: #241e30; color: #ede9f5;
   display: grid; grid-template-columns: 1fr; gap: 7px;
 }
-.hat-guide p { margin: 0; font-size: 13px; line-height: 1.55; }
+.hat-guide p { margin: 0; font-size: clamp(14px, 1.5vw, 16px); line-height: 1.55; }
 .hat-guide strong { color: #f5c1ed; font-weight: 850; }
 .hat-guide__note { color: #b7aeca; font-size: 11px !important; }
 .mouse-lab {
