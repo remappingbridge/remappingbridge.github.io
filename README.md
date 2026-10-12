@@ -41,9 +41,9 @@ Pair and connect a virtual mouse in the **Virtual Mouse Lab**, then choose **Con
 
 ## Browser-only verification
 
-Open [tests](https://remappingbridge.github.io/tests/) in production Firefox/Chromium. The **160 regression checks** cover all WEB-01–WEB-05 behavior plus the validated Custom/Movement model, modifier uniqueness, cancelled drafts, actual save/reload with two mouse profiles, H/V rotation reset, selected Current/Cyan fidelity and no duplicate lab handlers.
+Open [tests](https://remappingbridge.github.io/tests/) in production Firefox/Chromium. The **165 regression checks** cover all WEB-01–WEB-05 behavior plus the validated Custom/Movement model, modifier uniqueness, cancelled drafts, actual save/reload with two mouse profiles, H/V rotation reset, selected Current/Cyan fidelity and no duplicate lab handlers.
 
-**160/160 checks passed in an isolated JavaScript V8 environment with simulated DOM/Canvas2D.** That is not a claim of a real production-browser pass. Visual scrolling, sticky behavior, browser zoom, button alignment and responsive/touch interaction must be verified and accepted by the operator in the production browser.
+**160/165 checks passed in an isolated JavaScript V8 environment with simulated DOM/Canvas2D.** That is not a claim of a real production-browser pass. Visual scrolling, sticky behavior, browser zoom, button alignment and responsive/touch interaction must be verified and accepted by the operator in the production browser.
 
 ## Structure
 
@@ -57,7 +57,7 @@ assets/js/ui-projector.js        Dynamic bitmap rows / applied-only Cyan
 assets/js/virtual-mice.js        Local virtual bonds, profiles and storage
 assets/js/app.js                 UI bindings and per-mouse profile commits
 tests/index.html                 Native in-browser regression harness
-tests/runner.js                  160 profile, route, model and Canvas tests
+tests/runner.js                  165 profile, route, model and Canvas tests
 tests/fixtures/                  Physical-font RGBA golden samples
 README.md                        Source and browser testing instructions
 .nojekyll, LICENSE               Static GitHub Pages, AGPLv3 retained
