@@ -1,4 +1,4 @@
-/* WEB-07 — firmware 12-combination / 30-shortcut editor and sticky HAT corners.
+/* WEB-08 — accessible responsive HAT and browser brightness/density preferences.
  * Virtual pairing is browser-only; no actual BLE/HID hardware is accessed.
  */
 (function () {
@@ -8,9 +8,9 @@
     uiBaseline:"v3.2.3",
     commit:"69a640d9767ec7198572eb9b5073ed71f8f3d202",
     uiBaselineCommit:"f38c5fd15c68ea9a36d3b05912727788d7b98e81",
-    gate:"WEB-07",lcdMode:"Canvas 240x240 RGB565 glyph preview",
+    gate:"WEB-08",lcdMode:"Canvas 240x240 RGB565 glyph preview",
     framebufferImplemented:true,hatInteractionImplemented:true,
-    uxImplemented:true,bluetoothImplemented:false,virtualMiceImplemented:true,profilesImplemented:true,shortcutsImplemented:true,maxWebBrightnessPercent:100
+    uxImplemented:true,bluetoothImplemented:false,virtualMiceImplemented:true,profilesImplemented:true,shortcutsImplemented:true,displayControlsImplemented:true,maxWebBrightnessPercent:100
   });
   var LABELS=Object.freeze({
     JOY_UP:"JOY UP",JOY_DOWN:"JOY DOWN",JOY_LEFT:"JOY LEFT",
@@ -45,7 +45,7 @@
     var canonical=typeof key==="string"&&key.length===1?key.toLowerCase():key;
     return Object.prototype.hasOwnProperty.call(KEYBOARD,canonical)?KEYBOARD[canonical]:null;
   }
-  var currentEngine=null,currentMice=null;
+  var currentEngine=null,currentMice=null,currentDisplay=null;
   function boot(doc){
     if(doc.documentElement&&doc.documentElement.lang!=="en")
       throw new Error("RemappingBridge pages must declare English (lang=en)");
@@ -54,11 +54,19 @@
     var lcd=window.RemappingBridgeLCD,hat=window.RemappingBridgeHAT;
     var catalog=window.RemappingBridgeScreens,projector=window.RemappingBridgeProjector;
     var virtual=window.RemappingBridgeVirtualMice;
+    var displayModule=window.RemappingBridgeDisplay;
     var canvas=root.querySelector("[data-lcd-canvas]");
     var feedback=root.querySelector("[data-feedback]");
     var count=root.querySelector("[data-count]");
     var clear=root.querySelector("[data-reset]");
     var buttons=Array.prototype.slice.call(root.querySelectorAll("[data-control]"));
+    var touchButtons=Array.prototype.slice.call(root.querySelectorAll("[data-touch-control]"));
+    var allControls=buttons.concat(touchButtons);
+    var brightness=root.querySelector("[data-lcd-brightness]");
+    var brightnessReading=root.querySelector("[data-brightness-reading]");
+    var effectiveBrightness=root.querySelector("[data-effective-brightness]");
+    var density=root.querySelector("[data-ui-density]");
+    var displayPersistence=root.querySelector("[data-display-persistence]");
     var inspector=root.querySelector("[data-screen-inspector]");
     var scenarios=Array.prototype.slice.call(root.querySelectorAll("[data-scenario]"));
     var screenLabel=root.querySelector("[data-screen-label]");
@@ -71,11 +79,15 @@
     var mousePending=root.querySelector("[data-mouse-pending]");
     var mouseLog=root.querySelector("[data-virtual-log]");
     var labButtons=Array.prototype.slice.call(root.querySelectorAll("[data-lab-action]"));
-    if(!lcd||!hat||!catalog||!projector||!virtual||!canvas||!feedback||!count||!clear||!screenLabel||!inspector||
+    if(!lcd||!hat||!catalog||!projector||!virtual||!displayModule||!canvas||!feedback||!count||!clear||!screenLabel||!inspector||
+       !brightness||!brightnessReading||!effectiveBrightness||!density||!displayPersistence||touchButtons.length!==9||
        !mouseName||!mouseSelect||!mouseCount||!mouseConnection||!profileStatus||!mousePersistence||!mousePending||!mouseLog||labButtons.length!==10||
        catalog.ids.length!==45||buttons.length!==9||scenarios.length!==3||
-       !isValidPreview(INITIAL))throw new Error("WEB-06: invalid DOM/renderer contract");
+       !isValidPreview(INITIAL))throw new Error("WEB-08: invalid DOM/renderer contract");
 
+    var touchNames=touchButtons.map(function(button){return button.getAttribute("data-touch-control");});
+    if(new Set(touchNames).size!==9||touchNames.some(function(id){return !controlLabel(id);}))
+      throw new Error("WEB-08: invalid mobile HAT control duplicate");
     var seen=new Set();
     buttons.forEach(function(b){
       var id=b.getAttribute("data-control");
@@ -83,6 +95,8 @@
       seen.add(id);
     });
     var taps=0;
+    var settings=displayModule.create();
+    currentDisplay=settings;
     var mice=virtual.create();
     currentMice=mice;
     var lastAttemptMode=null;
@@ -107,9 +121,33 @@
       if(engine.snapshot().locked)return;
       engine.inspect(inspector.value);
     });
+    function showDisplay(state){
+      var pref=settings.snapshot(state.locked);
+      brightness.value=String(pref.brightness);
+      brightness.disabled=state.locked;
+      brightness.setAttribute("aria-valuetext",pref.brightness+" percent");
+      brightnessReading.textContent=pref.brightness+"%";
+      effectiveBrightness.textContent=pref.effectiveBrightness+"%";
+      density.value=pref.density;
+      root.setAttribute("data-density",pref.density);
+      root.setAttribute("data-brightness",String(pref.brightness));
+      root.setAttribute("data-effective-brightness",String(pref.effectiveBrightness));
+      // CSS filter only scales the displayed Canvas. The source RGB565 frame
+      // buffer is never modified; brightness factors cannot exceed 1.
+      canvas.setAttribute("style","filter:brightness("+pref.factor+");");
+      displayPersistence.textContent=pref.durable?
+        "Preferences are stored locally in this browser":
+        "Memory only — display settings will not survive a reload";
+    }
+    settings.subscribe(function(){
+      if(engine)paint();
+    });
+    brightness.addEventListener("input",function(){settings.setBrightness(brightness.value);});
+    density.addEventListener("change",function(){settings.setDensity(density.value);});
     function paint(){
       var state=engine.snapshot();
       lcd.render(canvas,state.locked?blackFrame:currentFrame(state),"gentle");
+      showDisplay(state);
       canvas.setAttribute("aria-label",state.locked?
         "Virtual LCD locked. Press and release one HAT control to unlock.":
         "Virtual 240 by 240 firmware LCD: "+hat.templates[state.screen][0]+
@@ -118,8 +156,9 @@
       root.setAttribute("data-locked",state.locked?"true":"false");
       screenLabel.textContent=state.locked?"LCD LOCKED":hat.templates[state.screen][0].slice(0,21);
       inspector.value=state.screen;
-      buttons.forEach(function(b){
-        b.classList.toggle("is-pressed",state.held.indexOf(b.getAttribute("data-control"))!==-1);
+      allControls.forEach(function(b){
+        var id=b.getAttribute("data-control")||b.getAttribute("data-touch-control");
+        b.classList.toggle("is-pressed",state.held.indexOf(id)!==-1);
       });
       scenarios.forEach(function(b){
         b.disabled=state.locked;
@@ -289,11 +328,11 @@
     function cancelHeld(){
       keyboardDown.clear();
       engine.cancelAll();
-      buttons.forEach(function(b){b.classList.remove("is-pressed");});
+      allControls.forEach(function(b){b.classList.remove("is-pressed");});
       paint();
     }
-    buttons.forEach(function(b){
-      var id=b.getAttribute("data-control"),hadPointer=false;
+    allControls.forEach(function(b){
+      var id=b.getAttribute("data-control")||b.getAttribute("data-touch-control"),hadPointer=false;
       b.addEventListener("pointerdown",function(event){
         hadPointer=true;
         if(event&&typeof b.setPointerCapture==="function"&&event.pointerId!==undefined){
@@ -394,6 +433,7 @@
     isValidPreview:isValidPreview,firstScreenTemplate:INITIAL,
     getSession:function(){return currentEngine?currentEngine.snapshot():null;},
     getVirtualMice:function(){return currentMice?currentMice.snapshot():null;},
+    getDisplay:function(){return currentDisplay?currentDisplay.snapshot(currentEngine?currentEngine.snapshot().locked:false):null;},
     canonicalScreenCount:45,
     boot:boot
   });
