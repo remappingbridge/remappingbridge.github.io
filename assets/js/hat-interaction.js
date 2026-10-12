@@ -29,6 +29,7 @@ function createEngine(listener){
  var scenario="first",screen=S.FIRST,selection=0,locked=false,armed=null;
  var held=new Set(),returnScreen=null,returnSelection=0;
  var savedCount=0,savedPage=0,connected=true,activeProfile="PASSTHROUGH";
+ var savedMice=[],connectedId=null,frontId=null,connectedName="DEMO MOUSE",removeTargetId=null;
  var customSource=0,customTargets=[0,1,2,3,4],customDirty=false;
  var movement={horizontal:4,vertical:4,rotation:0},editingCombination=0;
  var shortcuts=Array(12).fill(0),dpiSelection=[0,0,0,0],lastOutcome=null;
@@ -37,7 +38,8 @@ function createEngine(listener){
  function snapshot(){
   return Object.freeze({scenario:scenario,screen:screen,selection:selection,locked:locked,
    held:Object.freeze(Array.from(held)),unlockArmed:armed,returnScreen:returnScreen,
-   returnSelection:returnSelection,savedCount:savedCount,savedPage:savedPage,
+   returnSelection:returnSelection,savedCount:savedCount,savedPage:savedPage,savedMice:Object.freeze(savedMice.map(function(m){return Object.freeze({id:m.id,name:m.name});})),
+   connectedId:connectedId,frontId:frontId,connectedName:connectedName,removeTargetId:removeTargetId,
    connected:connected,activeProfile:activeProfile,customSource:customSource,
    customTargets:Object.freeze(customTargets.slice()),customDirty:customDirty,
    modifierSource:customTargets.indexOf(5),
@@ -54,6 +56,33 @@ function createEngine(listener){
   scenario=name;savedCount=name==="first"?0:1;connected=name==="connected";
   savedPage=0;go(home());held.clear();returnScreen=null;returnSelection=0;armed=null;lastOutcome=null;
   return emit("scenario");
+ }
+ function syncMice(value,reason){
+  if(!value||!Array.isArray(value.mice)||value.mice.length>8)throw new TypeError("Invalid virtual mouse snapshot");
+  savedMice=value.mice.map(function(m){return {id:m.id,name:m.name};});
+  savedCount=savedMice.length;frontId=value.frontId;connectedId=value.connectedId;
+  connected=!!connectedId;
+  var current=savedMice.find(function(m){return m.id===connectedId;});
+  connectedName=current?current.name:"DEMO MOUSE";
+  var frontIndex=savedMice.findIndex(function(m){return m.id===frontId;});
+  if(frontIndex>=0)savedPage=frontIndex;
+  else savedPage=Math.min(savedPage,Math.max(0,savedCount-1));
+  if(reason==="started-pair")go("PAIR_MOUSE");
+  else if(reason==="started-saved")go(S.SEARCH);
+  else if(reason==="timeout-pair"||reason==="failed-pair")go("RETRY_PAIR_NEW");
+  else if(reason==="timeout-saved"||reason==="failed-saved")go(S.RETRY);
+  else if(reason==="paired")go(savedCount===1?"MOUSE_SAVED":"HOME");
+  else if(reason==="connected")go("HOME");
+  else if(reason==="removed"||reason==="disconnected"||reason==="reboot"||reason==="reset"){
+   scenario=connected?"connected":savedCount?"saved":"first";go(home());
+  }
+  else if(reason==="initialized"){
+   scenario=connected?"connected":savedCount?"saved":"first";go(home());
+  }
+  if(reason==="paired"||reason==="connected"){scenario="connected";}
+  if(reason==="started-saved"||reason==="timeout-saved"||reason==="failed-saved")scenario="saved";
+  if(reason==="started-pair"||reason==="timeout-pair"||reason==="failed-pair")scenario=savedCount?"saved":"first";
+  return emit("mice-updated");
  }
  function inspect(id){
   if(!source.get(id))throw new RangeError("Unknown canonical screen");
@@ -192,10 +221,13 @@ function createEngine(listener){
   if(isWill(screen)&&id==="KEY_A")return applyVisualPlaceholder("CUSTOM_SET_TARGET");
   if(screen==="EDIT_CUSTOM"&&id==="KEY_A")return applyVisualPlaceholder("APPLY_CUSTOM");
   if(screen==="SAVED_DEVICES"){
-   if(id==="JOY_LEFT"||id==="JOY_RIGHT"){savedPage=0;return emit("page",id);}
-   if(id==="JOY_PRESS"&&savedCount){go("REMOVE_THIS");return emit("access",id);}
+   if(id==="JOY_LEFT"||id==="JOY_RIGHT"){
+    if(savedCount)savedPage=(savedPage+(id==="JOY_LEFT"?savedCount-1:1))%savedCount;
+    return emit("page",id);
+   }
+   if(id==="JOY_PRESS"&&savedCount){removeTargetId=savedMice[savedPage].id;go("REMOVE_THIS");return emit("access",id);}
   }
-  if(screen==="REMOVE_THIS"&&id==="KEY_A")return applyVisualPlaceholder("REMOVE_MOUSE");
+  if(screen==="REMOVE_THIS"&&id==="KEY_A")return removeTargetId?emit("remove-request",removeTargetId):emit("no-action",id);
   if(screen==="APPLY_PASSTHROUGH"&&id==="KEY_A")return applyVisualPlaceholder("APPLY_PASSTHROUGH");
   return emit("no-action",id);
  }
@@ -205,7 +237,7 @@ function createEngine(listener){
  }
  return Object.freeze({
   press:press,release:release,cancelAll:cancelAll,setScenario:setScenario,
-  inspect:inspect,snapshot:snapshot,isHelp:help,optionCount:options
+  inspect:inspect,syncMice:syncMice,snapshot:snapshot,isHelp:help,optionCount:options
  });
 }
 window.RemappingBridgeHAT=Object.freeze({
