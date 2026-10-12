@@ -154,3 +154,13 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 4px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior:auto !important; transition-duration:0s !important; animation-duration:0s !important; }
 }
+
+/* Below 400px the HAT groups stack so touch targets remain usable.
+ * Full responsive/HiDPI accessibility audits are reserved for WEB-08. */
+@media (max-width: 399px) {
+  .hardware-controls { grid-template-columns: 1fr; gap: 21px; }
+  .joy-cluster { width: 174px; }
+  .action-cluster { width: 164px; }
+  .joy { font-size: 19px; }
+  .action-key { font-size: 23px; }
+}
