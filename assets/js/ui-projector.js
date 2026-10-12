@@ -86,7 +86,7 @@ function projection(state,lcd){
  }
  if(U.isWill(id)){
   for(var w=1;w<=6;w++)setCellRow(frame,w,muted,lcd);
-  setCellRow(frame,state.customTargets[state.customSource]+1,now,lcd);
+  setCellRow(frame,(state.appliedTargets||state.customTargets)[state.customSource]+1,now,lcd);
  }
  if(U.isCombo(id)){
   var page=Number(id.split("_")[1])-1;
