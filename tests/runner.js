@@ -1,4 +1,4 @@
-/* WEB-08 — native browser tests for LCD brightness, density, touch and prior firmware gates,
+/* WEB-09 — native browser tests for deterministic isolated diagnostics and prior firmware gates,
  * per-pixel framebuffer, focus and navigation. No npm, CDN, server or BLE.
  */
 (function(){
@@ -6,7 +6,7 @@
 function run(){
  var W=window.RemappingBridgeWeb,L=window.RemappingBridgeLCD;
  var S=window.RemappingBridgeScreens,H=window.RemappingBridgeHAT;
- var P=window.RemappingBridgeProjector,V=window.RemappingBridgeVirtualMice,D=window.RemappingBridgeDisplay;
+ var P=window.RemappingBridgeProjector,V=window.RemappingBridgeVirtualMice,D=window.RemappingBridgeDiagnostics;
  var resultNode=document.getElementById("test-results"),summary=document.getElementById("summary");
  var tests=[];
  function check(name,pass){tests.push({name:name,pass:!!pass});}
@@ -19,7 +19,7 @@ function run(){
  check("Canvas, model, 45 screens, projector and local mouse module exported",!!L&&!!H&&!!S&&!!P&&!!W&&!!V&&!!D);
  if(L&&H&&S&&P&&W&&V&&D){
   var info=W.getBootstrapInfo();
-  check("Latest official v3.2.4 source and WEB-08",info.gate==="WEB-08"&&info.version==="v3.2.4"&&info.uiBaseline==="v3.2.3");
+  check("Latest official v3.2.4 source and WEB-09",info.gate==="WEB-09"&&info.version==="v3.2.4"&&info.uiBaseline==="v3.2.3");
   check("Firmware renderer is 240x240 with 9x21 logical grid",L.geometry.width===240&&L.geometry.height===240&&L.geometry.rows===9&&L.geometry.columns===21);
   check("Physical C glyphs are 5x7 scaled twofold",L.geometry.glyphWidth===10&&L.geometry.glyphHeight===14&&L.glyphRow("A",0)===14);
   check("All six semantic RGB565 foreground colors retained",L.rgb565.MAGENTA===0xf81f&&L.rgb565.CYAN===0x07ff&&L.rgb565.CYAN_FOCUSED===0xd7ff&&L.rgb565.OFF_WHITE_YELLOW===0xffb8);
@@ -506,62 +506,94 @@ function run(){
     ce.snapshot().customDirty&&!ce.snapshot().modifierShortcutsActive&&
     P.frame(ce.snapshot(),L).cells[3][1].tone!==L.tones.CURRENT);
 
-  // WEB-08 display preferences: independent of the canonical framebuffer.
-  var displayStore=memoryStore(),display=D.create({storage:displayStore});
-  check("Display preference schema is versioned with safe default 100%/Standard",
-    display.snapshot().schema==="remappingbridge-display-v1"&&
-    display.snapshot().brightness===100&&display.snapshot().density==="standard");
-  check("Display brightness is strictly capped to 0..100%",
-    D.clamp(-999)===0&&D.clamp(0)===0&&D.clamp(100)===100&&
-    D.clamp(999)===100&&D.clamp(45.7)===46);
-  check("Non-numeric or invalid brightness safely returns standard 100%",
-    D.clamp("bad")===100&&D.clamp(Infinity)===100&&D.clamp(NaN)===100);
-  display.setBrightness(-400);
-  check("Negative brightness inputs store only zero",display.snapshot().brightness===0&&display.snapshot().factor===0);
-  display.setBrightness(999);
-  check("Oversized brightness stores only 100%, never amplification",
-    display.snapshot().brightness===100&&display.snapshot().factor===1);
-  display.setBrightness(37);
-  check("Thirty-seven percent is represented by exact 0.37 CSS factor",
-    display.snapshot().brightness===37&&display.snapshot().factor===0.37);
-  check("Lock forces zero effective brightness without changing preference",
-    display.snapshot(true).effectiveBrightness===0&&display.snapshot(true).factor===0&&
-    display.snapshot(true).brightness===37);
-  check("Unlock restores remembered 37% without a second preference write",
-    display.snapshot(false).brightness===37&&display.snapshot(false).effectiveBrightness===37);
-  display.setDensity("compact");
-  check("Compact density is independent of brightness percentage",
-    display.snapshot().density==="compact"&&display.snapshot().brightness===37);
-  display.setDensity("spacious");
-  check("Spacious density is selectable independently of LCD pixel scale",
-    display.snapshot().density==="spacious"&&display.snapshot().factor===0.37);
-  display.setDensity("standard");
-  check("Standard density can be restored",display.snapshot().density==="standard");
-  check("Invalid density is rejected with no prior settings loss",
-    throws(function(){display.setDensity("extreme");})&&display.snapshot().density==="standard");
-  var restoredDisplay=D.create({storage:displayStore});
-  check("Display 37% preference and density persist after reload",
-    restoredDisplay.snapshot().recovered&&restoredDisplay.snapshot().brightness===37&&
-    restoredDisplay.snapshot().density==="standard");
-  var notice=[],detach=display.subscribe(function(pref){notice.push(pref.brightness);});
-  display.setBrightness(11);detach();display.setBrightness(12);
-  check("Display listeners receive user edits once and can unsubscribe",
-    same(notice,[11]));
-  var corruptDisplay=D.create({storage:{getItem:function(){return "{oops";},
-    setItem:function(){throw Error("blocked");}}});
-  check("Corrupted display preferences safely revert to defaults without claiming durability",
-    !corruptDisplay.snapshot().durable&&corruptDisplay.snapshot().brightness===100);
-  var blockedDisplay=D.create({storage:{getItem:function(){return null;},
-    setItem:function(){throw Error("blocked");}}});
-  blockedDisplay.setBrightness(52);
-  check("Blocked storage still allows memory-only brightness settings",
-    !blockedDisplay.snapshot().durable&&blockedDisplay.snapshot().brightness===52);
-  var invalidStored=D.create({storage:{getItem:function(){return JSON.stringify({
-     schema:D.schema,brightness:750,density:"standard"});},setItem:function(){}}});
-  check("Old abusive brightness above 100% cannot survive storage validation",
-    invalidStored.snapshot().brightness===100&&!invalidStored.snapshot().durable);
-  check("Density supports exactly three non-redundant spacing modes",
-    same(D.densities,["compact","standard","spacious"]));
+  // WEB-09: scenarios never touch the real browser's persisted virtual mice.
+  check("Eight reproducible current-UX scenarios, no deprecated v1 screens",
+    D.scenarios.length===8&&D.scenarios[0].id==="first-use"&&
+    D.scenarios[7].id==="shortcuts");
+  var dg=D.create({lcd:L,hat:H,projector:P,virtual:V});
+  var realBefore=JSON.stringify(profiles.snapshot().mice);
+  var scenarioOne=dg.run("first-use");
+  check("First use without any saved device starts canonical SEARCHING FIRST",
+    scenarioOne.screen==="SEARCHING_FIRST"&&scenarioOne.virtual.savedCount===0);
+  check("Scenario creates no durable browser storage",
+    !scenarioOne.virtual.durable&&JSON.stringify(profiles.snapshot().mice)===realBefore);
+  var scenarioConnected=dg.run("connected");
+  check("Connected scenario reaches HOME with one separate virtual bond",
+    scenarioConnected.screen==="HOME"&&scenarioConnected.virtual.savedCount===1&&
+    scenarioConnected.virtual.connectedId);
+  var stableHash=scenarioConnected.hash;
+  var scenarioRepeat=dg.run("connected");
+  check("Repeated connected scenario produces exactly the same state hash",
+    scenarioRepeat.hash===stableHash&&/^[0-9a-f]{8}$/.test(stableHash));
+  check("Hash is sensitive to inputs and not fixed between different scenarios",
+    scenarioOne.hash!==scenarioConnected.hash&&
+    D.checksum("a")!==D.checksum("b"));
+  var scenarioMulti=dg.run("multi-mouse");
+  check("Multiple-saved-mouse scenario creates exactly two unique local mice",
+    scenarioMulti.virtual.savedCount===2&&
+    scenarioMulti.events.filter(function(e){return e.kind==="paired";}).length===2);
+  var scenarioRemove=dg.run("remove-device");
+  check("Remove scenario leaves one mouse and opens Saved Devices",
+    scenarioRemove.screen==="SAVED_DEVICES"&&scenarioRemove.virtual.savedCount===1);
+  var scenarioFail=dg.run("stale-fail");
+  check("Stale/fail scenario never bonds a stale mouse",
+    scenarioFail.virtual.savedCount===0&&scenarioFail.screen==="RETRY_PAIR_NEW"&&
+    scenarioFail.events.some(function(e){return e.kind==="stale";})&&
+    scenarioFail.events.some(function(e){return e.kind==="failed";}));
+  var scenarioTimeout=dg.run("timeout");
+  check("Saved search timeout reaches HOME RETRY without new mouse bond",
+    scenarioTimeout.screen==="HOME_RETRY"&&scenarioTimeout.virtual.savedCount===1&&
+    scenarioTimeout.events.some(function(e){return e.kind==="timeout";}));
+  var scenarioMovement=dg.run("movement-custom");
+  check("Custom+Movement scenario has applied rotation 90 and H 2x",
+    scenarioMovement.screen==="MOVEMENT_OPTIONS"&&
+    scenarioMovement.state.activeProfile==="CUSTOM"&&
+    scenarioMovement.state.movement.horizontal===8&&
+    scenarioMovement.state.movement.rotation===1);
+  var scenarioShortcuts=dg.run("shortcuts");
+  check("Shortcut scenario has Modifier and assigned ZOOM IN on its first combo",
+    scenarioShortcuts.screen==="COMBINATIONS_1"&&
+    scenarioShortcuts.state.modifierShortcutsActive&&
+    scenarioShortcuts.state.shortcuts[0]===26);
+  check("Scenario LCD frame is still a canonical 9x21 grid with 240x240 geometry",
+    scenarioShortcuts.geometry.width===240&&scenarioShortcuts.geometry.height===240&&
+    dg.frame().cells.length===9&&dg.frame().cells[0].length===21);
+  var selectedGlyph=dg.inspectPixel(7,8);
+  check("Semantic glyph lookup returns source screen/row/col and exact 240px bounds",
+    !!selectedGlyph&&selectedGlyph.id==="LCD/COMBINATIONS_1/ROW_01/COL_01"&&
+    selectedGlyph.character==="C"&&selectedGlyph.bounds.x===7&&
+    selectedGlyph.bounds.y===8&&selectedGlyph.bounds.width===10&&selectedGlyph.bounds.height===14);
+  check("Inspector selection stores same current semantic ID and tone",
+    dg.snapshot().selection.id===selectedGlyph.id&&
+    dg.snapshot().selection.tone===L.tones.TITLE);
+  check("Hit testing rejects coordinates outside 240x240 without unsafe reads",
+    dg.inspectPixel(-1,8)===null&&dg.inspectPixel(240,8)===null&&
+    dg.inspectPixel(7,240)===null);
+  check("Inspector refuses unsourced empty pixels and clears prior selection",
+    dg.inspectPixel(235,235)===null&&dg.snapshot().selection===null);
+  var jsonEvidence=JSON.parse(dg.toJSON());
+  check("JSON evidence has local-only schema, deterministic hash and source text",
+    jsonEvidence.schema==="remappingbridge-web-diagnostics-v1"&&
+    jsonEvidence.scenario.hash===scenarioShortcuts.hash&&
+    jsonEvidence.note.indexOf("not physical")>=0);
+  check("Text evidence retains scenario ID, hash, logical dimensions and timeline",
+    dg.toText().includes("Scenario: shortcuts")&&dg.toText().includes(scenarioShortcuts.hash)&&
+    dg.toText().includes("240 x 240")&&dg.toText().includes("TIMELINE:"));
+  check("Isolated playback cannot change already saved browser mouse profiles",
+    JSON.stringify(profiles.snapshot().mice)===realBefore);
+  check("Unknown scenario is rejected rather than fabricating a result",
+    throws(function(){dg.run("STANDARD_REMAP");}));
+  var historyBefore=dg.snapshot().timeline.length;
+  dg.record("manual","click","unit check");
+  check("Local timeline records manual commands with monotonically increasing ID",
+    dg.snapshot().timeline.length===historyBefore+1&&
+    dg.snapshot().timeline.slice(-1)[0].source==="manual");
+  for(var n=0;n<90;n++)dg.record("test","repeat","bounded");
+  check("Diagnostic event timeline remains bounded at 60 entries",
+    dg.snapshot().timeline.length===60);
+  dg.run("connected");
+  check("Timeline recording does not pollute reproducible state hash",
+    dg.snapshot().hash===stableHash);
 
   // End of independent virtual model tests.
 
@@ -583,12 +615,23 @@ function run(){
     var el=document.createElement("button");el.setAttribute("data-touch-control",id);
     root.appendChild(el);return el;
   });
-  var brightnessSlider=document.createElement("input");
-  brightnessSlider.setAttribute("data-lcd-brightness","");brightnessSlider.value="100";root.appendChild(brightnessSlider);
-  var brightnessValue=document.createElement("output");brightnessValue.setAttribute("data-brightness-reading","");root.appendChild(brightnessValue);
-  var brightnessEffective=document.createElement("output");brightnessEffective.setAttribute("data-effective-brightness","");root.appendChild(brightnessEffective);
-  var densityChoice=document.createElement("select");densityChoice.setAttribute("data-ui-density","");densityChoice.value="standard";root.appendChild(densityChoice);
-  var persistedDisplay=document.createElement("span");persistedDisplay.setAttribute("data-display-persistence","");root.appendChild(persistedDisplay);
+  var scenarioSelect=document.createElement("select");scenarioSelect.setAttribute("data-diagnostic-scenario","");
+  var runScenario=document.createElement("button");runScenario.setAttribute("data-diagnostic-run","");
+  var diagnosticHash=document.createElement("output");diagnosticHash.setAttribute("data-diagnostic-hash","");
+  var diagnosticContext=document.createElement("span");diagnosticContext.setAttribute("data-diagnostic-context","");
+  var diagnosticRef=document.createElement("output");diagnosticRef.setAttribute("data-diagnostic-ref","");
+  var diagnosticBounds=document.createElement("p");diagnosticBounds.setAttribute("data-diagnostic-bounds","");
+  var diagnosticCopy=document.createElement("button");diagnosticCopy.setAttribute("data-diagnostic-copy","");
+  var diagnosticLog=document.createElement("ol");diagnosticLog.setAttribute("data-diagnostic-events","");
+  var diagnosticFeedback=document.createElement("p");diagnosticFeedback.setAttribute("data-diagnostic-feedback","");
+  var diagnosticCanvas=document.createElement("canvas");diagnosticCanvas.setAttribute("data-diagnostic-canvas","");
+  diagnosticCanvas.width=240;diagnosticCanvas.height=240;
+  [scenarioSelect,runScenario,diagnosticHash,diagnosticContext,diagnosticRef,diagnosticBounds,
+    diagnosticCopy,diagnosticLog,diagnosticFeedback,diagnosticCanvas].forEach(function(x){root.appendChild(x);});
+  var diagnosticExportButtons=["json","txt","png"].map(function(fmt){
+    var b=document.createElement("button");b.setAttribute("data-diagnostic-export",fmt);
+    root.appendChild(b);return b;
+  });
   var scenarios=["first","connected","saved"].map(function(id){
    var b=document.createElement("button");b.setAttribute("data-scenario",id);root.appendChild(b);return b;
   });
@@ -610,32 +653,47 @@ function run(){
    check("Application boots with no backdrop option buttons",started===true&&root.querySelectorAll("[data-backdrop]").length===0);
    check("Inspector contains all 45 original screens",inspect.children.length===45);
    check("Fixed Gentle LCD is used on initial screen",same(Array.from(ctx.getImageData(0,0,1,1).data),[48,12,57,255]));
-   check("Browser display preference initialized at 100% and standard density",
-     W.getDisplay().brightness===100&&W.getDisplay().effectiveBrightness===100&&
-     root.getAttribute("data-density")==="standard");
-   check("Initial CSS filter brightness is never above 1",
-     canvas.getAttribute("style")==="filter:brightness(1);");
-   brightnessSlider.value="36";brightnessSlider.dispatchEvent(new Event("input"));
-   check("Native range input updates requested and effective display brightness",
-     W.getDisplay().brightness===36&&W.getDisplay().effectiveBrightness===36&&
-     brightnessValue.textContent==="36%"&&brightnessEffective.textContent==="36%");
-   check("LCD brightness changes style only, not the source 240x240 pixel buffer",
-     canvas.getAttribute("style")==="filter:brightness(0.36);"&&
-     same(Array.from(ctx.getImageData(0,0,1,1).data),[48,12,57,255]));
-   brightnessSlider.value="750";brightnessSlider.dispatchEvent(new Event("input"));
-   check("Browser brightness input clamps 750 to safe 100 percent",
-     W.getDisplay().brightness===100&&canvas.getAttribute("style")==="filter:brightness(1);");
-   densityChoice.value="spacious";densityChoice.dispatchEvent(new Event("change"));
-   check("Native density control updates container without touching brightness",
-     root.getAttribute("data-density")==="spacious"&&W.getDisplay().brightness===100);
-   densityChoice.value="compact";densityChoice.dispatchEvent(new Event("change"));
-   check("Compact density updates the browser layout state",
-     root.getAttribute("data-density")==="compact"&&W.getDisplay().density==="compact");
-   densityChoice.value="standard";densityChoice.dispatchEvent(new Event("change"));
-   check("Standard density restores state",root.getAttribute("data-density")==="standard");
-   brightnessSlider.value="27";brightnessSlider.dispatchEvent(new Event("input"));
-   check("Mobile touch keys are separately wired without duplicating physical controls",
-     root.querySelectorAll("[data-touch-control]").length===9&&root.querySelectorAll("[data-control]").length===9);
+   check("Obsolete WEB-08 brightness/density controls are absent from HTML app",
+     root.querySelectorAll("[data-lcd-brightness]").length===0&&
+     root.querySelectorAll("[data-ui-density]").length===0);
+   check("Canonical display stays at full brightness by default",
+     W.getDisplay().brightness===100&&W.getDisplay().availableControls===false);
+   check("WEB-09 diagnostic panel defines exactly eight deterministic cases",
+     scenarioSelect.children.length===8);
+   scenarioSelect.value="connected";runScenario.click();
+   check("Diagnostic Run button draws HOME on separate 240x240 preview",
+     W.getDiagnostics().screen==="HOME"&&
+     diagnosticCanvas.getContext("2d").getImageData(0,0,1,1).data[3]===255);
+   check("Diagnostic state hash displayed after an isolated scenario",
+     diagnosticHash.textContent.includes(W.getDiagnostics().hash));
+   check("Scenario preview doesn't overwrite real HAT canvas or saved mice",
+     W.getSession().screen==="SEARCHING_FIRST"&&W.getVirtualMice().mice.length===0);
+   check("Diagnostic scenario timeline shows at least one event",
+     diagnosticLog.children.length>=1);
+   scenarioSelect.value="timeout";runScenario.click();
+   check("Diagnostic scenario control reruns a distinct timeout state",
+     W.getDiagnostics().screen==="HOME_RETRY"&&diagnosticContext.textContent.includes("HOME_RETRY"));
+   check("Diagnostic COPY refuses nonexistent selection with a clear message",
+     (diagnosticCopy.click(),diagnosticFeedback.textContent.includes("Select a character")));
+   var keySelection=new Event("keydown");
+   Object.defineProperty(keySelection,"key",{value:"Enter"});
+   diagnosticCanvas.dispatchEvent(keySelection);
+   check("Keyboard ENTER selects a semantic LCD glyph without pointing",
+     !!W.getDiagnostics().selection&&W.getDiagnostics().selection.id.indexOf("LCD/HOME_RETRY/ROW_01")===0);
+   check("Semantic inspector exposes exact source coordinates in UI",
+     diagnosticRef.textContent===W.getDiagnostics().selection.id&&
+     diagnosticBounds.textContent.includes("row 1"));
+   diagnosticExportButtons[0].click();
+   check("JSON evidence export is local and produces successful UI confirmation",
+     diagnosticFeedback.textContent.includes("Local JSON evidence downloaded"));
+   diagnosticExportButtons[1].click();
+   check("TXT evidence export is local and produces successful UI confirmation",
+     diagnosticFeedback.textContent.includes("Local TXT evidence downloaded"));
+   diagnosticCanvas.toDataURL=function(){return "data:image/png;base64,UE5H";};
+   diagnosticExportButtons[2].click();
+   check("PNG export uses local 240x240 diagnostic Canvas and a download action",
+     diagnosticFeedback.textContent.includes("Local PNG evidence downloaded")&&
+     diagnosticCanvas.width===240&&diagnosticCanvas.height===240);
 
    scenarios[1].click();
    check("Connected demo selector starts HOME",W.getSession().screen==="HOME");
@@ -651,26 +709,17 @@ function run(){
    check("QA screen selector displays requested canonical template",W.getSession().screen==="SHORTCUTS_4");
    keys[8].click();
    check("Y locks the LCD and makes Canvas black",W.getSession().locked&&same(Array.from(ctx.getImageData(0,0,1,1).data),[0,0,0,255]));
-   check("Lock forces effective brightness 0%, saves requested 27% and disables slider",
-     W.getDisplay().brightness===27&&W.getDisplay().effectiveBrightness===0&&
-     brightnessSlider.disabled&&canvas.getAttribute("style")==="filter:brightness(0);");
-
+   check("Lock still makes effective LCD brightness zero with no WEB-08 slider",
+     W.getDisplay().effectiveBrightness===0&&
+     root.querySelectorAll("[data-lcd-brightness]").length===0);
    keys[5].click();
    check("An unlock action is consumed and returns HOME",!W.getSession().locked&&W.getSession().screen==="HOME");
-   check("Unlock restores 27% brightness and slider value without losing preference",
-     W.getDisplay().brightness===27&&W.getDisplay().effectiveBrightness===27&&
-     !brightnessSlider.disabled&&canvas.getAttribute("style")==="filter:brightness(0.27);");
+   check("Unlock restores constant 100% display without old brightness controls",
+     W.getDisplay().effectiveBrightness===100&&
+     canvas.getAttribute("style")==="filter:brightness(1);");
    touchControls[0].click();touchControls[4].click();
-   check("Extra mobile touch controls navigate virtual HOME and return to original focus",
+   check("Accepted large mobile HAT touch controls remain functional",
      W.getSession().screen==="HOME"&&W.getSession().selection===0);
-   brightnessSlider.value="0";brightnessSlider.dispatchEvent(new Event("input"));
-   check("0% brightness renders pure black visually without Lock flag",
-     W.getDisplay().effectiveBrightness===0&&!W.getSession().locked&&
-     canvas.getAttribute("style")==="filter:brightness(0);");
-   brightnessSlider.value="100";brightnessSlider.dispatchEvent(new Event("input"));
-   check("Brightness restores readable LCD without changing selected firmware screen",
-     W.getSession().screen==="HOME"&&canvas.getAttribute("style")==="filter:brightness(1);");
-
    reset.click();
    check("Clear resets only counters and pressed state",counter.textContent==="00"&&feedback.textContent==="Ready for virtual controls.");
    check("Virtual Mouse Lab initialized with no real connected device",W.getVirtualMice().mice.length===0&&!!W.getVirtualMice().schema);
@@ -764,7 +813,7 @@ function run(){
  var ok=tests.filter(function(t){return t.pass;}).length;
  summary.textContent=ok+"/"+tests.length+" checks passed.";
  summary.className=ok===tests.length?"pass":"fail";
- window.__WEB08_TEST_RESULT__={passed:ok,total:tests.length};
+ window.__WEB09_TEST_RESULT__={passed:ok,total:tests.length};
 }
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run,{once:true});
 else run();

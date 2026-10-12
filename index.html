@@ -13,7 +13,7 @@
   <script defer src="./assets/js/hat-interaction.js"></script>
   <script defer src="./assets/js/ui-projector.js"></script>
   <script defer src="./assets/js/virtual-mice.js"></script>
-  <script defer src="./assets/js/display-settings.js"></script>
+  <script defer src="./assets/js/diagnostics.js"></script>
   <script defer src="./assets/js/app.js"></script>
 </head>
 <body>
@@ -67,38 +67,6 @@
         <p><strong>KEY Y</strong> — Lock the display; press and release any HAT control to unlock and return Home.</p>
         <p class="hat-guide__note">The first-mouse tutorial is demonstration-only; some retry screens also have special key behavior.</p>
       </aside>
-
-      <section class="display-options" aria-labelledby="display-options-title">
-        <div class="display-options__heading">
-          <div>
-            <span class="eyebrow">DISPLAY CONTROLS · WEB-08</span>
-            <h2 id="display-options-title">LCD appearance</h2>
-          </div>
-          <span class="display-options__source">Firmware UI v3.2.4</span>
-        </div>
-        <div class="display-options__grid">
-          <div class="display-options__field">
-            <label for="lcd-brightness">LCD brightness
-              <output for="lcd-brightness" data-brightness-reading>100%</output>
-            </label>
-            <input type="range" id="lcd-brightness" data-lcd-brightness min="0" max="100" step="1"
-              value="100" aria-label="LCD brightness from zero to one hundred percent">
-            <p class="display-options__detail">Effective LCD brightness:
-              <output data-effective-brightness aria-live="polite">100%</output>
-            </p>
-          </div>
-          <div class="display-options__field">
-            <label for="ui-density">Controls and options density</label>
-            <select id="ui-density" data-ui-density aria-label="Choose spacing of lower simulator controls">
-              <option value="compact">Compact</option>
-              <option value="standard" selected>Standard</option>
-              <option value="spacious">Spacious</option>
-            </select>
-            <p class="display-options__detail">Changes spacing, not firmware text or LCD brightness.</p>
-          </div>
-        </div>
-        <p class="display-options__note">Browser-only display controls. Lock makes the LCD effectively 0% bright and restores the saved brightness after unlock. No physical backlight or mouse is accessed. <span data-display-persistence>Checking display preferences</span>.</p>
-      </section>
 
       <section class="touch-hat" aria-label="Large mobile touch controls">
         <p class="touch-hat__label">LARGE TOUCH CONTROLS</p>
@@ -184,6 +152,48 @@
           <ol data-virtual-log aria-label="Local virtual connection events"></ol>
         </details>
         <p class="mouse-lab__note">Up to eight virtual mice are saved only in this browser when storage is available. Pairing, reconnection and removal are entirely simulated; Custom Remapping and Movement are edited through the virtual HAT; Modifier Shortcuts are also editable through the HAT.</p>
+      </section>
+
+      <section class="diagnostics" aria-label="Browser-only diagnostic laboratory">
+        <details data-diagnostic-panel>
+          <summary>Diagnostic Inspector · scenarios and local evidence</summary>
+          <div class="diagnostics__body">
+            <p class="diagnostics__notice">Browser-only laboratory. Scenario playback is isolated from saved mice, preferences and the physical firmware. No data is uploaded.</p>
+            <div class="diagnostics__scenarios">
+              <label for="diagnostic-scenario">Reproducible scenario
+                <select id="diagnostic-scenario" data-diagnostic-scenario></select>
+              </label>
+              <button type="button" data-diagnostic-run>Run isolated scenario</button>
+            </div>
+            <div class="diagnostics__summary" aria-live="polite">
+              <output data-diagnostic-hash>Scenario not run</output>
+              <span data-diagnostic-context>Run a scenario, then click a character in the 240 × 240 diagnostic LCD.</span>
+            </div>
+            <div class="diagnostics__inspector">
+              <div class="diagnostics__preview">
+                <canvas width="240" height="240" data-diagnostic-canvas
+                  aria-label="Interactive diagnostic LCD: select a rendered character to inspect semantic ID and pixel bounds"></canvas>
+              </div>
+              <div class="diagnostics__selection">
+                <h3>Semantic element inspector</h3>
+                <output data-diagnostic-ref aria-live="polite">No character selected</output>
+                <p data-diagnostic-bounds>Logical LCD bounds: 240 × 240 px.</p>
+                <button type="button" data-diagnostic-copy>Copy reference</button>
+                <p>Choose a rendered glyph to see its ID, row/column, original tone and pixel rectangle. The normal HAT framebuffer is not modified.</p>
+              </div>
+            </div>
+            <div class="diagnostics__exports" aria-label="Download local diagnostic evidence">
+              <button type="button" data-diagnostic-export="json">Export JSON</button>
+              <button type="button" data-diagnostic-export="txt">Export TXT</button>
+              <button type="button" data-diagnostic-export="png">Export LCD PNG</button>
+            </div>
+            <div class="diagnostics__timeline">
+              <h3>Event timeline</h3>
+              <ol data-diagnostic-events aria-live="polite"></ol>
+            </div>
+            <p class="diagnostics__feedback" data-diagnostic-feedback aria-live="polite">Run a scenario to generate evidence.</p>
+          </div>
+        </details>
       </section>
 
       <section class="session-panel" aria-label="Preview status">

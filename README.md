@@ -2,7 +2,7 @@
 
 An **English-only**, static, single-page browser simulator of the [RemappingBridge](https://github.com/remappingbridge/remappingbridge) Pico 2 W and Waveshare Pico-LCD-1.3 firmware.
 
-**WEB-01–WEB-07 accepted by the operator. WEB-08 is the current production-browser candidate; operator acceptance is pending.**
+**WEB-01–WEB-08 accepted by the operator. WEB-09 is the current production-browser candidate; operator acceptance is pending.**
 
 ## Production
 
@@ -10,28 +10,31 @@ An **English-only**, static, single-page browser simulator of the [RemappingBrid
 
 The site consists solely of HTML/CSS/native JavaScript. No npm, Node.js, bundler, external CDN, service worker, application backend, telemetry, hosted storage, Web Bluetooth or custom Pages build workflow is required.
 
-## WEB-08: responsive display and accessibility
+## WEB-09: clean HAT and browser-only diagnostics
 
-The single-page application has **no institutional hero, editorial header, navbar, footer or global navigation**. The physical HAT and its panels are the application.
+Following the operator's explicit WEB-08 acceptance, the three technical lines **PICO 2 W / LCD 240 × 240 / 9 HAT CONTROLS** now occupy the **bottom-right corner of their right-side HAT metadata region**. The accepted **REMAPPINGBRIDGE upper-left** and yellow-dot **VIRTUAL DEVICE lower-left** remain unchanged; the HAT stays sticky while the other panels scroll.
 
-The HAT stays **sticky** at the viewport top while settings below scroll. The compact physical layout and colors accepted in WEB-07 remain intact: **REMAPPINGBRIDGE** top-left, **VIRTUAL DEVICE with yellow dot** bottom-left, joystick on the left, source-accurate 240×240 LCD, four vertical A/B/X/Y buttons to its right, hardware specifications at far right.
+The operator considered the optional **DISPLAY CONTROLS · WEB-08** controls dispensable. Consequently, the entire **LCD appearance / brightness / density** UI and its unused JavaScript module were **removed** in WEB-09. The source-accurate LCD is displayed at normal **100%** web brightness; **KEY Y Lock** still renders the real black framebuffer and unlock returns to normal brightness without a slider. No CSS brightness amplification or alternative background is provided. The WEB-08 large mobile touch HAT, keyboard focus rings, reduced motion support and adaptive layout are retained.
 
-**LCD appearance** is an in-app panel (not a new firmware screen):
-- The native brightness range input runs **only 0–100%**, with 1% steps and a numeric readout. Values are clamped before storage or CSS use; CSS display brightness is a factor from **0 to 1**, never above 1. The browser setting does **not** change RGB565 framebuffer pixels or scale. At 0% it is visually black while the underlying LCD screen/firmware state remains navigable.
-- When **KEY Y locks**, the effective brightness becomes **0%** and the LCD framebuffer is also black; the user's chosen brightness remains stored separately. Pressing/releasing one HAT control unlocks and restores that chosen value (including 0% if deliberately chosen).
-- The **Compact / Standard / Spacious** selector adjusts application-panel padding and gaps, **not firmware text or the LCD brightness**. Both preferences use independent schema-validated, browser-local `localStorage` (key `remappingbridge.display.v1`) with an honest memory-only fallback if storage is blocked or corrupt. Virtual mouse profiles retain their separate storage.
-- At mobile widths a dedicated **nine-button large touch-control set** appears under the display panel. Each of its keys is at least **44×44 CSS pixels**; the original compact physical HAT remains unchanged and sticky. This avoids sacrificing the physical left joystick + center LCD + right keys arrangement at narrow widths.
-- Strong keyboard `:focus-visible` rings, native labeled range/select controls, effective-brightness live output, no excessive animation under `prefers-reduced-motion: reduce`, CSS-pixel/HiDPI bitmap scaling and legible contrast are maintained. The 240×240 Canvas is never redrawn with browser fonts.
+### Diagnostic Inspector (collapsed by default)
 
-No hardware backlight, actual Bluetooth mouse, Pico flash, firmware or real host keyboard is accessed. The WEB-07 Modifier Shortcuts and prior Custom/Movement simulation remain functional.
+Expand **Diagnostic Inspector · scenarios and local evidence** below the normal HAT and mouse lab. The panel is an optional lab, **not a physical-firmware menu**, not a replacement LCD and not a second application or backend.
 
-**Automated validation:** the actual native browser suite returned **226/226 PASS in an isolated V8 DOM/Canvas2D test environment**, including all 194 previous cases, strict brightness bounds, Lock/Unlock preference restoration, density, corruption/reload and mobile touch wiring. That result does **not** replace manual visual validation in production Firefox/Chromium, especially at 320px, 768px, 2K, 150–200% zoom and on touch devices.
+- **Eight reproducible scenarios:** first use/no saved mice, connected, two mice, remove, stale+failed pairing, saved search timeout, Custom/Movement and Modifier Shortcuts. All playback is **isolated in memory** via a new virtual-mouse model explicitly using `storage:null`, never mutates saved mice or browser localStorage, and cannot connect to real Bluetooth or USB/HID.
+- Each playback produces an **independent 240×240 logical diagnostic Canvas** with the same firmware glyph/renderer, **deterministic state hash (FNV-1a)**, canonical screen name, isolated saved-mouse count and event timeline. Re-running a scenario produces the same hash; no random IDs, timestamps, hosted API or server telemetry.
+- **Semantic element Inspector:** click a rendered character on the diagnostic Canvas to select a stable `LCD/<SCREEN>/ROW_nn/COL_nn` reference, character, original semantic tone and exact **source pixel bounding rectangle**, not CSS display coordinates. It scales mouse/touch pointer positions into 240×240 pixels. When focused, Enter/Space and arrow keys permit keyboard-only selection. **Copy reference** uses the Clipboard API when permitted, with manual fallback.
+- **Local evidence:** download JSON (scenario/source metadata, state hash, deterministic events and selection), TXT (readable local timeline), or the diagnostic **PNG (240×240)**. Downloads originate within the browser using Blob URLs / `canvas.toDataURL`, without upload, analytics or outbound requests. The evidence is explicitly labeled **virtual**, not from a physical Pico/real mouse.
+- The timeline includes bounded scenario replay events and subsequent **HAT/live virtual-model actions** as diagnostics, but its entries do not affect reproducible scenario state hashes.
+
+The firmware remains at source **v3.2.4**, including 45 canonical LCD screens, Gentle `#300c39`, all MNT-12/MNT-13 colors and the WEB-07 12-combination/30-shortcut local mouse simulation. No firmware/UF2 or real Bluetooth/HID changes.
+
+**Automated validation:** the native browser runner was executed in an **isolated V8 DOM/Canvas2D harness**, not in the user's live Firefox browser. WEB-09 tests cover deterministic isolated states, 240×240 semantic hit detection, evidence generation, keyboard interaction, obsolete-control absence and all accepted historical HAT/virtual-mouse regressions. Actual layout, copy permission, file downloads and production browser behavior still require operator verification.
 
 ## WEB-07: always-visible, physically compact HAT
 
 The **physical-HAT-inspired simulator is sticky at the top of the viewport**. Scroll through the Virtual Mouse Lab, screen inspector and session options below while the HAT stays in view. It remains a normal document element, not a detached overlay; its viewport offset, rounded border and shadow remain visible.
 
-The HAT now displays **REMAPPINGBRIDGE in the upper-left corner** and the **yellow-dot VIRTUAL DEVICE indicator in the lower-left corner**, inside its sticky housing. The hardware specifications remain in a separate right-hand column, vertically aligned to the square LCD. Narrow screens reserve small corner-label bands to avoid overlapping LCD pixels.
+The HAT now displays **REMAPPINGBRIDGE in the upper-left corner** and the **yellow-dot VIRTUAL DEVICE indicator in the lower-left corner**, inside its sticky housing. The hardware specifications remain aligned to the **bottom-right** of the right-hand LCD-height column. Narrow screens reserve small corner-label bands to avoid overlapping LCD pixels.
 
 The device has four horizontally aligned regions: **left cross-shaped joystick → reduced 240×240 logical LCD → four narrower, less-rounded A/B/X/Y buttons in a vertical column → right-side Pico / LCD / HAT specifications**. The original top/header and bottom/footer rows are gone; their brand and virtual device status now occupy left corner positions, while technical specifications remain in the right column. The LCD housing uses narrow padding above/below. Responsive CSS preserves the arrangement at narrower widths, with compact metadata.
 
@@ -70,9 +73,9 @@ These are UI/local persistence simulations; they never dispatch real keyboard sh
 
 ## Browser-only verification
 
-Open [tests](https://remappingbridge.github.io/tests/) in production Firefox/Chromium. The **226 regression checks** cover all WEB-01–WEB-05 behavior plus the validated Custom/Movement model, modifier uniqueness, cancelled drafts, actual save/reload with two mouse profiles, H/V rotation reset, selected Current/Cyan fidelity and no duplicate lab handlers.
+Open [tests](https://remappingbridge.github.io/tests/) in production Firefox/Chromium. The **235 regression checks** cover all WEB-01–WEB-05 behavior plus the validated Custom/Movement model, modifier uniqueness, cancelled drafts, actual save/reload with two mouse profiles, H/V rotation reset, selected Current/Cyan fidelity and no duplicate lab handlers.
 
-**226/226 checks passed in an isolated JavaScript V8 environment with simulated DOM/Canvas2D.** That is not a claim of a real production-browser pass. Visual scrolling, sticky behavior, browser zoom, button alignment and responsive/touch interaction must be verified and accepted by the operator in the production browser.
+**235/235 checks passed in an isolated JavaScript V8 environment with simulated DOM/Canvas2D.** That is not a claim of a real production-browser pass. Visual scrolling, sticky behavior, browser zoom, button alignment and responsive/touch interaction must be verified and accepted by the operator in the production browser.
 
 ## Structure
 
@@ -84,15 +87,15 @@ assets/js/screens.js             All 45 canonical 9-row firmware templates
 assets/js/hat-interaction.js     HAT, Custom/Movement, 12 combo and 30 shortcut choices
 assets/js/ui-projector.js        Source bitmap, assigned/unavailable tones and MNT-13
 assets/js/virtual-mice.js        Local virtual bonds, profiles and storage
-assets/js/display-settings.js    0–100% brightness and density persistence
-assets/js/app.js                 UI bindings, mobile HAT and display wiring
+assets/js/diagnostics.js         Independent local scenarios and pixel Inspector
+assets/js/app.js                 UI bindings, mobile HAT and diagnostic exports
 tests/index.html                 Native in-browser regression harness
-tests/runner.js                  226 profile, display, touch, shortcut and Canvas checks
+tests/runner.js                  235 profile, diagnostic, shortcut and Canvas checks
 tests/fixtures/                  Physical-font RGBA golden samples
 README.md                        Source and browser testing instructions
 .nojekyll, LICENSE               Static GitHub Pages, AGPLv3 retained
 ```
 
-Firmware canonical source: v3.2.4 (C UX Git blob `132010179de09ea81f4543e9ca83def09c0a743f`; renderer blob `61c4fe3d547ba05c3e24de86518d807047b50a77`). Firmware code and tags, UF2 assets and real BLE devices are unchanged by WEB-08.
+Firmware canonical source: v3.2.4 (C UX Git blob `132010179de09ea81f4543e9ca83def09c0a743f`; renderer blob `61c4fe3d547ba05c3e24de86518d807047b50a77`). Firmware code and tags, UF2 assets and real BLE devices are unchanged by WEB-09.
 
 All public website and firmware documentation/labels/release descriptions must remain **English**. Site license stays **GNU AGPLv3**. See [WEB-00–WEB-15 gate planning](https://github.com/remappingbridge/planner/tree/main/web-simulator-readme).
