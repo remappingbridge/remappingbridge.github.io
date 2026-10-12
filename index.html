@@ -12,6 +12,7 @@
   <script defer src="./assets/js/screens.js"></script>
   <script defer src="./assets/js/hat-interaction.js"></script>
   <script defer src="./assets/js/ui-projector.js"></script>
+  <script defer src="./assets/js/virtual-mice.js"></script>
   <script defer src="./assets/js/app.js"></script>
 </head>
 <body>
@@ -23,7 +24,7 @@
           <h1 id="simulator-title">RemappingBridge</h1>
           <p>Virtual simulator <span aria-hidden="true">·</span> LCD UX v3.2.4</p>
         </div>
-        <span class="phase-chip">WEB-04 <span class="phase-chip__dot" aria-hidden="true"></span> Preview</span>
+        <span class="phase-chip">WEB-05 <span class="phase-chip__dot" aria-hidden="true"></span> Preview</span>
       </div>
 
       <div class="device" aria-label="Pico 2 W demonstration panel with LCD and controls">
@@ -72,6 +73,12 @@
         </div>
       </div>
 
+      <aside class="hat-guide" aria-label="General HAT key guide">
+        <p><strong>KEY B</strong> — Go back or cancel on most screens (except Connected Home).</p>
+        <p><strong>KEY Y</strong> — Lock the display; press and release any HAT control to unlock and return Home.</p>
+        <p class="hat-guide__note">The first-mouse tutorial is demonstration-only; some retry screens also have special key behavior.</p>
+      </aside>
+
       <section class="demo-scenarios" aria-labelledby="demo-scenarios-title">
         <div class="demo-scenarios__heading">
           <div>
@@ -94,6 +101,50 @@
         </details>
       </section>
 
+      <section class="mouse-lab" aria-labelledby="mouse-lab-title">
+        <div class="mouse-lab__heading">
+          <div><span class="eyebrow">LOCAL SIMULATION</span><h2 id="mouse-lab-title">Virtual Mouse Lab</h2></div>
+          <span class="mouse-lab__tag">No real Bluetooth</span>
+        </div>
+        <div class="mouse-lab__status" aria-live="polite">
+          <span data-mouse-count>0 / 8 saved</span>
+          <span data-mouse-connection>Disconnected</span>
+          <span data-mouse-persistence>Checking local storage</span>
+        </div>
+        <div class="mouse-lab__fields">
+          <label for="virtual-mouse-name">New virtual mouse name
+            <input id="virtual-mouse-name" type="text" maxlength="32" data-mouse-name value="Demo Mouse"
+              placeholder="e.g. Office Mouse" autocomplete="off">
+          </label>
+          <label for="virtual-mouse-select">Saved virtual mouse
+            <select id="virtual-mouse-select" data-mouse-id aria-label="Choose a saved virtual mouse"></select>
+          </label>
+        </div>
+        <div class="mouse-lab__actions" aria-label="Virtual pairing and connection controls">
+          <button type="button" data-lab-action="pair">Start Pair New</button>
+          <button type="button" data-lab-action="search">Search Saved</button>
+          <button type="button" data-lab-action="success">Complete Successfully</button>
+          <button type="button" data-lab-action="fail">Simulate Failure</button>
+        </div>
+        <details class="mouse-lab__advanced">
+          <summary>Connection, timeout and storage controls</summary>
+          <div class="mouse-lab__actions">
+            <button type="button" data-lab-action="timeout">Advance to Timeout (+5 ticks)</button>
+            <button type="button" data-lab-action="cancel">Cancel Pending</button>
+            <button type="button" data-lab-action="disconnect">Disconnect</button>
+            <button type="button" data-lab-action="remove">Remove Saved Mouse</button>
+            <button type="button" data-lab-action="reboot">Reboot Virtual Device</button>
+            <button type="button" data-lab-action="reset">Clear All Virtual Data</button>
+          </div>
+        </details>
+        <p class="mouse-lab__pending" data-mouse-pending aria-live="polite">No pending virtual connection.</p>
+        <details class="mouse-lab__log">
+          <summary>Virtual event history</summary>
+          <ol data-virtual-log aria-label="Local virtual connection events"></ol>
+        </details>
+        <p class="mouse-lab__note">Up to eight virtual mice are saved only in this browser when storage is available. Pairing, reconnection and removal are entirely simulated; profiles and shortcut editing remain in later gates.</p>
+      </section>
+
       <section class="session-panel" aria-label="Preview status">
         <div class="session-panel__heading">
           <div>
@@ -107,7 +158,7 @@
           <p class="event-preview__message" aria-live="polite" aria-atomic="true" data-feedback>Ready for virtual controls.</p>
           <output class="event-preview__counter" data-count aria-label="Number of commands">00</output>
         </div>
-        <p class="session-panel__note">Use the arrow keys, Enter or Space, and A/B/X/Y, or click the HAT. A virtual HOME lets you test Help (X), Back (B), and Lock (Y). The first-mouse tutorial remains non-interactive, as on the firmware. Explore the 45 source screens and menus; saved profiles, applied settings and Bluetooth transactions remain simulated until later gates. No physical device is accessed.</p>
+        <p class="session-panel__note">Use the arrow keys, Enter or Space, and A/B/X/Y, or click the HAT. A virtual HOME lets you test Help (X), Back (B), and Lock (Y). The first-mouse tutorial remains non-interactive, as in the firmware. Explore all 45 original screens and use the Virtual Mouse Lab for simulated pairing, reconnection, timeout and removal; real Bluetooth/HID and editing profiles remain outside this gate.</p>
       </section>
     </section>
   </main>
