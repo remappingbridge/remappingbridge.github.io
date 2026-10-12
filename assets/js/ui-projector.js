@@ -90,24 +90,44 @@ function projection(state,lcd){
  }
  if(U.isCombo(id)){
   var page=Number(id.split("_")[1])-1;
+  var applied=state.appliedTargets||state.customTargets||[0,1,2,3,4];
+  var active=U.shortcutsActive(state.activeProfile,applied);
   for(var pair=0;pair<2;pair++){
-   var idx=page*2+pair,value=state.shortcuts[idx];
-   replace(frame,2+pair*2,value?" "+(["COPY","CUT","SELECT ALL","PASTE","UNDO","REDO"][value-1]||"CUSTOMIZED"):" NOT CUSTOMIZED",muted,lcd);
+   var index=page*2+pair,shortcut=state.shortcuts[index];
+   var unavailable=U.comboUnavailable(index,applied);
+   var name=unavailable?"UNAVAILABLE":U.shortcutNames[shortcut]||"NOT CUSTOMIZED";
+   replace(frame,2+pair*2," "+name,
+      unavailable?regular:(active&&shortcut?now:muted),lcd);
    setCellRow(frame,1+pair*2,muted,lcd);
   }
  }
  if(U.isShortcut(id)){
-  for(var a=1;a<=6;a++)setCellRow(frame,a,muted,lcd);
+  var shortPage=Number(id.split("_")[1])-1;
+  var assignedShortcut=state.shortcuts[state.editingCombination];
+  for(var a=1;a<=6;a++){
+    var absoluteId=shortPage*6+a;
+    setCellRow(frame,a,absoluteId===assignedShortcut?now:muted,lcd);
+  }
  }
  if(id==="PASSTHROUGH_APPLIED"){
   for(var sr=1;sr<hint;sr++)setCellRow(frame,sr,now,lcd);
  }
- // User has no applied modifiers, shortcuts or persisted Movement values
- // in WEB-04. Color changes beyond this preview belong to WEB-06/07.
+ // WEB-07 mirrors v3.2.4 C rendering order: dynamic value, applied cyan,
+ // focus, disabled yellow, then MNT-13 pipe on the value/second row.
  var chosen=selectedRow(state);
  if(chosen>0&&chosen<hint&&id!=="SAVED_DEVICES"){
   focusRow(frame,chosen,lcd);
   if(U.isCombo(id))focusRow(frame,chosen+1,lcd);
+ }
+ if(U.isCombo(id)){
+  // Disabled slot value always stays informational yellow, even focused.
+  // Only the label and column-0 focus marker indicate selection.
+  var modTargets=state.appliedTargets||state.customTargets||[0,1,2,3,4];
+  for(var rowPair=0;rowPair<2;rowPair++){
+   var absoluteCombo=(Number(id.split("_")[1])-1)*2+rowPair;
+   if(U.comboUnavailable(absoluteCombo,modTargets))
+    setCellRow(frame,2+2*rowPair,regular,lcd);
+  }
  }
  if(U.isCombo(id)&&chosen>0&&chosen+1<hint){
   // Marker is on the SECOND line of each selected pair, not on label.
@@ -117,7 +137,10 @@ function projection(state,lcd){
  if(chosen>0&&chosen<hint&&frame.cells[chosen][0].character===" "&&
     frame.cells[chosen][1].character!==" "){
   frame.cells[chosen][0].character="|";
-  frame.cells[chosen][0].tone=frame.cells[chosen][1].tone;
+  frame.cells[chosen][0].tone=(U.isCombo(id)&&
+    U.comboUnavailable((Number(id.split("_")[1])-1)*2+state.selection,
+      state.appliedTargets||state.customTargets||[0,1,2,3,4]))?
+      frame.cells[chosen-1][1].tone:frame.cells[chosen][1].tone;
  }
  // Only HAT hints on non-saved screens highlight temporarily.
  if(id!=="SAVED_DEVICES"&&state.held.length){
