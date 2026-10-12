@@ -71,6 +71,22 @@
         </div>
       </div>
 
+      <section class="demo-scenarios" aria-labelledby="demo-scenarios-title">
+        <div class="demo-scenarios__heading">
+          <div>
+            <span class="eyebrow">VIRTUAL LCD CONTEXT</span>
+            <h2 id="demo-scenarios-title">Choose a demo state</h2>
+          </div>
+          <span class="demo-scenarios__screen" data-screen-label aria-live="polite">SEARCHING FIRST MOUSE</span>
+        </div>
+        <div class="demo-scenarios__buttons" role="group" aria-label="Select a virtual mouse state">
+          <button type="button" class="demo-scenario is-selected" data-scenario="first" aria-pressed="true">First mouse</button>
+          <button type="button" class="demo-scenario" data-scenario="connected" aria-pressed="false">Connected demo</button>
+          <button type="button" class="demo-scenario" data-scenario="saved" aria-pressed="false">Saved mouse search</button>
+        </div>
+        <p class="demo-scenarios__note">These are visual test states only. No Bluetooth pairing or stored mouse is created.</p>
+      </section>
+
       <section class="lcd-settings" aria-label="LCD web backdrop">
         <div class="lcd-settings__label">
           <span class="eyebrow">LCD BACKGROUND</span>
