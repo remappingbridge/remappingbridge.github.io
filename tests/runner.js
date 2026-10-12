@@ -1,4 +1,4 @@
-/* WEB-09 — native browser tests for deterministic isolated diagnostics and prior firmware gates,
+/* WEB-10 — native browser tests, pinned C↔JS fixture parity, diagnostics and prior gates,
  * per-pixel framebuffer, focus and navigation. No npm, CDN, server or BLE.
  */
 (function(){
@@ -7,6 +7,7 @@ function run(){
  var W=window.RemappingBridgeWeb,L=window.RemappingBridgeLCD;
  var S=window.RemappingBridgeScreens,H=window.RemappingBridgeHAT;
  var P=window.RemappingBridgeProjector,V=window.RemappingBridgeVirtualMice,D=window.RemappingBridgeDiagnostics;
+ var F=window.RemappingBridgeFirmwareFixture;
  var resultNode=document.getElementById("test-results"),summary=document.getElementById("summary");
  var tests=[];
  function check(name,pass){tests.push({name:name,pass:!!pass});}
@@ -19,7 +20,20 @@ function run(){
  check("Canvas, model, 45 screens, projector and local mouse module exported",!!L&&!!H&&!!S&&!!P&&!!W&&!!V&&!!D);
  if(L&&H&&S&&P&&W&&V&&D){
   var info=W.getBootstrapInfo();
-  check("Latest official v3.2.4 source and WEB-09",info.gate==="WEB-09"&&info.version==="v3.2.4"&&info.uiBaseline==="v3.2.3");
+  check("Latest official v3.2.4 source and WEB-10",info.gate==="WEB-10"&&info.version==="v3.2.4"&&info.uiBaseline==="v3.2.3"); 
+  check("WEB-10 independent C source fixture has pinned firmware version, SHA and exactly 45 screens",
+    !!F&&F.sourceTag==="v3.2.4"&&F.sourceCommit===info.commit&&
+    F.sourceBlob==="132010179de09ea81f4543e9ca83def09c0a743f"&&
+    F.screenCount===45&&Object.keys(F.screens).length===45);
+  if(F&&F.screens){
+    Object.keys(F.screens).forEach(function(id){
+      check("C source screen text/dynamic parity: "+id,
+        !!S.get(id)&&same(S.get(id).rows,F.screens[id].rows)&&
+        same(S.get(id).dynamic,F.screens[id].dynamic));
+    });
+    check("C source fixture has no retired/missing/duplicate screen IDs",
+      same(Object.keys(F.screens).slice().sort(),S.ids.slice().sort()));
+  }
   check("Firmware renderer is 240x240 with 9x21 logical grid",L.geometry.width===240&&L.geometry.height===240&&L.geometry.rows===9&&L.geometry.columns===21);
   check("Physical C glyphs are 5x7 scaled twofold",L.geometry.glyphWidth===10&&L.geometry.glyphHeight===14&&L.glyphRow("A",0)===14);
   check("All six semantic RGB565 foreground colors retained",L.rgb565.MAGENTA===0xf81f&&L.rgb565.CYAN===0x07ff&&L.rgb565.CYAN_FOCUSED===0xd7ff&&L.rgb565.OFF_WHITE_YELLOW===0xffb8);
@@ -826,6 +840,10 @@ function run(){
    nameInput.value="Reset Target";lab[0].click();lab[2].click();
    scenarios[2].click();
    var resetConfirm=window.confirm;
+   window.confirm=function(){return false;};
+   lab[9].click();
+   check("Canceling destructive factory reset preserves saved mice and connection",
+     W.getVirtualMice().mice.length===1&&W.getVirtualMice().connectedId!==null);
    window.confirm=function(){return true;};
    lab[9].click();
    window.confirm=resetConfirm;

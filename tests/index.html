@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WEB-09 — Browser HAT, Help and Lock Tests</title>
+  <title>WEB-10 — Browser Parity and Regression Tests</title>
   <style>
     body { max-width: 760px; margin: 2rem auto; padding: 0 1rem; background:#151822; color:#f1f4fc; font:16px/1.65 system-ui,sans-serif; }
     h1 { font-size:1.5rem; } li { margin:.45rem 0; } .pass { color:#86e4b6; } .fail { color:#ff9bad; }
@@ -16,11 +16,13 @@
   <script defer src="../assets/js/virtual-mice.js"></script>
   <script defer src="../assets/js/diagnostics.js"></script>
   <script defer src="../assets/js/app.js"></script>
+  <script defer src="./fixtures/firmware-screens-v3.2.4.js"></script>
   <script defer src="./runner.js"></script>
 </head>
 <body>
-  <h1>WEB-09 — Browser Tests</h1>
-  <p>The 226 native browser checks cover all 45 canonical screens, 12 Modifier combinations, 30 shortcuts, virtual profiles and WEB-09 display preferences: brightness 0–100%, remembered brightness across Lock/Unlock, density, persistence and mobile control wiring. Actual sticky layout, 44px mobile tap targets, zoom, screen-reader contrast and narrow viewport visual behavior require manual production-browser checks. Use this page on the production GitHub Pages site; no Node.js, CDN or custom build tools are required.</p>
+  <h1>WEB-10 — Browser Parity and Regression Tests</h1>
+  <p>This page automatically checks the pinned v3.2.4 firmware source fixture against all 45 screen templates, Canvas pixel and color goldens, HAT and keyboard navigation, saved mouse and profile isolation, MNT-12/MNT-13, all 12 Modifier combinations and 30 shortcuts, local diagnostics and the WEB-09 demo/factory reset improvements. The removed brightness/density UI is intentionally not restored; the LCD stays at normal 100% web brightness except when source Lock is active. The result count below is generated at runtime, not a fixed claim.</p>
+  <p>Run here in Firefox or Chromium. Mobile, actual scrolling/zoom, 44px touch targets, clipboard permissions, downloads and the production JavaScript console also require manual testing. No npm, CDN, real Bluetooth, backend or custom build workflow is used.</p>
   <ol id="test-results" aria-live="polite"><li>Running checks…</li></ol>
   <p id="summary"></p>
   <p><a style="color:#a9ddff" href="../index.html">Open simulator</a></p>
