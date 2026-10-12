@@ -1,54 +1,56 @@
-# RemappingBridge — Simulador web
+# RemappingBridge — Web Simulator
 
-**WEB-01 — candidato para validação do operador.** Este repositório hospeda a aplicação web estática do projeto [RemappingBridge](https://github.com/remappingbridge/remappingbridge). A fonte de UX é o firmware **v3.2.3** (`f38c5fd15c68ea9a36d3b05912727788d7b98e81`) e a referência de simulação atual é o [mouse-ui](https://github.com/remappingbridge/mouse-ui), não o simulador histórico v1.
+This repository hosts the static web simulator for [RemappingBridge](https://github.com/remappingbridge/remappingbridge). **All public-facing text is in English**, including accessible names, buttons, feedback messages, test reports, documentation, and future release notes.
 
-## Estado atual
+## Current status
 
-- **Implementado em WEB-01:** `index.html` único, recursos CSS/JS locais, shell de visualização do LCD, controles HAT com nove botões clicáveis, feedback visual/contagem de ações, reset de contagem, layout responsivo e testes locais no browser.
-- **Prévia, ainda não implementado:** renderer exato do LCD RGB565 240×240 (WEB-02), navegação HAT/Help/Lock (WEB-03), 45 telas/fluxos (WEB-04), BLE simulado/persistência (WEB-05), Movement/Custom (WEB-06), Modifier/Shortcuts (WEB-07), brilho 0–100% e polimento final (WEB-08), cenários/evidências (WEB-09) e release de Pages validada (WEB-10).
-- **Fonte do LCD desta etapa:** texto fixo da tela `BLU2USB_SCREEN_SEARCHING_FIRST` do firmware v3.2.3, apresentado em HTML **não pixel-perfect**; não confundir com a renderização por bitmap/Canvas planejada.
-- Os controles **não executam transições do firmware** nesta etapa: apenas registram a entrada de demonstração.
-- Nenhuma conexão Bluetooth, HID USB, gravação flash, UF2, API ou telemetria.
+**WEB-01 accepted:** a single `index.html` page, local CSS and JavaScript, a stylized Pico 2 W LCD/HAT preview, nine clickable HAT controls, feedback and a counter with a Clear action, responsive layout, and a browser-only test page.
 
-## Executar sem instalar nada
+The LCD currently shows the exact source text of `BLU2USB_SCREEN_SEARCHING_FIRST` from firmware **v3.2.3** (`f38c5fd15c68ea9a36d3b05912727788d7b98e81`). It is an **HTML text preview, not a pixel-accurate framebuffer**. The complete 240×240 Canvas renderer belongs to WEB-02, HAT firmware navigation and Help/Lock to WEB-03, all 45 screens to WEB-04, simulated Bluetooth and persistence to WEB-05, Movement and Custom remapping to WEB-06, Modifier Shortcuts to WEB-07, brightness limited to 0–100% and final styling to WEB-08, diagnostic scenarios to WEB-09, and full parity checks to WEB-10.
 
-Abrir `index.html` diretamente pelo navegador (`file://`) funciona com os assets relativos.
+The current controls **only record demonstration input**. The page does not connect to a physical Pico, Bluetooth mouse, USB HID host, flash memory, or firmware. No telemetry or external API is used.
 
-Alternativamente, para experimentar em HTTP local:
+## Open in a browser
+
+The intended production address is **https://remappingbridge.github.io/** once GitHub Pages is configured to publish the `main` branch at `/(root)`. Publication must be verified before claiming the address is live.
+
+Alternatively, open `index.html` directly (`file://`) or serve the repository over HTTP:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Abrir `http://localhost:8000/` e testar os nove botões do HAT. O número de eventos deve aumentar, e o botão **Limpar** deve restaurá-lo para `00`.
+Open `http://localhost:8000/`. The counter increases each time a HAT button is clicked; **Clear** resets it to `00`.
 
-Para validar sem Node.js ou GitHub Actions do projeto, abrir `tests/index.html` (`file://` ou `http://localhost:8000/tests/`) e conferir todas as verificações. **Executar o harness no navegador e registrar seu resultado**, pois somente a existência do arquivo não prova testes executados.
+The self-contained browser test harness is `tests/index.html`, also available at `http://localhost:8000/tests/`. It does not require Node.js, npm, a bundler, CDN, or a project-owned GitHub Actions workflow. Results must be checked in a real browser; the presence of the harness alone does not prove a passing browser run.
 
-## Arquivos
+## Files
 
 ```text
-index.html            única página de aplicação
-.nojekyll             desativa processamento Jekyll nos arquivos estáticos
-assets/css/app.css    CSS local responsivo e controles arredondados
-assets/js/app.js      bootstrap e feedback do HAT (sem lógica BLE/UX)
-tests/index.html      harness de testes browser-only
-tests/runner.js       casos de teste independentes de build
-README.md             documentação do repositório
-LICENSE               licença GNU AGPLv3 existente (preservada)
+index.html            Only public application page
+.nojekyll             Serve static files without a Jekyll build
+assets/css/app.css    Responsive styling and rounded controls
+assets/js/app.js      Static preview, bootstrap, and HAT feedback
+tests/index.html      Browser-only test page
+tests/runner.js       Tests without build dependencies
+README.md             Repository documentation
+LICENSE               Existing GNU AGPLv3 license
 ```
 
-Não existe `package.json`, `node_modules`, backend, biblioteca CDN necessária nem workflow autoral de Actions.
+## English-only content policy
 
-## GitHub Pages
+- All UI copy, screen reader labels (`aria-*`), placeholders, browser test messages, documentation, captions, and GitHub Release descriptions **must use English**.
+- Preserve the **literal English LCD firmware strings** and stable command/ID identifiers; do not translate or paraphrase strings used for firmware parity.
+- Every later WEB gate must review newly added text for English-only output. Historical version tags, hash values, code identifiers, and proper nouns are not translated.
+- Do not introduce a language selector or additional navigation page; the simulator remains a single-page static application.
+- The firmware repository has a matching English-only policy. Translating published release notes must never rewrite firmware tags, binaries, or `SHA256SUMS`.
 
-A URL pretendida depois da habilitação por **Settings → Pages → Deploy from a branch → main / (root)** é [remappingbridge.github.io](https://remappingbridge.github.io/). **A publicação não foi verificada no WEB-01:** este gate fica em branch/PR candidata até o aceite. O GitHub pode usar mecanismos internos de publicação Pages; não é um workflow de build mantido aqui.
+## GitHub Pages and product documentation
 
-## Planejamento e critérios de aceite
+To use branch-based Pages publishing, an authorized repository administrator selects **Settings → Pages → Deploy from a branch → main / (root)**. This project does not require a custom build workflow. The interactive demo will be linked from the firmware README using a **clickable static preview**, because GitHub README pages do not execute an embedded JavaScript application.
 
-[Programa WEB-00..WEB-15](https://github.com/remappingbridge/planner/tree/main/web-simulator-readme) e [gate WEB-01](https://github.com/remappingbridge/planner/blob/main/web-simulator-readme/gates/WEB-01.md).
+Planning and acceptance records: [WEB-00–WEB-15](https://github.com/remappingbridge/planner/tree/main/web-simulator-readme). Reference desktop simulator: [mouse-ui](https://github.com/remappingbridge/mouse-ui).
 
-O futuro README do firmware mostrará uma prévia estática clicável para abrir esta aplicação no navegador. O GitHub **não executa JavaScript incorporado diretamente em README.md**.
+## License
 
-## Licença
-
-Preservada a GNU AGPLv3 deste repositório. O firmware é licenciado em CC0 e a tela textual de prévia é baseada em seus fontes; não inclui imagens nem CDNs externos.
+The site's existing **GNU AGPLv3** license is preserved. The firmware source uses **CC0 1.0**; the screen text preview is derived from that source. No third-party image or CDN dependency has been added.
