@@ -14,7 +14,9 @@ The site consists solely of HTML/CSS/native JavaScript. No npm, Node.js, bundler
 
 The **physical-HAT-inspired simulator is sticky at the top of the viewport**. Scroll through the Virtual Mouse Lab, screen inspector and session options below while the HAT stays in view. It remains a normal document element, not a detached overlay; its viewport offset, rounded border and shadow remain visible.
 
-The HAT now displays **REMAPPINGBRIDGE in the upper-left corner** and the **yellow-dot VIRTUAL DEVICE indicator in the lower-left corner**, inside its sticky housing. The hardware specifications remain in a separate right-hand column, vertically aligned to the square LCD. Narrow screens reserve small corner-label bands to avoid overlapping LCD pixels.\n\nThe device has four horizontally aligned regions: **left cross-shaped joystick → reduced 240×240 logical LCD → four narrower, less-rounded A/B/X/Y buttons in a vertical column → right-side Pico / virtual device / LCD metadata**. The previous large brand/header above the simulated HAT and informational footer below it have been moved into the **right column**, vertically bounded by the LCD square. The LCD housing uses narrow padding above/below. Responsive CSS preserves the arrangement at narrower widths, with compact metadata.
+The HAT now displays **REMAPPINGBRIDGE in the upper-left corner** and the **yellow-dot VIRTUAL DEVICE indicator in the lower-left corner**, inside its sticky housing. The hardware specifications remain in a separate right-hand column, vertically aligned to the square LCD. Narrow screens reserve small corner-label bands to avoid overlapping LCD pixels.
+
+The device has four horizontally aligned regions: **left cross-shaped joystick → reduced 240×240 logical LCD → four narrower, less-rounded A/B/X/Y buttons in a vertical column → right-side Pico / LCD / HAT specifications**. The original top/header and bottom/footer rows are gone; their brand and virtual device status now occupy left corner positions, while technical specifications remain in the right column. The LCD housing uses narrow padding above/below. Responsive CSS preserves the arrangement at narrower widths, with compact metadata.
 
 The renderer preserves the accepted physical 240×240 logical framebuffer, 9×21 text grid, 5×7 source glyphs, RGB565 foreground colors, MNT-13 `|` selection marker and Gentle-only dark-magenta backdrop `#300c39`. The smaller visual size affects CSS presentation only, not firmware pixel data.
 
@@ -53,7 +55,7 @@ These are UI/local persistence simulations; they never dispatch real keyboard sh
 
 Open [tests](https://remappingbridge.github.io/tests/) in production Firefox/Chromium. The **194 regression checks** cover all WEB-01–WEB-05 behavior plus the validated Custom/Movement model, modifier uniqueness, cancelled drafts, actual save/reload with two mouse profiles, H/V rotation reset, selected Current/Cyan fidelity and no duplicate lab handlers.
 
-**160/165 checks passed in an isolated JavaScript V8 environment with simulated DOM/Canvas2D.** That is not a claim of a real production-browser pass. Visual scrolling, sticky behavior, browser zoom, button alignment and responsive/touch interaction must be verified and accepted by the operator in the production browser.
+**194/194 checks passed in an isolated JavaScript V8 environment with simulated DOM/Canvas2D.** That is not a claim of a real production-browser pass. Visual scrolling, sticky behavior, browser zoom, button alignment and responsive/touch interaction must be verified and accepted by the operator in the production browser.
 
 ## Structure
 
