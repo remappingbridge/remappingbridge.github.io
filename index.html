@@ -96,11 +96,11 @@
           <span class="demo-scenarios__screen" data-screen-label aria-live="polite">SEARCHING FIRST MOUSE</span>
         </div>
         <div class="demo-scenarios__buttons" role="group" aria-label="Select a virtual mouse state">
-          <button type="button" class="demo-scenario is-selected" data-scenario="first" aria-pressed="true">First mouse</button>
-          <button type="button" class="demo-scenario" data-scenario="connected" aria-pressed="false">Connected demo</button>
-          <button type="button" class="demo-scenario" data-scenario="saved" aria-pressed="false">Saved mouse search</button>
+          <button type="button" class="demo-scenario is-selected" data-scenario="first" aria-pressed="true">Searching First Mouse</button>
+          <button type="button" class="demo-scenario" data-scenario="first-connected" aria-pressed="false">First Mouse Connected</button>
+          <button type="button" class="demo-scenario" data-scenario="home-connected" aria-pressed="false">Home Connected</button>
         </div>
-        <p class="demo-scenarios__note">These are visual test states only. No Bluetooth pairing or stored mouse is created.</p>
+        <p class="demo-scenarios__note">These are isolated screen previews: Searching First Mouse, First Mouse Connected and Home Connected. They never create or remove a saved virtual mouse.</p>
         <details class="screen-inspector">
           <summary>Inspect all 45 firmware screens</summary>
           <label for="screen-inspector-select">Canonical screen (visual QA only)</label>
@@ -120,20 +120,34 @@
           <span data-profile-summary>Profile: no saved mouse selected</span>
           <span data-mouse-persistence>Checking local storage</span>
         </div>
-        <div class="mouse-lab__fields">
-          <label for="virtual-mouse-name">New virtual mouse name
-            <input id="virtual-mouse-name" type="text" maxlength="32" data-mouse-name value="Demo Mouse"
-              placeholder="e.g. Office Mouse" autocomplete="off">
-          </label>
-          <label for="virtual-mouse-select">Saved virtual mouse
-            <select id="virtual-mouse-select" data-mouse-id aria-label="Choose a saved virtual mouse"></select>
-          </label>
+        <div class="mouse-lab__workflows" aria-label="Virtual connection workflows">
+          <section class="mouse-lab__workflow" aria-label="Search for a saved virtual mouse">
+            <label for="virtual-mouse-select">Saved virtual mouse</label>
+            <div class="mouse-lab__control-row">
+              <select id="virtual-mouse-select" data-mouse-id aria-label="Choose a saved virtual mouse"></select>
+              <button type="button" data-lab-action="search">Search Saved</button>
+            </div>
+            <div class="mouse-lab__outcomes" aria-label="Saved mouse search outcome">
+              <button type="button" data-lab-action="search-success">Complete Successfully</button>
+              <button type="button" data-lab-action="search-fail">Simulate Failure</button>
+            </div>
+          </section>
+          <section class="mouse-lab__workflow" aria-label="Pair a new virtual mouse">
+            <label for="virtual-mouse-name">New virtual mouse name</label>
+            <div class="mouse-lab__control-row">
+              <input id="virtual-mouse-name" type="text" maxlength="32" data-mouse-name value="Demo Mouse"
+                placeholder="e.g. Office Mouse" autocomplete="off">
+              <button type="button" data-lab-action="pair">Start Pair New</button>
+            </div>
+            <div class="mouse-lab__outcomes" aria-label="New mouse pairing outcome">
+              <button type="button" data-lab-action="pair-success">Complete Successfully</button>
+              <button type="button" data-lab-action="pair-fail">Simulate Failure</button>
+            </div>
+          </section>
         </div>
-        <div class="mouse-lab__actions" aria-label="Virtual pairing and connection controls">
-          <button type="button" data-lab-action="pair">Start Pair New</button>
-          <button type="button" data-lab-action="search">Search Saved</button>
-          <button type="button" data-lab-action="success">Complete Successfully</button>
-          <button type="button" data-lab-action="fail">Simulate Failure</button>
+        <div class="mouse-lab__factory" aria-label="Reset virtual mouse storage">
+          <button type="button" data-lab-action="reset">Factory Reset Virtual Mice</button>
+          <p>Remove all saved virtual mice, profiles and connection history and return to Searching First Mouse. This cannot be undone.</p>
         </div>
         <details class="mouse-lab__advanced">
           <summary>Connection, timeout and storage controls</summary>
@@ -143,7 +157,6 @@
             <button type="button" data-lab-action="disconnect">Disconnect</button>
             <button type="button" data-lab-action="remove">Remove Saved Mouse</button>
             <button type="button" data-lab-action="reboot">Reboot Virtual Device</button>
-            <button type="button" data-lab-action="reset">Clear All Virtual Data</button>
           </div>
         </details>
         <p class="mouse-lab__pending" data-mouse-pending aria-live="polite">No pending virtual connection.</p>

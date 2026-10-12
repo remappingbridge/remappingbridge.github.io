@@ -2,7 +2,7 @@
 
 An **English-only**, static, single-page browser simulator of the [RemappingBridge](https://github.com/remappingbridge/remappingbridge) Pico 2 W and Waveshare Pico-LCD-1.3 firmware.
 
-**WEB-01–WEB-08 accepted by the operator. WEB-09 is the current production-browser candidate; operator acceptance is pending.**
+**WEB-01–WEB-08 accepted by the operator. WEB-09 is the current production-browser candidate, with the requested demo selector and Virtual Mouse Lab revision; operator acceptance is pending.**
 
 ## Production
 
@@ -29,6 +29,12 @@ Expand **Diagnostic Inspector · scenarios and local evidence** below the normal
 The firmware remains at source **v3.2.4**, including 45 canonical LCD screens, Gentle `#300c39`, all MNT-12/MNT-13 colors and the WEB-07 12-combination/30-shortcut local mouse simulation. No firmware/UF2 or real Bluetooth/HID changes.
 
 **Automated validation:** the native browser runner was executed in an **isolated V8 DOM/Canvas2D harness**, not in the user's live Firefox browser. WEB-09 tests cover deterministic isolated states, 240×240 semantic hit detection, evidence generation, keyboard interaction, obsolete-control absence and all accepted historical HAT/virtual-mouse regressions. Actual layout, copy permission, file downloads and production browser behavior still require operator verification.
+
+### WEB-09 revision: demo state names and Virtual Mouse Lab layout
+
+- **Choose a demo state** has three independent previews: **Searching First Mouse** (`SEARCHING_FIRST`), **First Mouse Connected** (`MOUSE_SAVED`, the real magenta firmware title), and **Home Connected** (`HOME`). The intermediate tutorial can be previewed with any number of virtual mice saved; demo clicks never create, delete or alter virtual bonds. The prior legacy states are preserved internally for reproducible diagnostics and navigation regression tests.
+- **Virtual Mouse Lab** now shows **Saved virtual mouse** on the left and **New virtual mouse name** on the right at desktop widths. Each input/select shares its row with its own Search Saved / Start Pair New button; two independent, pending-mode-guarded Complete Successfully and Simulate Failure actions occupy the next line within that card. At narrow widths the cards stack without horizontal clipping.
+- **Factory Reset Virtual Mice** is visible beneath both cards. A browser confirmation protects destructive clearing of virtual bonds, profiles, pending tasks and event history. Confirming restores Searching First Mouse, including after a prior saved/demo state; no real Bluetooth or physical firmware is affected.
 
 ## WEB-07: always-visible, physically compact HAT
 
@@ -57,7 +63,7 @@ For an actual saved virtual mouse, navigate using the virtual HAT (or keyboard A
 4. **Connected Home → Movement Options → Horizontal DPI / Vertical DPI / Rotation** allows 0.25×, 0.5×, 0.75×, 1×, 1.25×, 1.5×, 2× and 3× gain, and 0°, 90°, 180°, 270° rotation. Joystick Left/Right switches the Slow/Fast gain pages. **A applies** the chosen value only to the active/selected virtual mouse; B cancels navigation without saving. **A on MOVEMENT OPTIONS** resets H/V to 1× and rotation to 0° without erasing the saved Custom profile or another mouse's Movement settings.
 5. Reconnecting, switching or reloading saved mice restores each mouse's distinct **applied** profile, target mapping and Movement values; draft values are not published as applied or persisted until Apply.
 
-Pair and connect a virtual mouse in the **Virtual Mouse Lab**, then choose **Connected demo** (or Lock/Unlock from the first-connected tutorial) to navigate from HOME. An unsupported "connected demo" with no saved virtual mouse cannot persist profile changes: it displays an explicit prompt to pair or select a saved mouse. All persistence is **only inside this browser**, never a real RemappingBridge bond or HID action.
+Pair and connect a virtual mouse in the **Virtual Mouse Lab**, then choose **Home Connected** to navigate from HOME. An unsupported "connected demo" with no saved virtual mouse cannot persist profile changes: it displays an explicit prompt to pair or select a saved mouse. All persistence is **only inside this browser**, never a real RemappingBridge bond or HID action.
 
 **Implemented in WEB-07:** interactive Modifier Shortcuts, 12 combinations across six pages and 30 source-identical shortcut actions across five pages. These changes are **local to virtual saved mouse profiles**, not real HID commands.
 

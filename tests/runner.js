@@ -58,6 +58,12 @@ function run(){
   check("Startup is didactic FIRST MOUSE",e.snapshot().screen==="SEARCHING_FIRST");
   press(e,"KEY_Y");
   check("First-mouse Y remains didactic without locking",!e.snapshot().locked);
+  e.setScenario("first-connected");
+  check("Explicit First Mouse Connected demo renders the real intermediate didactic screen",
+    e.snapshot().screen==="MOUSE_SAVED"&&H.templates[e.snapshot().screen][0]==="FIRST MOUSE CONNECTED");
+  e.setScenario("home-connected");
+  check("Explicit Home Connected demo renders HOME independently of real mouse bonds",
+    e.snapshot().screen==="HOME"&&e.snapshot().connected);
   e.setScenario("connected");
   check("Connected demo starts HOME with four options",e.snapshot().screen==="HOME"&&e.optionCount()===4);
   press(e,"JOY_UP");
@@ -632,7 +638,7 @@ function run(){
     var b=document.createElement("button");b.setAttribute("data-diagnostic-export",fmt);
     root.appendChild(b);return b;
   });
-  var scenarios=["first","connected","saved"].map(function(id){
+  var scenarios=["first","first-connected","home-connected"].map(function(id){
    var b=document.createElement("button");b.setAttribute("data-scenario",id);root.appendChild(b);return b;
   });
   var nameInput=document.createElement("input");nameInput.setAttribute("data-mouse-name","");
@@ -643,7 +649,7 @@ function run(){
   });
   var profileView=document.createElement("span");profileView.setAttribute("data-profile-summary","");root.appendChild(profileView);
   var eventsList=document.createElement("ol");eventsList.setAttribute("data-virtual-log","");root.appendChild(eventsList);
-  var labActions=["pair","search","success","fail","timeout","cancel","disconnect","remove","reboot","reset"];
+  var labActions=["pair","search","pair-success","pair-fail","timeout","cancel","disconnect","remove","reboot","reset","search-success","search-fail"];
   var lab=labActions.map(function(id){var b=document.createElement("button");b.setAttribute("data-lab-action",id);root.appendChild(b);return b;});
   document.body.appendChild(root);
   var ctx=canvas.getContext("2d");
@@ -696,7 +702,10 @@ function run(){
      diagnosticCanvas.width===240&&diagnosticCanvas.height===240);
 
    scenarios[1].click();
-   check("Connected demo selector starts HOME",W.getSession().screen==="HOME");
+   check("Intermediate demo button renders FIRST MOUSE CONNECTED without creating a bond",
+     W.getSession().screen==="MOUSE_SAVED"&&W.getVirtualMice().mice.length===0);
+   scenarios[2].click();
+   check("Home Connected demo selector starts HOME",W.getSession().screen==="HOME");
    keys[1].click(); // JOY LEFT inert on HOME
    keys[4].click(); // JOY DOWN changes focus
    check("A HAT click changes HOME focus",W.getSession().selection===1);
@@ -724,14 +733,22 @@ function run(){
    check("Clear resets only counters and pressed state",counter.textContent==="00"&&feedback.textContent==="Ready for virtual controls.");
    check("Virtual Mouse Lab initialized with no real connected device",W.getVirtualMice().mice.length===0&&!!W.getVirtualMice().schema);
    nameInput.value="Test Work Mouse";lab[0].click();
+   check("Pair outcome buttons activate only new pairing, not saved mouse outcomes",
+     !lab[2].disabled&&!lab[3].disabled&&lab[10].disabled&&lab[11].disabled);
    check("Pair button starts a local pairing attempt",W.getVirtualMice().pending.name==="Test Work Mouse");
    lab[2].click();
    check("Profile summary initially shows the selected virtual mouse",profileView.textContent.indexOf("PASSTHROUGH")>=0);
    check("Pair success adds a saved virtual mouse and shows first connected screen",
      W.getVirtualMice().mice.length===1&&W.getVirtualMice().connectedId!==null&&
      W.getSession().screen==="MOUSE_SAVED");
-   // End-to-end HAT-to-persisted-profile integration through app.js handlers.
+   // A demo preview must remain available even after a real virtual mouse is saved.
+   var savedIdBeforeDemo=W.getVirtualMice().connectedId;
    scenarios[1].click();
+   check("First Mouse Connected demo works with a previously saved mouse and never removes its bond",
+     W.getSession().screen==="MOUSE_SAVED"&&
+     W.getVirtualMice().connectedId===savedIdBeforeDemo&&W.getVirtualMice().mice.length===1);
+   // End-to-end HAT-to-persisted-profile integration through app.js handlers.
+   scenarios[2].click();
    keys[2].click(); // HOME > MOUSE_OPTIONS
    keys[4].click();keys[2].click(); // CUSTOM
    keys[2].click(); // LEFT WILL BECOME
@@ -786,10 +803,13 @@ function run(){
    lab[6].click();
    check("Disconnect button preserves saved device but returns saved search",
      W.getVirtualMice().connectedId===null&&W.getSession().screen==="HOME_SEARCHING");
-   lab[1].click();lab[4].click();
+   lab[1].click();
+   check("Search outcome buttons activate only the saved search and pairing outcomes stay disabled",
+     !lab[10].disabled&&!lab[11].disabled&&lab[2].disabled&&lab[3].disabled);
+   lab[4].click();
    check("Advance-to-timeout button shows retry state without spontaneous pairing",
      W.getVirtualMice().pending===null&&W.getSession().screen==="HOME_RETRY");
-   lab[1].click();lab[2].click();
+   lab[1].click();lab[10].click();
    check("Saved search success reconnects the same saved ID",
      W.getVirtualMice().mice.length===1&&W.getVirtualMice().connectedId===W.getVirtualMice().frontId);
    var eventsBeforeListenerCheck=W.getVirtualMice().events.length;
@@ -802,8 +822,17 @@ function run(){
    lab[7].click();
    check("Removing connected mouse restores FIRST without stale bonds",
      W.getVirtualMice().mice.length===0&&W.getSession().screen==="SEARCHING_FIRST");
+   // Verify the prominent factory reset from an actual saved virtual bond.
+   nameInput.value="Reset Target";lab[0].click();lab[2].click();
+   scenarios[2].click();
+   var resetConfirm=window.confirm;
+   window.confirm=function(){return true;};
    lab[9].click();
-   check("Clear All leaves a valid empty virtual schema",W.getVirtualMice().seq===0&&W.getVirtualMice().mice.length===0);
+   window.confirm=resetConfirm;
+   check("Factory reset clears saved bonds and restores SEARCHING FIRST MOUSE",
+     W.getVirtualMice().seq===0&&W.getVirtualMice().mice.length===0&&
+     W.getVirtualMice().connectedId===null&&W.getSession().screen==="SEARCHING_FIRST");
+   check("Factory reset leaves a valid empty virtual schema",W.getVirtualMice().seq===0&&W.getVirtualMice().mice.length===0);
 
   }
   root.remove();
