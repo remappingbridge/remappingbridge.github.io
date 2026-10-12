@@ -273,7 +273,7 @@ function run(){
   var withRemoved=restore.snapshot();eng.syncMice(withRemoved,"initialized");
   eng.inspect("SAVED_DEVICES");
   check("Saved Devices selection renders the restored front mouse name",
-    P.frame(eng.snapshot(),L).cells[1].map(function(x){return x.character;}).join("").indexOf(withRemoved.mice[0].name)>=0);
+    P.frame(eng.snapshot(),L).cells[1].map(function(x){return x.character;}).join("").indexOf(withRemoved.mice[0].name.toUpperCase())>=0);
   // End of independent virtual model tests.
 
   // Real Canvas2D DOM integration tests run on the browser, not just pure data.
