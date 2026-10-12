@@ -1,4 +1,4 @@
-/* WEB-08 — accessible responsive HAT and browser brightness/density preferences.
+/* WEB-09 — physical HAT, local diagnostic Inspector and reproducible evidence.
  * Virtual pairing is browser-only; no actual BLE/HID hardware is accessed.
  */
 (function () {
@@ -8,9 +8,9 @@
     uiBaseline:"v3.2.3",
     commit:"69a640d9767ec7198572eb9b5073ed71f8f3d202",
     uiBaselineCommit:"f38c5fd15c68ea9a36d3b05912727788d7b98e81",
-    gate:"WEB-08",lcdMode:"Canvas 240x240 RGB565 glyph preview",
+    gate:"WEB-09",lcdMode:"Canvas 240x240 RGB565 glyph preview",
     framebufferImplemented:true,hatInteractionImplemented:true,
-    uxImplemented:true,bluetoothImplemented:false,virtualMiceImplemented:true,profilesImplemented:true,shortcutsImplemented:true,displayControlsImplemented:true,maxWebBrightnessPercent:100
+    uxImplemented:true,bluetoothImplemented:false,virtualMiceImplemented:true,profilesImplemented:true,shortcutsImplemented:true,displayControlsImplemented:false,diagnosticsImplemented:true,maxWebBrightnessPercent:100
   });
   var LABELS=Object.freeze({
     JOY_UP:"JOY UP",JOY_DOWN:"JOY DOWN",JOY_LEFT:"JOY LEFT",
@@ -45,7 +45,7 @@
     var canonical=typeof key==="string"&&key.length===1?key.toLowerCase():key;
     return Object.prototype.hasOwnProperty.call(KEYBOARD,canonical)?KEYBOARD[canonical]:null;
   }
-  var currentEngine=null,currentMice=null,currentDisplay=null;
+  var currentEngine=null,currentMice=null,currentDiagnostics=null;
   function boot(doc){
     if(doc.documentElement&&doc.documentElement.lang!=="en")
       throw new Error("RemappingBridge pages must declare English (lang=en)");
@@ -54,7 +54,7 @@
     var lcd=window.RemappingBridgeLCD,hat=window.RemappingBridgeHAT;
     var catalog=window.RemappingBridgeScreens,projector=window.RemappingBridgeProjector;
     var virtual=window.RemappingBridgeVirtualMice;
-    var displayModule=window.RemappingBridgeDisplay;
+    var diagnosticModule=window.RemappingBridgeDiagnostics;
     var canvas=root.querySelector("[data-lcd-canvas]");
     var feedback=root.querySelector("[data-feedback]");
     var count=root.querySelector("[data-count]");
@@ -62,11 +62,17 @@
     var buttons=Array.prototype.slice.call(root.querySelectorAll("[data-control]"));
     var touchButtons=Array.prototype.slice.call(root.querySelectorAll("[data-touch-control]"));
     var allControls=buttons.concat(touchButtons);
-    var brightness=root.querySelector("[data-lcd-brightness]");
-    var brightnessReading=root.querySelector("[data-brightness-reading]");
-    var effectiveBrightness=root.querySelector("[data-effective-brightness]");
-    var density=root.querySelector("[data-ui-density]");
-    var displayPersistence=root.querySelector("[data-display-persistence]");
+    var diagnosticCanvas=root.querySelector("[data-diagnostic-canvas]");
+    var diagnosticScenario=root.querySelector("[data-diagnostic-scenario]");
+    var diagnosticRun=root.querySelector("[data-diagnostic-run]");
+    var diagnosticHash=root.querySelector("[data-diagnostic-hash]");
+    var diagnosticContext=root.querySelector("[data-diagnostic-context]");
+    var diagnosticRef=root.querySelector("[data-diagnostic-ref]");
+    var diagnosticBounds=root.querySelector("[data-diagnostic-bounds]");
+    var diagnosticCopy=root.querySelector("[data-diagnostic-copy]");
+    var diagnosticEvents=root.querySelector("[data-diagnostic-events]");
+    var diagnosticFeedback=root.querySelector("[data-diagnostic-feedback]");
+    var diagnosticExports=Array.prototype.slice.call(root.querySelectorAll("[data-diagnostic-export]"));
     var inspector=root.querySelector("[data-screen-inspector]");
     var scenarios=Array.prototype.slice.call(root.querySelectorAll("[data-scenario]"));
     var screenLabel=root.querySelector("[data-screen-label]");
@@ -79,11 +85,13 @@
     var mousePending=root.querySelector("[data-mouse-pending]");
     var mouseLog=root.querySelector("[data-virtual-log]");
     var labButtons=Array.prototype.slice.call(root.querySelectorAll("[data-lab-action]"));
-    if(!lcd||!hat||!catalog||!projector||!virtual||!displayModule||!canvas||!feedback||!count||!clear||!screenLabel||!inspector||
-       !brightness||!brightnessReading||!effectiveBrightness||!density||!displayPersistence||touchButtons.length!==9||
+    if(!lcd||!hat||!catalog||!projector||!virtual||!diagnosticModule||!canvas||!feedback||!count||!clear||!screenLabel||!inspector||
+       !diagnosticCanvas||!diagnosticScenario||!diagnosticRun||!diagnosticHash||
+       !diagnosticContext||!diagnosticRef||!diagnosticBounds||!diagnosticCopy||
+       !diagnosticEvents||!diagnosticFeedback||diagnosticExports.length!==3||touchButtons.length!==9||
        !mouseName||!mouseSelect||!mouseCount||!mouseConnection||!profileStatus||!mousePersistence||!mousePending||!mouseLog||labButtons.length!==10||
        catalog.ids.length!==45||buttons.length!==9||scenarios.length!==3||
-       !isValidPreview(INITIAL))throw new Error("WEB-08: invalid DOM/renderer contract");
+       !isValidPreview(INITIAL))throw new Error("WEB-09: invalid DOM/renderer contract");
 
     var touchNames=touchButtons.map(function(button){return button.getAttribute("data-touch-control");});
     if(new Set(touchNames).size!==9||touchNames.some(function(id){return !controlLabel(id);}))
@@ -95,8 +103,8 @@
       seen.add(id);
     });
     var taps=0;
-    var settings=displayModule.create();
-    currentDisplay=settings;
+    var diagnostics=diagnosticModule.create({lcd:lcd,hat:hat,projector:projector,virtual:virtual});
+    currentDiagnostics=diagnostics;
     var mice=virtual.create();
     currentMice=mice;
     var lastAttemptMode=null;
@@ -121,33 +129,12 @@
       if(engine.snapshot().locked)return;
       engine.inspect(inspector.value);
     });
-    function showDisplay(state){
-      var pref=settings.snapshot(state.locked);
-      brightness.value=String(pref.brightness);
-      brightness.disabled=state.locked;
-      brightness.setAttribute("aria-valuetext",pref.brightness+" percent");
-      brightnessReading.textContent=pref.brightness+"%";
-      effectiveBrightness.textContent=pref.effectiveBrightness+"%";
-      density.value=pref.density;
-      root.setAttribute("data-density",pref.density);
-      root.setAttribute("data-brightness",String(pref.brightness));
-      root.setAttribute("data-effective-brightness",String(pref.effectiveBrightness));
-      // CSS filter only scales the displayed Canvas. The source RGB565 frame
-      // buffer is never modified; brightness factors cannot exceed 1.
-      canvas.setAttribute("style","filter:brightness("+pref.factor+");");
-      displayPersistence.textContent=pref.durable?
-        "Preferences are stored locally in this browser":
-        "Memory only — display settings will not survive a reload";
-    }
-    settings.subscribe(function(){
-      if(engine)paint();
-    });
-    brightness.addEventListener("input",function(){settings.setBrightness(brightness.value);});
-    density.addEventListener("change",function(){settings.setDensity(density.value);});
     function paint(){
       var state=engine.snapshot();
       lcd.render(canvas,state.locked?blackFrame:currentFrame(state),"gentle");
-      showDisplay(state);
+      // No WEB-08 brightness/density panel survives WEB-09. Canonical 100%
+      // display is restored; Lock remains the firmware's black framebuffer.
+      canvas.setAttribute("style","filter:brightness(1);");
       canvas.setAttribute("aria-label",state.locked?
         "Virtual LCD locked. Press and release one HAT control to unlock.":
         "Virtual 240 by 240 firmware LCD: "+hat.templates[state.screen][0]+
@@ -213,8 +200,117 @@
         b.disabled=(needsPending&&!state.pending)||(needsSaved&&!state.mice.length)||engine.snapshot().locked;
       });
     }
+    function diagnosticsTimeline(){
+      var snap=diagnostics.snapshot(),timeline=snap?snap.timeline:[];
+      diagnosticEvents.replaceChildren();
+      timeline.slice().reverse().forEach(function(item){
+        var li=doc.createElement("li");
+        li.textContent="#"+item.index+" "+item.source+" | "+item.kind+" | "+item.detail;
+        diagnosticEvents.appendChild(li);
+      });
+    }
+    function renderDiagnostic(){
+      var snap=diagnostics.snapshot();
+      if(!snap)return;
+      lcd.render(diagnosticCanvas,diagnostics.frame(),"gentle");
+      diagnosticHash.textContent="State hash: "+snap.hash;
+      diagnosticContext.textContent=snap.label+" | "+snap.screen+
+        " | saved in isolated scenario: "+snap.virtual.savedCount;
+      diagnosticRef.textContent=snap.selection?snap.selection.id:"No character selected";
+      diagnosticBounds.textContent=snap.selection?
+        "Glyph: "+JSON.stringify(snap.selection.bounds)+
+        " | row "+(snap.selection.row+1)+", col "+(snap.selection.column+1)+
+        " | char "+snap.selection.character+" | tone "+snap.selection.tone:
+        "Logical LCD bounds: 240 × 240 px.";
+      diagnosticsTimeline();
+    }
+    function runDiagnostic(id){
+      diagnostics.run(id);
+      renderDiagnostic();
+      diagnosticFeedback.textContent="Isolated scenario complete. Saved real-browser mice were not modified.";
+    }
+    diagnosticModule.scenarios.forEach(function(sc){
+      var option=doc.createElement("option");option.value=sc.id;option.textContent=sc.label;
+      diagnosticScenario.appendChild(option);
+    });
+    diagnosticRun.addEventListener("click",function(){
+      try{runDiagnostic(diagnosticScenario.value);}
+      catch(error){diagnosticFeedback.textContent="Scenario failed: "+error.message;}
+    });
+    diagnosticCanvas.setAttribute("tabindex","0");
+    diagnosticCanvas.addEventListener("click",function(event){
+      if(!diagnostics.snapshot())return;
+      if(!diagnosticCanvas.getBoundingClientRect)return;
+      var rect=diagnosticCanvas.getBoundingClientRect();
+      if(!rect.width||!rect.height)return;
+      var x=Math.floor((event.clientX-rect.left)*240/rect.width);
+      var y=Math.floor((event.clientY-rect.top)*240/rect.height);
+      diagnostics.inspectPixel(x,y);renderDiagnostic();
+    });
+    function copyText(value){
+      if(typeof navigator!=="undefined"&&navigator.clipboard&&navigator.clipboard.writeText)
+        return navigator.clipboard.writeText(value);
+      // Explicit fallback for non-secure browser contexts without Clipboard API.
+      var el=doc.createElement("textarea");el.value=value;
+      el.setAttribute("readonly","readonly");el.setAttribute("aria-label","Temporary copy field");
+      root.appendChild(el);if(el.select)el.select();
+      var okay=typeof doc.execCommand==="function"&&doc.execCommand("copy");
+      if(el.remove)el.remove();
+      if(!okay)throw Error("Clipboard unavailable; select the visible semantic ID to copy manually");
+      return null;
+    }
+    diagnosticCopy.addEventListener("click",function(){
+      var snap=diagnostics.snapshot();
+      if(!snap||!snap.selection){
+        diagnosticFeedback.textContent="Select a character in the diagnostic LCD first.";
+        return;
+      }
+      try{
+        var operation=copyText(snap.selection.id);
+        if(operation&&operation.then)
+          operation.then(function(){diagnosticFeedback.textContent="Reference copied locally.";},
+            function(){diagnosticFeedback.textContent="Clipboard denied; select and copy the visible ID.";});
+        else diagnosticFeedback.textContent="Reference copied locally.";
+      }catch(error){diagnosticFeedback.textContent=error.message;}
+    });
+    function downloadLocal(kind,filename,mime,content){
+      var a=doc.createElement("a");
+      var url=null;
+      // Blob/object URL is local to browser; never sent to a server.
+      if(typeof Blob==="function"&&typeof URL!=="undefined"&&URL.createObjectURL){
+        url=URL.createObjectURL(new Blob([content],{type:mime}));
+        a.href=url;
+      }else a.href="data:"+mime+","+encodeURIComponent(content);
+      a.download=filename;
+      a.setAttribute("aria-label","Download local "+kind+" evidence");
+      if(a.style)a.style.display="none";
+      root.appendChild(a);a.click();
+      if(a.remove)a.remove();
+      if(url&&URL.revokeObjectURL)URL.revokeObjectURL(url);
+    }
+    diagnosticExports.forEach(function(button){
+      button.addEventListener("click",function(){
+        var snap=diagnostics.snapshot(),format=button.getAttribute("data-diagnostic-export");
+        if(!snap){diagnosticFeedback.textContent="Run a scenario before exporting.";return;}
+        var name="remappingbridge-"+snap.id+"-"+snap.hash;
+        try{
+          if(format==="json")downloadLocal("JSON",name+".json","application/json;charset=utf-8",diagnostics.toJSON());
+          else if(format==="txt")downloadLocal("TXT",name+".txt","text/plain;charset=utf-8",diagnostics.toText());
+          else if(format==="png"){
+            var a=doc.createElement("a");a.download=name+".png";
+            a.href=diagnosticCanvas.toDataURL("image/png");
+            root.appendChild(a);a.click();if(a.remove)a.remove();
+          }
+          diagnostics.record("export",format,name);
+          diagnosticFeedback.textContent="Local "+format.toUpperCase()+" evidence downloaded. No upload performed.";
+          diagnosticsTimeline();
+        }catch(error){diagnosticFeedback.textContent="Export unavailable: "+error.message;}
+      });
+    });
     function onVirtualEvent(event){
       var state=event.state;
+      diagnostics.record("mouse",event.kind,event.text);
+      if(diagnostics.snapshot())diagnosticsTimeline();
       if(event.kind==="started"&&state.pending)lastAttemptMode=state.pending.mode;
       var reason=event.kind;
       if(event.kind==="started")reason="started-"+lastAttemptMode;
@@ -225,6 +321,10 @@
     }
     mice.subscribe(onVirtualEvent);
     function onEngineEvent(event){
+      if(event.kind!=="press"&&event.kind!=="mice-updated"){
+        diagnostics.record("hat",event.kind,(event.control||"")+" @ "+event.state.screen);
+        if(diagnostics.snapshot())diagnosticsTimeline();
+      }
       paint();
       if(event.kind==="mice-updated")return;
       if(event.kind==="set-shortcut"||event.kind==="reset-shortcut"){
@@ -433,7 +533,11 @@
     isValidPreview:isValidPreview,firstScreenTemplate:INITIAL,
     getSession:function(){return currentEngine?currentEngine.snapshot():null;},
     getVirtualMice:function(){return currentMice?currentMice.snapshot():null;},
-    getDisplay:function(){return currentDisplay?currentDisplay.snapshot(currentEngine?currentEngine.snapshot().locked:false):null;},
+    getDisplay:function(){
+      return {brightness:100,effectiveBrightness:currentEngine&&currentEngine.snapshot().locked?0:100,
+        factor:currentEngine&&currentEngine.snapshot().locked?0:1,availableControls:false};
+    },
+    getDiagnostics:function(){return currentDiagnostics?currentDiagnostics.snapshot():null;},
     canonicalScreenCount:45,
     boot:boot
   });
