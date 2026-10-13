@@ -619,6 +619,7 @@ function run(){
 
   // Real Canvas2D DOM integration tests run on the browser, not just pure data.
   var root=document.createElement("div");root.setAttribute("data-app-root","");
+  root.setAttribute("data-isolated-tests","");
   var feedback=document.createElement("p");feedback.setAttribute("data-feedback","");
   var counter=document.createElement("output");counter.setAttribute("data-count","");
   var reset=document.createElement("button");reset.setAttribute("data-reset","");
@@ -746,6 +747,9 @@ function run(){
    reset.click();
    check("Clear resets only counters and pressed state",counter.textContent==="00"&&feedback.textContent==="Ready for virtual controls.");
    check("Virtual Mouse Lab initialized with no real connected device",W.getVirtualMice().mice.length===0&&!!W.getVirtualMice().schema);
+   check("Native browser test harness explicitly uses ephemeral memory-only storage",
+     !W.getVirtualMice().durable&&W.getVirtualMice().mice.length===0&&
+     root.hasAttribute("data-isolated-tests"));
    nameInput.value="Test Work Mouse";lab[0].click();
    check("Pair outcome buttons activate only new pairing, not saved mouse outcomes",
      !lab[2].disabled&&!lab[3].disabled&&lab[10].disabled&&lab[11].disabled);

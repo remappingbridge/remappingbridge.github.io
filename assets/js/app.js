@@ -105,7 +105,10 @@
     var taps=0;
     var diagnostics=diagnosticModule.create({lcd:lcd,hat:hat,projector:projector,virtual:virtual});
     currentDiagnostics=diagnostics;
-    var mice=virtual.create();
+    // The /tests/ harness is deliberately ephemeral. Never read or modify
+    // production virtual bonds when running end-to-end browser regressions.
+    var isolatedTest=root.hasAttribute("data-isolated-tests");
+    var mice=virtual.create(isolatedTest?{storage:null}:undefined);
     currentMice=mice;
     var lastAttemptMode=null;
     var engine=hat.createEngine(onEngineEvent);
