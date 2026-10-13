@@ -12,6 +12,7 @@ The site consists solely of HTML/CSS/native JavaScript. No npm, Node.js, bundler
 
 ## WEB-10: full firmware screen parity and static deployment audit
 
+- **Safety of browser tests:** `/tests/` constructs its own DOM root with `data-isolated-tests`. The app bootstrap detects that test-only root and calls the mouse model with `{storage:null}`. All test pairing, profiles and **Factory Reset** stay in memory; the real website's saved virtual mice are neither read nor deleted by the regression page. The normal production root does not have this attribute and keeps its accepted local-only persistence.
 - The `tests/fixtures/firmware-screens-v3.2.4.js` independent fixture is generated from the **actual release v3.2.4 C source literals**, `src/ux_model/ux_model.c` Git blob `132010179de09ea81f4543e9ca83def09c0a743f`, at release commit `69a640d9767ec7198572eb9b5073ed71f8f3d202`.
 - Direct source auditing found **45 of 45 exact firmware screen literals and dynamic row masks matching the web model**. The browser test runner additionally compares the fixture with every displayed source template, beside the prior exact LCD font/geometry/color goldens, movement, shortcuts, Help, Lock, diagnostic and multi-mouse state checks.
 - The `tests/index.html` copy has been updated to match the accepted deletion of the optional brightness/density controls and the correct WEB-10 regression scope. Tests must run in a real browser for production acceptance; no previous isolated harness result should be represented as a real Firefox/Chromium run.
