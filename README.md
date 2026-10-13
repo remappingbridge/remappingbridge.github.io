@@ -2,7 +2,7 @@
 
 An **English-only**, static, single-page browser simulator of the [RemappingBridge](https://github.com/remappingbridge/remappingbridge) Pico 2 W and Waveshare Pico-LCD-1.3 firmware.
 
-**WEB-01–WEB-09 accepted by the operator. WEB-10 is the current full-parity/static-publication candidate; operator acceptance is pending.**
+**WEB-01–WEB-10 accepted by the operator.** The WEB-10 source-parity audit and production publication were accepted; see the [WEB-10 acceptance record](https://github.com/remappingbridge/planner/blob/main/web-simulator-readme/executions/WEB-10/operator-acceptance.md).
 
 ## Production
 
