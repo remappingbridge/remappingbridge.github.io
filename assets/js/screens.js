@@ -1,5 +1,5 @@
-/* WEB-04 — authoritative 45 templates from v3.2.4 firmware.
- * Source src/ux_model/ux_model.c, Git blob 132010179de09ea81f4543e9ca83def09c0a743f.
+/* WEB-04 — authoritative 48 templates from v3.3.0 firmware.
+ * Source src/ux_model/ux_model.c, Git blob 9f83921b8c780622a545157ed373726603b96cae.
  * The C source has 2 long source strings in HELP_REMAPPER_OPTIONS (22 chars);
  * preserve those literals here and clip only when producing the physical
  * 21-column framebuffer, exactly as blu2usb_ui_frame_set_text() does.
@@ -311,11 +311,11 @@
   },
   "SAVED_DEVICES": {
     "rows": [
-      "0 OF 0",
-      "UNKNOWN MOUSE",
-      "PROFILE: PASSTHROUGH",
-      "DPI: H 1 - V 1",
-      "ROTATION: 0 DEGREE",
+      "NO SAVED MOUSE",
+      "",
+      "",
+      "",
+      "",
       " REMOVE DEVICE",
       "",
       "JOY RIGHT/LEFT: PAGE",
@@ -364,7 +364,7 @@
       "MOVEMENT OPTIONS",
       " HORIZONTAL DPI 1",
       " VERTICAL DPI 1",
-      " COUNTERCLOCKWISE",
+      " SCROLL INVERSE OFF",
       " ROTATION 0-DEGREE",
       "",
       "JOY PRESS: ACCESS",
@@ -426,6 +426,48 @@
       "JOY LEFT/RIGHT: PAGE",
       "KEY A: APPLY AND BACK",
       "KEY X: HELP FAST DPI"
+    ],
+    "dynamic": []
+  },
+  "SCROLL_INVERSE_OFF": {
+    "rows": [
+      "SCROLL INVERSE OFF",
+      "CURRENTLY DISABLED",
+      "APPLY TO ENABLE",
+      "MOUSE WHEEL",
+      "DIRECTION REVERSAL.",
+      "",
+      "KEY A: APPLY AND BACK",
+      "KEY B: CANCEL",
+      "KEY X: SCROLL HELP"
+    ],
+    "dynamic": []
+  },
+  "SCROLL_INVERSE_ON": {
+    "rows": [
+      "SCROLL INVERSE ON",
+      "CURRENTLY ENABLED",
+      "APPLY TO RESTORE",
+      "DEFAULT MOUSE WHEEL",
+      "DIRECTION.",
+      "",
+      "KEY A: APPLY AND BACK",
+      "KEY B: CANCEL",
+      "KEY X: SCROLL HELP"
+    ],
+    "dynamic": []
+  },
+  "SCROLL_HELP": {
+    "rows": [
+      "SCROLL HELP",
+      "WHEN DISABLED, WHEEL",
+      "DIRECTION IS PASSED",
+      "THROUGH UNCHANGED.",
+      "WHEN ENABLED, WHEEL",
+      "UP BECOMES DOWN AND",
+      "DOWN BECOMES UP.",
+      "",
+      "KEY B: BACK"
     ],
     "dynamic": []
   },
@@ -679,8 +721,8 @@
     Object.freeze(entry.rows);Object.freeze(entry.dynamic);Object.freeze(entry);
   });
   window.RemappingBridgeScreens=Object.freeze({
-    firmwareTag:"v3.2.4",
-    firmwareBlob:"132010179de09ea81f4543e9ca83def09c0a743f",
+    firmwareTag:"v3.3.0",
+    firmwareBlob:"9f83921b8c780622a545157ed373726603b96cae",
     ids:Object.freeze(Object.keys(catalog)),
     templates:Object.freeze(catalog),
     get:function(id){return catalog[id]||null;}

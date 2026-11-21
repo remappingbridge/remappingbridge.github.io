@@ -102,9 +102,9 @@
         </div>
         <p class="demo-scenarios__note">These are isolated screen previews: Searching First Mouse, First Mouse Connected and Home Connected. They never create or remove a saved virtual mouse.</p>
         <details class="screen-inspector">
-          <summary>Inspect all 45 firmware screens</summary>
+          <summary>Inspect all 48 firmware screens</summary>
           <label for="screen-inspector-select">Canonical screen (visual QA only)</label>
-          <select id="screen-inspector-select" data-screen-inspector aria-label="Choose one of the 45 original firmware screen templates"></select>
+          <select id="screen-inspector-select" data-screen-inspector aria-label="Choose one of the 48 original firmware screen templates"></select>
           <p>Choose any source screen to inspect its display. HAT navigation normally begins from HOME; no Bluetooth or flash settings are changed.</p>
         </details>
       </section>
@@ -145,6 +145,13 @@
             </div>
           </section>
         </div>
+        <fieldset class="mouse-lab__workflow" data-wheel-preview>
+          <legend>Test vertical scrolling</legend>
+          <p>Use the wheel here or select a direction to test the connected virtual mouse.</p>
+          <button type="button" data-wheel="up">Wheel up</button>
+          <button type="button" data-wheel="down">Wheel down</button>
+          <output aria-live="polite"></output>
+        </fieldset>
         <div class="mouse-lab__factory" aria-label="Reset virtual mouse storage">
           <button type="button" data-lab-action="reset">Factory Reset Virtual Mice</button>
           <p>Remove all saved virtual mice, profiles and connection history and return to Searching First Mouse. This cannot be undone.</p>
@@ -222,7 +229,7 @@
           <p class="event-preview__message" aria-live="polite" aria-atomic="true" data-feedback>Ready for virtual controls.</p>
           <output class="event-preview__counter" data-count aria-label="Number of commands">00</output>
         </div>
-        <p class="session-panel__note">Use the arrow keys, Enter or Space, and A/B/X/Y, or click the HAT. A virtual HOME lets you test Help (X), Back (B), and Lock (Y). The first-mouse tutorial remains non-interactive, as in the firmware. Explore all 45 original screens and use the Virtual Mouse Lab for simulated pairing, reconnection, timeout and removal; real Bluetooth/HID remain outside this simulator; edits affect only saved virtual mouse profiles.</p>
+        <p class="session-panel__note">Use the arrow keys, Enter or Space, and A/B/X/Y, or click the HAT. A virtual HOME lets you test Help (X), Back (B), and Lock (Y). The first-mouse tutorial remains non-interactive, as in the firmware. Explore all 48 original screens and use the Virtual Mouse Lab for simulated pairing, reconnection, timeout and removal; real Bluetooth/HID remain outside this simulator; edits affect only saved virtual mouse profiles.</p>
       </section>
     </section>
   </main>

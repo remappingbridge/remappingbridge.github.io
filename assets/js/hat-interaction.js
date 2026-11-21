@@ -1,11 +1,11 @@
-/* WEB-04 — 45 canonical screen route model, based on firmware v3.2.4.
+/* WEB-04 — 48 canonical screen route model, based on firmware v3.3.0.
  * Release-driven control/Help/Lock behavior preserved from WEB-03.
  * Persistence commits and actual BLE transactions belong to WEB-05/06/07.
  */
 (function () {
 "use strict";
 var source=window.RemappingBridgeScreens;
-if(!source||source.ids.length!==45)throw new Error("WEB-04 needs 45 canonical screen templates");
+if(!source||source.ids.length!==48)throw new Error("WEB-04 needs 48 canonical screen templates");
 var T=Object.freeze(Object.fromEntries(source.ids.map(function(id){return [id,source.get(id).rows];})));
 var S=Object.freeze({
  FIRST:"SEARCHING_FIRST",HOME:"HOME",SEARCH:"HOME_SEARCHING",RETRY:"HOME_RETRY",
@@ -26,7 +26,7 @@ function comboUnavailable(id,targets){
 }
 function shortcutsActive(kind,targets){return kind==="CUSTOM"&&targets.indexOf(5)!==-1;}
 
-var NUM=Object.freeze({HOME:4,HOME_SEARCHING:2,HOME_RETRY:2,MOUSE_OPTIONS:3,MOVEMENT_OPTIONS:3,
+var NUM=Object.freeze({HOME:4,HOME_SEARCHING:2,HOME_RETRY:2,MOUSE_OPTIONS:3,MOVEMENT_OPTIONS:4,
  EDIT_CUSTOM:5,HORIZONTAL_SLOW_DPI:4,HORIZONTAL_FAST_DPI:4,VERTICAL_SLOW_DPI:4,
  VERTICAL_FAST_DPI:4,ROTATION:4});
 function isCombo(id){return /^COMBINATIONS_[1-6]$/.test(id);}
@@ -41,14 +41,14 @@ function createEngine(listener){
  var savedCount=0,savedPage=0,connected=true,activeProfile="PASSTHROUGH";
  var savedMice=[],connectedId=null,frontId=null,connectedName="DEMO MOUSE",removeTargetId=null;
  var customSource=0,customTargets=[0,1,2,3,4],appliedTargets=[0,1,2,3,4],customDirty=false,profileOwner=null;
- var movement={horizontal:4,vertical:4,rotation:0},editingCombination=0;
+ var movement={horizontal:4,vertical:4,rotation:0,scrollInverse:false},editingCombination=0;
  var shortcuts=Array(12).fill(0),dpiSelection=[0,0,0,0],lastOutcome=null;
  function home(){return scenario==="first"?S.FIRST:scenario==="saved"?S.SEARCH:scenario==="first-connected"?"MOUSE_SAVED":S.HOME;}
  function options(){return countFor(screen);}
  function snapshot(){
   return Object.freeze({scenario:scenario,screen:screen,selection:selection,locked:locked,
    held:Object.freeze(Array.from(held)),unlockArmed:armed,returnScreen:returnScreen,
-   returnSelection:returnSelection,savedCount:savedCount,savedPage:savedPage,savedMice:Object.freeze(savedMice.map(function(m){return Object.freeze({id:m.id,name:m.name});})),
+   returnSelection:returnSelection,savedCount:savedCount,savedPage:savedPage,savedMice:Object.freeze(savedMice.map(function(m){return m;})),
    connectedId:connectedId,frontId:frontId,connectedName:connectedName,removeTargetId:removeTargetId,
    connected:connected,activeProfile:activeProfile,customSource:customSource,
    customTargets:Object.freeze(customTargets.slice()),appliedTargets:Object.freeze(appliedTargets.slice()),customDirty:customDirty,profileOwner:profileOwner,
@@ -63,13 +63,13 @@ function createEngine(listener){
  function setScenario(name){
   if(SCENARIOS.indexOf(name)===-1)throw new RangeError("Unknown scenario");
   if(locked)return emit("locked");
-  scenario=name;savedCount=name==="first"?0:1;connected=name==="connected"||name==="first-connected"||name==="home-connected";
+  scenario=name;savedCount=name==="first"?0:Math.max(1,savedMice.length);connected=name==="connected"||name==="first-connected"||name==="home-connected";
   savedPage=0;go(home());held.clear();returnScreen=null;returnSelection=0;armed=null;lastOutcome=null;
   return emit("scenario");
  }
  function syncMice(value,reason){
   if(!value||!Array.isArray(value.mice)||value.mice.length>8)throw new TypeError("Invalid virtual mouse snapshot");
-  savedMice=value.mice.map(function(m){return {id:m.id,name:m.name};});
+  savedMice=value.mice.map(function(m){return Object.freeze({id:m.id,name:m.name,kind:m.profile.kind,movement:Object.freeze(Object.assign({},m.profile.movement))});});
   savedCount=savedMice.length;frontId=value.frontId;connectedId=value.connectedId;
   connected=!!connectedId;
   var current=savedMice.find(function(m){return m.id===connectedId;});
@@ -84,12 +84,13 @@ function createEngine(listener){
     activeProfile=profile?profile.kind:"PASSTHROUGH";
     appliedTargets=profile?profile.targets.slice():[0,1,2,3,4];
     customTargets=appliedTargets.slice();customDirty=false;
-    movement=profile?Object.assign({},profile.movement):{horizontal:4,vertical:4,rotation:0};
+    movement=profile?Object.assign({},profile.movement):{horizontal:4,vertical:4,rotation:0,scrollInverse:false};
     shortcuts=profile?profile.shortcuts.slice():Array(12).fill(0);
   }
 
-  var frontIndex=savedMice.findIndex(function(m){return m.id===frontId;});
-  if(frontIndex>=0)savedPage=frontIndex;
+  var first=savedMice.findIndex(function(m){return m.id===(connectedId||frontId);});
+  if(first>0)savedMice.unshift(savedMice.splice(first,1)[0]);
+  if(["paired","connected","initialized","removed","reboot","reset","front"].includes(reason))savedPage=0;
   else savedPage=Math.min(savedPage,Math.max(0,savedCount-1));
   if(reason==="started-pair")go("PAIR_MOUSE");
   else if(reason==="started-saved")go(S.SEARCH);
@@ -141,6 +142,7 @@ function createEngine(listener){
   if(screen==="PAIR_MOUSE")return "HELP_PAIR_NEW";
   if(screen==="RETRY_PAIR_NEW")return "HELP_RETRY_PAIR_NEW";
   if(isDpi(screen))return screen.includes("FAST")?"HELP_FAST_DPI":"HELP_SLOW_DPI";
+  if(screen.startsWith("SCROLL_INVERSE_"))return "SCROLL_HELP";
   if(screen==="ROTATION")return "HELP_ROTATION";
   return null;
  }
@@ -186,6 +188,10 @@ function createEngine(listener){
   if(screen==="RETRY_PAIR_NEW"&&id==="KEY_A"){go("PAIR_MOUSE");return emit("retry",id);}
   if(screen==="RETRY_PAIR_NEW"&&id==="KEY_B"){go(home());return emit("back",id);}
   if(screen==="REMOVE_THIS"&&id==="KEY_B"){go("SAVED_DEVICES");return emit("back",id);}
+  if(screen.startsWith("SCROLL_INVERSE_")){
+   if(id==="KEY_A")return emit("apply-movement",id,{movement:Object.assign({},movement,{scrollInverse:!movement.scrollInverse})});
+   if(id==="KEY_B"){go("MOVEMENT_OPTIONS",2);return emit("back",id);}
+  }
   if(id==="KEY_B"){
    if(isCombo(screen)){go("MOUSE_OPTIONS",2);return emit("back",id);}
    if(isShortcut(screen)){go("COMBINATIONS_"+(Math.floor(editingCombination/2)+1),editingCombination%2);return emit("back",id);}
@@ -251,10 +257,11 @@ function createEngine(listener){
    }
   }
   if(screen==="MOVEMENT_OPTIONS"){
-   if(id==="KEY_A")return emit("reset-movement",id,{movement:{horizontal:4,vertical:4,rotation:0}});
+   if(id==="KEY_A")return emit("reset-movement",id,{movement:{horizontal:4,vertical:4,rotation:0,scrollInverse:false}});
    if(id==="JOY_PRESS"){
     var axis=selection;
-    if(axis===2)go("ROTATION",movement.rotation);
+    if(axis===2)go(movement.scrollInverse?"SCROLL_INVERSE_ON":"SCROLL_INVERSE_OFF");
+    else if(axis===3)go("ROTATION",movement.rotation);
     else{
      var horizontal=axis===0,gain=horizontal?movement.horizontal:movement.vertical;
      var fast=gain>4;
@@ -331,7 +338,7 @@ function createEngine(listener){
  function confirmApply(kind){
   if(kind==="custom")go("MOUSE_OPTIONS",1);
   else if(kind==="passthrough")go("PASSTHROUGH_APPLIED");
-  else if(kind==="movement")go("MOVEMENT_OPTIONS");
+  else if(kind==="movement")go("MOVEMENT_OPTIONS",screen.startsWith("SCROLL_INVERSE_")?2:0);
   return emit("applied",null);
  }
  function cancelAll(){

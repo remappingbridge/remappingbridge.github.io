@@ -4,10 +4,10 @@
 (function () {
   "use strict";
   var FIRMWARE=Object.freeze({
-    name:"RemappingBridge",version:"v3.2.4",
-    uiBaseline:"v3.2.3",
-    commit:"69a640d9767ec7198572eb9b5073ed71f8f3d202",
-    uiBaselineCommit:"f38c5fd15c68ea9a36d3b05912727788d7b98e81",
+    name:"RemappingBridge",version:"v3.3.0",
+    uiBaseline:"v3.3.0",
+    commit:"0efbd433c68867f38d38cc98560714c1f96cfec1",
+    uiBaselineCommit:"0efbd433c68867f38d38cc98560714c1f96cfec1",
     gate:"WEB-10",lcdMode:"Canvas 240x240 RGB565 glyph preview",
     framebufferImplemented:true,hatInteractionImplemented:true,
     uxImplemented:true,bluetoothImplemented:false,virtualMiceImplemented:true,profilesImplemented:true,shortcutsImplemented:true,displayControlsImplemented:false,diagnosticsImplemented:true,maxWebBrightnessPercent:100
@@ -90,7 +90,7 @@
        !diagnosticContext||!diagnosticRef||!diagnosticBounds||!diagnosticCopy||
        !diagnosticEvents||!diagnosticFeedback||diagnosticExports.length!==3||touchButtons.length!==9||
        !mouseName||!mouseSelect||!mouseCount||!mouseConnection||!profileStatus||!mousePersistence||!mousePending||!mouseLog||labButtons.length!==12||
-       catalog.ids.length!==45||buttons.length!==9||scenarios.length!==3||
+       catalog.ids.length!==48||buttons.length!==9||scenarios.length!==3||
        !isValidPreview(INITIAL))throw new Error("WEB-10: invalid DOM/renderer contract");
 
     var touchNames=touchButtons.map(function(button){return button.getAttribute("data-touch-control");});
@@ -134,17 +134,19 @@
     });
     function paint(){
       var state=engine.snapshot();
-      lcd.render(canvas,state.locked?blackFrame:currentFrame(state),"gentle");
+      var frame=currentFrame(state);
+      var displayedTitle=frame.cells[0].map(c=>c.character).join("").trimEnd();
+      lcd.render(canvas,state.locked?blackFrame:frame,"gentle");
       // No WEB-08 brightness/density panel survives WEB-09. Canonical 100%
       // display is restored; Lock remains the firmware's black framebuffer.
       canvas.setAttribute("style","filter:brightness(1);");
       canvas.setAttribute("aria-label",state.locked?
         "Virtual LCD locked. Press and release one HAT control to unlock.":
-        "Virtual 240 by 240 firmware LCD: "+hat.templates[state.screen][0]+
+        "Virtual 240 by 240 firmware LCD: "+displayedTitle+
         ". No physical mouse is connected.");
       root.setAttribute("data-demo-screen",state.screen);
       root.setAttribute("data-locked",state.locked?"true":"false");
-      screenLabel.textContent=state.locked?"LCD LOCKED":hat.templates[state.screen][0].slice(0,21);
+      screenLabel.textContent=state.locked?"LCD LOCKED":displayedTitle;
       inspector.value=state.screen;
       allControls.forEach(function(b){
         var id=b.getAttribute("data-control")||b.getAttribute("data-touch-control");
@@ -161,6 +163,25 @@
     function announce(message){
       feedback.textContent=message;count.textContent=String(taps).padStart(2,"0");
     }
+    var wheelPreview=root.querySelector("[data-wheel-preview]");
+    if(wheelPreview){
+      var wheelOutput=wheelPreview.querySelector("output");
+      function previewWheel(direction){
+        var connected=mice.snapshot().connectedId;
+        if(!connected){wheelOutput.textContent="Pair or reconnect a virtual mouse to test scrolling.";return;}
+        var reverse=mice.profileFor(connected).movement.scrollInverse;
+        var output=reverse?(direction==="up"?"down":"up"):direction;
+        wheelOutput.textContent="Wheel "+direction+" → virtual output "+output;
+      }
+      wheelPreview.querySelectorAll("[data-wheel]").forEach(function(button){
+        button.addEventListener("click",()=>previewWheel(button.dataset.wheel));
+      });
+      wheelPreview.addEventListener("wheel",function(event){
+        if(event.ctrlKey||!event.deltaY||!mice.snapshot().connectedId)return;
+        event.preventDefault();
+        previewWheel(event.deltaY<0?"up":"down");
+      },{passive:false});
+    }
     function renderMice(){
       var state=mice.snapshot();
       mouseCount.textContent=state.mice.length+" / 8 saved";
@@ -171,7 +192,7 @@
       var p=focused&&focused.profile;
       profileStatus.textContent=p?
         "Profile: "+p.kind+" · H "+(p.movement.horizontal/4)+"x · V "+
-        (p.movement.vertical/4)+"x · "+(p.movement.rotation*90)+"°":
+        (p.movement.vertical/4)+"x · "+(p.movement.rotation*90)+"° · Scroll Inverse "+(p.movement.scrollInverse?"ON":"OFF"):
         "Profile: no saved mouse selected";
       mousePending.textContent=state.pending?
         "Pending "+(state.pending.mode==="pair"?"pairing":"saved search")+
@@ -414,10 +435,6 @@
       if(event.kind==="retry"&&event.state.screen==="HOME_SEARCHING"&&mice.snapshot().mice.length){
         mice.beginSearch();return;
       }
-      if(event.kind==="page"&&event.state.screen==="SAVED_DEVICES"){
-        var target=event.state.savedMice[event.state.savedPage];
-        if(target){mice.selectFront(target.id);return;}
-      }
       if(event.kind==="cancel-search"&&mice.snapshot().pending){mice.cancel("Back");return;}
       if(event.kind==="back"&&mice.snapshot().pending){mice.cancel("Back");return;}
 
@@ -575,7 +592,7 @@
         factor:currentEngine&&currentEngine.snapshot().locked?0:1,availableControls:false};
     },
     getDiagnostics:function(){return currentDiagnostics?currentDiagnostics.snapshot():null;},
-    canonicalScreenCount:45,
+    canonicalScreenCount:48,
     boot:boot
   });
   if(document.readyState==="loading")

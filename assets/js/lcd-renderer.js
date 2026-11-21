@@ -1,7 +1,7 @@
 /* WEB-02 — ST7789 240x240 software LCD rasterizer, no dependencies.
  * Exact 5x7 font, geometric constants, RGB565 tones and layout are
- * ported from RemappingBridge v3.2.4 renderer.c (identical Git blob
- * 61c4fe3d547ba05c3e24de86518d807047b50a77 in v3.2.3).
+ * ported from RemappingBridge v3.3.0 renderer.c (Git blob
+ * 398a211e27990688beaee152e2fef908dc533600).
  * Only DARK MAGENTA background may differ for the browser.
  * THIS FILE DOES NOT IMPLEMENT FIRMWARE NAVIGATION OR BLE/HID.
  */
@@ -29,8 +29,8 @@
   var GLYPHS_ALPHA = [[14,17,17,31,17,17,17],[30,17,17,30,17,17,30],[15,16,16,16,16,16,15],[30,17,17,17,17,17,30],[31,16,16,30,16,16,31],[31,16,16,30,16,16,16],[15,16,16,23,17,17,15],[17,17,17,31,17,17,17],[31,4,4,4,4,4,31],[7,2,2,2,18,18,12],[17,18,20,24,20,18,17],[16,16,16,16,16,16,31],[17,27,21,21,17,17,17],[17,25,21,19,17,17,17],[14,17,17,17,17,17,14],[30,17,17,30,16,16,16],[14,17,17,17,21,18,13],[30,17,17,30,20,18,17],[15,16,16,14,1,1,30],[31,4,4,4,4,4,4],[17,17,17,17,17,17,14],[17,17,17,17,17,10,4],[17,17,17,21,21,21,10],[17,17,10,4,10,17,17],[17,17,10,4,4,4,4],[31,1,2,4,8,16,31]];
   var GLYPHS_DIGIT = [[14,17,19,21,25,17,14],[4,12,4,4,4,4,14],[14,17,1,2,4,8,31],[30,1,1,14,1,1,30],[2,6,10,18,31,2,2],[31,16,16,30,1,1,30],[14,16,16,30,17,17,14],[31,1,2,4,8,8,8],[14,17,17,14,17,17,14],[14,17,17,15,1,1,14]];
   var PHYSICAL_SOURCE = Object.freeze({
-    tag:"v3.2.4",rendererBlob:"61c4fe3d547ba05c3e24de86518d807047b50a77",
-    uiBaseline:"v3.2.3",font:"5x7",sourceLicense:"CC0-1.0"
+    tag:"v3.3.0",rendererBlob:"398a211e27990688beaee152e2fef908dc533600",
+    uiBaseline:"v3.3.0",font:"5x7",sourceLicense:"CC0-1.0"
   });
   function assertInt(v,min,max,name) {
     if (!Number.isInteger(v)||v<min||v>max) throw new RangeError(name);

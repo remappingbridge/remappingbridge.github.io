@@ -1,6 +1,6 @@
 /* WEB-04 — visual projection from canonical firmware 9×21 templates.
  * Sequence: source rows -> dynamic (demo) fields -> semantic foreground
- * -> focused option -> MNT-13 pipe marker -> v3.2.4 Canvas.
+ * -> focused option -> MNT-13 pipe marker -> v3.3.0 Canvas.
  * Does not claim BLE, flash/persistent preference operations.
  */
 (function(){
@@ -31,7 +31,6 @@ function focusRow(frame,row,lcd){
 function selectedRow(state){
  var id=state.screen;
  if(U.isCombo(id))return 1+2*state.selection;
- if(id==="MOVEMENT_OPTIONS")return state.selection===2?4:1+state.selection;
  if(id==="SAVED_DEVICES")return state.savedCount?5:-1;
  return U.optionCount(id)?1+state.selection:-1;
 }
@@ -49,12 +48,20 @@ function projection(state,lcd){
  var regular=lcd.tones.STATIC,muted=lcd.tones.ACTIONABLE,now=lcd.tones.CURRENT;
  if(id==="HOME")replace(frame,0,state.connectedId?(state.connectedName||"DEMO MOUSE"):"DEMO MOUSE",lcd.tones.TITLE,lcd);
  if(id==="SAVED_DEVICES"){
-  replace(frame,0,state.savedCount?(Math.min(state.savedPage+1,state.savedCount)+" OF "+state.savedCount):"0 OF 0",lcd.tones.TITLE,lcd);
-  var shown=state.savedMice&&state.savedMice[state.savedPage];
-  replace(frame,1,shown?shown.name:"UNKNOWN MOUSE",state.connectedId&&shown&&shown.id===state.connectedId?now:regular,lcd);
-  replace(frame,2,"PROFILE: "+state.activeProfile,regular,lcd);
-  replace(frame,3,"DPI: H "+parseGain(state.movement.horizontal)+" - V "+parseGain(state.movement.vertical),regular,lcd);
-  replace(frame,4,"ROTATION: "+(90*state.movement.rotation)+" DEGREE",regular,lcd);
+  var shown=state.savedCount && state.savedMice[state.savedPage];
+  if(state.savedCount && !shown)
+   shown={id:state.connectedId,name:"Demo Mouse",kind:state.activeProfile,movement:state.movement};
+  if(shown){
+   var raw=shown.name.toUpperCase(),hasMouse=raw.includes("MOUSE");
+   var base=Array.from(raw).filter(c=>/[A-Z0-9]/.test(c)||" -:.=/\\><?!,()".includes(c)).slice(0,hasMouse?15:13).join("").trimEnd();
+   var name=base?(base+(hasMouse?"":" MOUSE")):"UNKNOWN MOUSE";
+   var tone=state.connected && shown.id===state.connectedId?now:regular;
+   replace(frame,0,(state.savedPage+1)+" "+name,lcd.tones.TITLE,lcd);
+   replace(frame,1,"PROFILE: "+shown.kind,tone,lcd);
+   replace(frame,2,"DPI: H "+parseGain(shown.movement.horizontal)+" - V "+parseGain(shown.movement.vertical),tone,lcd);
+   replace(frame,3,"SCROLL INVERSE: "+(shown.movement.scrollInverse?"ON":"OFF"),tone,lcd);
+   replace(frame,4,"ROTATION: "+(90*shown.movement.rotation)+" DEGREE",tone,lcd);
+  }
   replace(frame,5," REMOVE DEVICE",state.savedCount?lcd.tones.EMPHASIZED:muted,lcd);
   for(var hr=hint;hr<9;hr++)setCellRow(frame,hr,muted,lcd);
  }
@@ -66,7 +73,9 @@ function projection(state,lcd){
   replace(frame,1," HORIZONTAL DPI "+parseGain(state.movement.horizontal),muted,lcd);
   replace(frame,2," VERTICAL DPI "+parseGain(state.movement.vertical),muted,lcd);
   replace(frame,4," ROTATION "+(90*state.movement.rotation)+"-DEGREE",muted,lcd);
-  if(state.selection===2)focusRow(frame,3,lcd);
+  var scroll=state.movement.scrollInverse?"ON":"OFF";
+  replace(frame,3," SCROLL INVERSE "+scroll,muted,lcd);
+  lcd.setToneSpan(frame,3,16,scroll.length,now);
   var pos1=" HORIZONTAL DPI ".length;
   var pos2=" VERTICAL DPI ".length;
   lcd.setToneSpan(frame,1,pos1,Math.min(21-pos1,parseGain(state.movement.horizontal).length),now);
@@ -112,7 +121,7 @@ function projection(state,lcd){
  if(id==="PASSTHROUGH_APPLIED"){
   for(var sr=1;sr<hint;sr++)setCellRow(frame,sr,now,lcd);
  }
- // WEB-07 mirrors v3.2.4 C rendering order: dynamic value, applied cyan,
+ // WEB-07 mirrors v3.3.0 C rendering order: dynamic value, applied cyan,
  // focus, disabled yellow, then MNT-13 pipe on the value/second row.
  var chosen=selectedRow(state);
  if(chosen>0&&chosen<hint&&id!=="SAVED_DEVICES"){

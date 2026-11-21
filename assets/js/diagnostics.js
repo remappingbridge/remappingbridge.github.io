@@ -78,7 +78,7 @@ function create(deps){
     frontId:vm.frontId,connectedId:vm.connectedId,
     events:log,rows:frame.cells.map(function(row){return row.map(function(c){return c.character;}).join("");})};
   var hash=checksum(sample);
-  last={id:id,label:def.label,screen:state.screen,hash:hash,source:"v3.2.4",
+  last={id:id,label:def.label,screen:state.screen,hash:hash,source:"v3.3.0",
     geometry:{width:240,height:240,rows:9,columns:21},
     state:state,virtual:{savedCount:vm.mice.length,connectedId:vm.connectedId,
       frontId:vm.frontId,pending:vm.pending,durable:vm.durable},
@@ -121,7 +121,7 @@ function create(deps){
  }
  function toJSON(){
   return JSON.stringify({
-   schema:"remappingbridge-web-diagnostics-v1",firmware:"v3.2.4",
+   schema:"remappingbridge-web-diagnostics-v1",firmware:"v3.3.0",
    note:"Local browser-only simulation; not physical device evidence.",
    scenario:last?{id:last.id,label:last.label,hash:last.hash,screen:last.screen,
      geometry:last.geometry,deterministic:last.deterministic,
@@ -131,7 +131,7 @@ function create(deps){
  }
  function toText(){
   var s=last;
-  var lines=["REMAPPINGBRIDGE WEB-09 LOCAL DIAGNOSTICS","Firmware: v3.2.4",
+  var lines=["REMAPPINGBRIDGE WEB-09 LOCAL DIAGNOSTICS","Firmware: v3.3.0",
     "No real mouse or hardware was used.",""];
   if(s){
    lines.push("Scenario: "+s.id,"Screen: "+s.screen,"Deterministic hash: "+s.hash,

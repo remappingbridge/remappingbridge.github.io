@@ -1,6 +1,6 @@
-/* WEB-10: generated directly from the checked-in v3.2.4 C firmware literals.
+/* WEB-10: generated directly from the checked-in v3.3.0 C firmware literals.
  * Immutable, independent fixture for browser-only C↔JS parity regression.
- * Source Git blob 132010179de09ea81f4543e9ca83def09c0a743f.
+ * Source Git blob 9f83921b8c780622a545157ed373726603b96cae.
  * No runtime network request or build tooling is needed.
  */
 (function(){
@@ -8,11 +8,11 @@
 window.RemappingBridgeFirmwareFixture=Object.freeze({
   "schema": "remappingbridge-web10-firmware-screen-fixture-v1",
   "source": "remappingbridge/remappingbridge",
-  "sourceTag": "v3.2.4",
-  "sourceCommit": "69a640d9767ec7198572eb9b5073ed71f8f3d202",
+  "sourceTag": "v3.3.0",
+  "sourceCommit": "0efbd433c68867f38d38cc98560714c1f96cfec1",
   "sourcePath": "src/ux_model/ux_model.c",
-  "sourceBlob": "132010179de09ea81f4543e9ca83def09c0a743f",
-  "screenCount": 45,
+  "sourceBlob": "9f83921b8c780622a545157ed373726603b96cae",
+  "screenCount": 48,
   "screens": {
     "HOME": {
       "rows": [
@@ -318,11 +318,11 @@ window.RemappingBridgeFirmwareFixture=Object.freeze({
     },
     "SAVED_DEVICES": {
       "rows": [
-        "0 OF 0",
-        "UNKNOWN MOUSE",
-        "PROFILE: PASSTHROUGH",
-        "DPI: H 1 - V 1",
-        "ROTATION: 0 DEGREE",
+        "NO SAVED MOUSE",
+        "",
+        "",
+        "",
+        "",
         " REMOVE DEVICE",
         "",
         "JOY RIGHT/LEFT: PAGE",
@@ -371,7 +371,7 @@ window.RemappingBridgeFirmwareFixture=Object.freeze({
         "MOVEMENT OPTIONS",
         " HORIZONTAL DPI 1",
         " VERTICAL DPI 1",
-        " COUNTERCLOCKWISE",
+        " SCROLL INVERSE OFF",
         " ROTATION 0-DEGREE",
         "",
         "JOY PRESS: ACCESS",
@@ -433,6 +433,48 @@ window.RemappingBridgeFirmwareFixture=Object.freeze({
         "JOY LEFT/RIGHT: PAGE",
         "KEY A: APPLY AND BACK",
         "KEY X: HELP FAST DPI"
+      ],
+      "dynamic": []
+    },
+    "SCROLL_INVERSE_OFF": {
+      "rows": [
+        "SCROLL INVERSE OFF",
+        "CURRENTLY DISABLED",
+        "APPLY TO ENABLE",
+        "MOUSE WHEEL",
+        "DIRECTION REVERSAL.",
+        "",
+        "KEY A: APPLY AND BACK",
+        "KEY B: CANCEL",
+        "KEY X: SCROLL HELP"
+      ],
+      "dynamic": []
+    },
+    "SCROLL_INVERSE_ON": {
+      "rows": [
+        "SCROLL INVERSE ON",
+        "CURRENTLY ENABLED",
+        "APPLY TO RESTORE",
+        "DEFAULT MOUSE WHEEL",
+        "DIRECTION.",
+        "",
+        "KEY A: APPLY AND BACK",
+        "KEY B: CANCEL",
+        "KEY X: SCROLL HELP"
+      ],
+      "dynamic": []
+    },
+    "SCROLL_HELP": {
+      "rows": [
+        "SCROLL HELP",
+        "WHEN DISABLED, WHEEL",
+        "DIRECTION IS PASSED",
+        "THROUGH UNCHANGED.",
+        "WHEN ENABLED, WHEEL",
+        "UP BECOMES DOWN AND",
+        "DOWN BECOMES UP.",
+        "",
+        "KEY B: BACK"
       ],
       "dynamic": []
     },

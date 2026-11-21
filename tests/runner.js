@@ -17,14 +17,14 @@ function run(){
  function press(e,id){e.press(id);return e.release(id);}
  function throws(fn){try{fn();return false;}catch(_){return true;}}
  check("HTML document language is English",document.documentElement.lang==="en");
- check("Canvas, model, 45 screens, projector and local mouse module exported",!!L&&!!H&&!!S&&!!P&&!!W&&!!V&&!!D);
+ check("Canvas, model, 48 screens, projector and local mouse module exported",!!L&&!!H&&!!S&&!!P&&!!W&&!!V&&!!D);
  if(L&&H&&S&&P&&W&&V&&D){
   var info=W.getBootstrapInfo();
-  check("Latest official v3.2.4 source and WEB-10",info.gate==="WEB-10"&&info.version==="v3.2.4"&&info.uiBaseline==="v3.2.3"); 
-  check("WEB-10 independent C source fixture has pinned firmware version, SHA and exactly 45 screens",
-    !!F&&F.sourceTag==="v3.2.4"&&F.sourceCommit===info.commit&&
-    F.sourceBlob==="132010179de09ea81f4543e9ca83def09c0a743f"&&
-    F.screenCount===45&&Object.keys(F.screens).length===45);
+  check("Latest official v3.3.0 source and WEB-10",info.gate==="WEB-10"&&info.version==="v3.3.0"&&info.uiBaseline==="v3.3.0"); 
+  check("WEB-10 independent C source fixture has pinned firmware version, SHA and exactly 48 screens",
+    !!F&&F.sourceTag==="v3.3.0"&&F.sourceCommit===info.commit&&
+    F.sourceBlob==="9f83921b8c780622a545157ed373726603b96cae"&&
+    F.screenCount===48&&Object.keys(F.screens).length===48);
   if(F&&F.screens){
     Object.keys(F.screens).forEach(function(id){
       check("C source screen text/dynamic parity: "+id,
@@ -40,13 +40,13 @@ function run(){
   check("MNT-13 vertical pipe bitmap unchanged",Array.from({length:7},function(_,n){return L.glyphRow("|",n);}).every(function(n){return n===4;}));
   check("Gentle magenta remains vivid #300c39",L.backdrops.gentle.hex==="#300c39");
   check("App does not provide brightness beyond 100% or real BLE",info.maxWebBrightnessPercent===100&&!info.bluetoothImplemented);
-  check("Canonical catalog has exactly 45 unique screens",S.ids.length===45&&new Set(S.ids).size===45&&P.canonicalCount===45&&W.canonicalScreenCount===45);
-  check("Catalog is pinned to original C Git blob",S.firmwareBlob==="132010179de09ea81f4543e9ca83def09c0a743f");
-  check("All 45 screens contain exactly nine UTF-8 source strings",S.ids.every(function(id){return S.get(id).rows.length===9&&S.get(id).rows.every(function(x){return typeof x==="string";});}));
+  check("Canonical catalog has exactly 48 unique screens",S.ids.length===48&&new Set(S.ids).size===48&&P.canonicalCount===48&&W.canonicalScreenCount===48);
+  check("Catalog is pinned to original C Git blob",S.firmwareBlob==="9f83921b8c780622a545157ed373726603b96cae");
+  check("All 48 screens contain exactly nine UTF-8 source strings",S.ids.every(function(id){return S.get(id).rows.length===9&&S.get(id).rows.every(function(x){return typeof x==="string";});}));
   check("Exactly two long C source rows in Remapping Help are retained",S.get("HELP_REMAPPER_OPTIONS").rows.filter(function(x){return x.length>21;}).length===2);
   check("Long firmware source strings clip to 21 LCD columns",P.frame({screen:"HELP_REMAPPER_OPTIONS",selection:0,held:[],savedCount:0,connected:false},L).cells[0].length===21);
   check("No retired Standard/Escape menu templates",S.ids.every(function(id){return !/STANDARD_REMAP|ESCAPE_REMAP|LEARN_THE_KEYS/.test(id);}));
-  check("45 screen names map to HAT navigation templates",S.ids.every(function(id){return !!H.templates[id]&&H.templates[id]===S.get(id).rows;}));
+  check("48 screen names map to HAT navigation templates",S.ids.every(function(id){return !!H.templates[id]&&H.templates[id]===S.get(id).rows;}));
   check("Source title is magenta",P.frame({screen:"HOME",selection:0,held:[],savedCount:1,connected:true,activeProfile:"PASSTHROUGH",movement:{horizontal:4,vertical:4,rotation:0}},L).cells[0][0].tone===L.tones.TITLE);
   // Golden WEB-02 and WEB-03 RGBA samples are intentionally retained.
   var rows=W.firstScreenTemplate,first=L.previewFrame(rows),orig=L.rasterize(first,"original"),gentle=L.rasterize(first,"gentle");
@@ -67,7 +67,7 @@ function run(){
     rendered++;
    }catch(err){errors.push(id+": "+err.message);}
   });
-  check("Every one of 45 firmware screens rasterizes without overflow",rendered===45&&errors.length===0);
+  check("Every one of 48 firmware screens rasterizes without overflow",rendered===48&&errors.length===0);
   var e=H.createEngine();
   check("Startup is didactic FIRST MOUSE",e.snapshot().screen==="SEARCHING_FIRST");
   press(e,"KEY_Y");
@@ -135,6 +135,13 @@ function run(){
   press(e,"JOY_DOWN");press(e,"JOY_PRESS");
   check("HOME Movement route enters MOVEMENT OPTIONS",e.snapshot().screen==="MOVEMENT_OPTIONS");
   press(e,"JOY_DOWN");press(e,"JOY_DOWN");
+  press(e,"JOY_PRESS");
+  check("Third Movement option opens Scroll Inverse OFF",e.snapshot().screen==="SCROLL_INVERSE_OFF");
+  press(e,"KEY_X");
+  check("Scroll Help opens",e.snapshot().screen==="SCROLL_HELP");
+  press(e,"KEY_B");press(e,"KEY_B");
+  check("Cancel restores focus to Scroll Inverse",e.snapshot().screen==="MOVEMENT_OPTIONS"&&e.snapshot().selection===2);
+  press(e,"JOY_DOWN");
   var mv=P.frame(e.snapshot(),L);
   check("Rotation selected marker is on row 4, not blank row 3",mv.cells[4][0].character==="|"&&mv.cells[3][0].character!=="|");
   press(e,"JOY_PRESS");
@@ -293,7 +300,7 @@ function run(){
   var withRemoved=restore.snapshot();eng.syncMice(withRemoved,"initialized");
   eng.inspect("SAVED_DEVICES");
   check("Saved Devices selection renders the restored front mouse name",
-    P.frame(eng.snapshot(),L).cells[1].map(function(x){return x.character;}).join("").indexOf(withRemoved.mice[0].name.toUpperCase())>=0);
+    P.frame(eng.snapshot(),L).cells[0].map(function(x){return x.character;}).join("").indexOf(withRemoved.mice[0].name.toUpperCase())>=0);
   // WEB-06: Custom/MODIFIER and Movement states persist per virtual bond.
   var ps=memoryStore(),profiles=V.create({storage:ps});
   profiles.beginPair("Mouse Alpha");profiles.complete(true);
@@ -305,7 +312,7 @@ function run(){
   var originalB=profiles.profileFor(beta);
   var alphaProfile=profiles.profileFor(alpha);
   alphaProfile.kind="CUSTOM";alphaProfile.targets=[5,1,2,3,4];
-  alphaProfile.movement={horizontal:8,vertical:3,rotation:1};
+  alphaProfile.movement={horizontal:8,vertical:3,rotation:1,scrollInverse:true};
   var alphaEvent=profiles.applyProfile(alpha,alphaProfile);
   check("Custom and Movement values atomically apply only to Mouse Alpha",
     alphaEvent.kind==="profile-applied"&&profiles.profileFor(alpha).targets[0]===5&&
@@ -330,6 +337,13 @@ function run(){
   check("Connecting Beta rehydrates its own applied profile and movement",
     ed.snapshot().activeProfile==="CUSTOM"&&ed.snapshot().movement.horizontal===2&&
     ed.snapshot().movement.vertical===12&&ed.snapshot().customTargets[3]===5);
+  ed.inspect("SAVED_DEVICES");
+  function lcdLine(frame,row){return frame.cells[row].map(c=>c.character).join("").trimEnd();}
+  var connectedPage=P.frame(ed.snapshot(),L);
+  check("Connected mouse is first with cyan status",lcdLine(connectedPage,0)==="1 MOUSE BETA"&&connectedPage.cells[4][0].tone===L.tones.CURRENT);
+  press(ed,"JOY_RIGHT");
+  var otherPage=P.frame(ed.snapshot(),L);
+  check("Next page shows Alpha settings in yellow",lcdLine(otherPage,0)==="2 MOUSE ALPHA"&&lcdLine(otherPage,2)==="DPI: H 2 - V 0.75"&&lcdLine(otherPage,3)==="SCROLL INVERSE: ON"&&otherPage.cells[1][0].tone===L.tones.STATIC);
   ed.inspect("EDIT_CUSTOM");
   press(ed,"JOY_PRESS");
   check("LEFT target chooser defaults to currently applied LEFT setting",
@@ -388,11 +402,11 @@ function run(){
     profiles.profileFor(alpha).movement.rotation===1);
   var resetCmd=press(ed,"KEY_A");
   check("Movement Reset All requests neutral H/V and zero rotation",
-    resetCmd.kind==="reset-movement"&&same(resetCmd.payload.movement,{horizontal:4,vertical:4,rotation:0}));
+    resetCmd.kind==="reset-movement"&&same(resetCmd.payload.movement,{horizontal:4,vertical:4,rotation:0,scrollInverse:false}));
   profiles.resetMovement(beta);ed.syncMice(profiles.snapshot(),"profile-applied");ed.confirmApply("movement");
   check("Reset Movement preserves Custom mapping and Alpha's independent gains",
     same(profiles.profileFor(beta).targets,[5,1,2,3,4])&&profiles.profileFor(beta).kind==="CUSTOM"&&
-    same(profiles.profileFor(beta).movement,{horizontal:4,vertical:4,rotation:0})&&
+    same(profiles.profileFor(beta).movement,{horizontal:4,vertical:4,rotation:0,scrollInverse:false})&&
     profiles.profileFor(alpha).movement.horizontal===8);
   var refreshed=V.create({storage:ps});
   check("Reload preserves both independent mouse profiles and custom targets",
@@ -414,7 +428,7 @@ function run(){
 
   // WEB-07: all C combination ordinals, 30 native shortcut identities,
   // MNT-12 applied/draft predicates and MNT-13 second-row markers.
-  check("All 12 canonical combination ordinals in v3.2.4 source order",
+  check("All 12 canonical combination ordinals in v3.3.0 source order",
     H.combinationNames.length===12&&H.combinationNames[0]==="MODIFIER RELEASED"&&
     H.combinationNames[1]==="MOD + MIDDLE"&&H.combinationNames[5]==="MOD + BACKWARD"&&
     H.combinationNames[11]==="MOD + MOVE DOWN");
@@ -672,7 +686,7 @@ function run(){
   if(ctx){
    var started=W.boot(document);
    check("Application boots with no backdrop option buttons",started===true&&root.querySelectorAll("[data-backdrop]").length===0);
-   check("Inspector contains all 45 original screens",inspect.children.length===45);
+   check("Inspector contains all 48 original screens",inspect.children.length===48);
    check("Fixed Gentle LCD is used on initial screen",same(Array.from(ctx.getImageData(0,0,1,1).data),[48,12,57,255]));
    check("Obsolete WEB-08 brightness/density controls are absent from HTML app",
      root.querySelectorAll("[data-lcd-brightness]").length===0&&
@@ -788,7 +802,10 @@ function run(){
    check("End-to-end Horizontal DPI commit persists 1.5x via A",
      W.getSession().screen==="MOVEMENT_OPTIONS"&&
      W.getVirtualMice().mice[0].profile.movement.horizontal===6);
-   keys[4].click();keys[4].click();keys[2].click(); // rotation
+   keys[4].click();keys[4].click();keys[2].click(); // Scroll Inverse
+   keys[5].click();
+   check("Apply reverses wheel and restores focus",W.getVirtualMice().mice[0].profile.movement.scrollInverse&&W.getSession().selection===2);
+   keys[4].click();keys[2].click(); // rotation
    keys[4].click();keys[5].click(); // 90 degree apply
    check("End-to-end Rotation commit persists 90 degrees",
      W.getVirtualMice().mice[0].profile.movement.rotation===1);

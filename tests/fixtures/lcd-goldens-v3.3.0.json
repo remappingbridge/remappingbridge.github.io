@@ -1,10 +1,10 @@
 {
   "schema": "remappingbridge-web03-lcd-rgba-golden-v2",
   "source": "remappingbridge/remappingbridge",
-  "firmwareVersion": "v3.2.4",
-  "uiBaseline": "v3.2.3",
+  "firmwareVersion": "v3.3.0",
+  "uiBaseline": "v3.3.0",
   "sourceFile": "src/renderer/renderer.c",
-  "sourceBlob": "61c4fe3d547ba05c3e24de86518d807047b50a77",
+  "sourceBlob": "398a211e27990688beaee152e2fef908dc533600",
   "logicalCanvas": {
     "width": 240,
     "height": 240,

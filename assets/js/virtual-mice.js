@@ -13,7 +13,7 @@ function nameOf(s){
  if(!name||name.length>32||/[\x00-\x1f\x7f]/.test(name))throw new RangeError("Mouse name must be 1–32 printable characters");
  return name;
 }
-function defaults(){return {kind:"PASSTHROUGH",targets:[0,1,2,3,4],movement:{horizontal:4,vertical:4,rotation:0},shortcuts:Array(12).fill(0)};}
+function defaults(){return {kind:"PASSTHROUGH",targets:[0,1,2,3,4],movement:{horizontal:4,vertical:4,rotation:0,scrollInverse:false},shortcuts:Array(12).fill(0)};}
 var GAINS=[1,2,3,4,5,6,8,12];
 function validateProfile(p){
  if(!p||typeof p!=="object"||!["PASSTHROUGH","CUSTOM"].includes(p.kind)||
@@ -21,11 +21,12 @@ function validateProfile(p){
   !p.targets.every(n=>Number.isInteger(n)&&n>=0&&n<=5)||
   p.targets.filter(n=>n===5).length>1||
   !p.movement||!GAINS.includes(p.movement.horizontal)||!GAINS.includes(p.movement.vertical)||
+  (p.movement.scrollInverse!==undefined && typeof p.movement.scrollInverse!=="boolean")||
   !Number.isInteger(p.movement.rotation)||p.movement.rotation<0||p.movement.rotation>3||
   !Array.isArray(p.shortcuts)||p.shortcuts.length!==12||
   !p.shortcuts.every(n=>Number.isInteger(n)&&n>=0&&n<=30))
   throw new RangeError("Invalid virtual mouse profile");
- return copy({kind:p.kind,targets:p.targets,movement:p.movement,shortcuts:p.shortcuts});
+ return copy({kind:p.kind,targets:p.targets,movement:Object.assign({},p.movement,{scrollInverse:p.movement.scrollInverse===true}),shortcuts:p.shortcuts});
 }
 function newState(){return {schema:SCHEMA,seq:0,clock:0,mice:[],frontId:null,connectedId:null,events:[]};}
 function isId(s){return typeof s==="string"&&/^mouse-[0-9]{4,9}$/.test(s);}
@@ -40,6 +41,7 @@ function validate(raw){
   if(!m||!isId(m.id)||seen.has(m.id)||m.name!==nameOf(m.name)||
      names.has(m.name.toLowerCase())||!m.profile||!profileSafe(m.profile))
       throw new Error("Invalid saved mouse or profile");
+  m.profile=validateProfile(m.profile);
   seen.add(m.id);names.add(m.name.toLowerCase());
  }
  for(var id of [raw.frontId,raw.connectedId])if(id!==null&&!seen.has(id))throw new Error("Dangling mouse reference");
@@ -155,7 +157,7 @@ function create(options){
  function resetMovement(id){
   var p=profileFor(id);
   if(!p)return emit("not-found","No selected saved mouse to reset.");
-  p.movement={horizontal:4,vertical:4,rotation:0};
+  p.movement={horizontal:4,vertical:4,rotation:0,scrollInverse:false};
   return applyProfile(id,p);
  }
  function disconnect(){
