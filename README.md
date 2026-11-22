@@ -18,6 +18,7 @@
 2. In **Virtual Mouse Lab**, enter a name and select **Start Pair New → Complete Successfully**. This creates a virtual mouse profile.
 3. Use the virtual joystick (or keyboard arrows and Enter) to open **Movement Options** and select **SCROLL INVERSE OFF**. Press the joystick and apply with **Key A**. In **Saved Devices**, page left/right to compare each mouse’s settings. The connected mouse appears first with cyan status text.
 4. To experiment with shortcuts, visit **Remapping Options → Custom Remapping**, assign a mouse button as **Modifier**, apply the Custom profile, then open **Modifier Shortcuts**.
+5. To disable a standalone click, open **BACKWARD WILL BECOME**. Its choices are **LEFT CLICK**, **RIGHT CLICK**, **FORWARD**, **BACKWARD**, **MODIFIER**, and **DISABLED**. Choose **DISABLED** and press **Key A**. The selected editor row reads `|BACKWARD IS DISABLED`. Press **Key A** again to apply. With a different button set to Modifier, you can still assign **MOD + BACKWARD** to **COPY**. Previously saved middle-click mappings keep their meaning.
 
 The joystick moves the selection and pressing it inward opens an option. **A** generally applies, **B** goes back, **X** opens Help and **Y** controls Lock. Follow the hints on each LCD screen for exceptions.
 

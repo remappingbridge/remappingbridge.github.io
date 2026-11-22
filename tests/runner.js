@@ -20,10 +20,10 @@ function run(){
  check("Canvas, model, 48 screens, projector and local mouse module exported",!!L&&!!H&&!!S&&!!P&&!!W&&!!V&&!!D);
  if(L&&H&&S&&P&&W&&V&&D){
   var info=W.getBootstrapInfo();
-  check("Latest official v3.3.0 source and WEB-10",info.gate==="WEB-10"&&info.version==="v3.3.0"&&info.uiBaseline==="v3.3.0"); 
+  check("Latest official v3.4.0 source and WEB-10",info.gate==="WEB-10"&&info.version==="v3.4.0"&&info.uiBaseline==="v3.4.0");
   check("WEB-10 independent C source fixture has pinned firmware version, SHA and exactly 48 screens",
-    !!F&&F.sourceTag==="v3.3.0"&&F.sourceCommit===info.commit&&
-    F.sourceBlob==="9f83921b8c780622a545157ed373726603b96cae"&&
+    !!F&&F.sourceTag==="v3.4.0"&&F.sourceCommit===info.commit&&
+    F.sourceBlob==="758e1279cc48065887d9526ded3044a4f2b31a80"&&
     F.screenCount===48&&Object.keys(F.screens).length===48);
   if(F&&F.screens){
     Object.keys(F.screens).forEach(function(id){
@@ -41,7 +41,7 @@ function run(){
   check("Gentle magenta remains vivid #300c39",L.backdrops.gentle.hex==="#300c39");
   check("App does not provide brightness beyond 100% or real BLE",info.maxWebBrightnessPercent===100&&!info.bluetoothImplemented);
   check("Canonical catalog has exactly 48 unique screens",S.ids.length===48&&new Set(S.ids).size===48&&P.canonicalCount===48&&W.canonicalScreenCount===48);
-  check("Catalog is pinned to original C Git blob",S.firmwareBlob==="9f83921b8c780622a545157ed373726603b96cae");
+  check("Catalog is pinned to original C Git blob",S.firmwareBlob==="758e1279cc48065887d9526ded3044a4f2b31a80");
   check("All 48 screens contain exactly nine UTF-8 source strings",S.ids.every(function(id){return S.get(id).rows.length===9&&S.get(id).rows.every(function(x){return typeof x==="string";});}));
   check("Exactly two long C source rows in Remapping Help are retained",S.get("HELP_REMAPPER_OPTIONS").rows.filter(function(x){return x.length>21;}).length===2);
   check("Long firmware source strings clip to 21 LCD columns",P.frame({screen:"HELP_REMAPPER_OPTIONS",selection:0,held:[],savedCount:0,connected:false},L).cells[0].length===21);
@@ -348,7 +348,7 @@ function run(){
   press(ed,"JOY_PRESS");
   check("LEFT target chooser defaults to currently applied LEFT setting",
     ed.snapshot().screen==="LEFT_WILL_BECOME"&&ed.snapshot().selection===0);
-  for(var ix=0;ix<5;ix++)press(ed,"JOY_DOWN");
+  for(var ix=0;ix<4;ix++)press(ed,"JOY_DOWN");
   press(ed,"KEY_A");
   check("New Modifier draft displaces Forward modifier to Forward identity",
     ed.snapshot().screen==="EDIT_CUSTOM"&&
@@ -371,8 +371,8 @@ function run(){
     canceled.snapshot().screen==="MOUSE_OPTIONS"&&!canceled.snapshot().customDirty&&
     same(canceled.snapshot().customTargets,canceled.snapshot().appliedTargets));
   var willFrame=P.frame(ed.snapshot(),L);
-  check("Draft modifier does not turn uncommitted candidate cyan",
-    willFrame.cells[6][1].tone!==L.tones.CURRENT&&willFrame.cells[6][1].tone!==L.tones.SELECTED_CURRENT&&willFrame.cells[1][1].tone===L.tones.SELECTED_CURRENT);
+  check("Reopened chooser focuses and highlights the saved draft Modifier",
+    willFrame.cells[5][1].tone===L.tones.SELECTED_CURRENT);
   ed.inspect("EDIT_CUSTOM");
   var applyCustom=press(ed,"KEY_A");
   check("Edit Custom A emits an explicit commit request with draft target data",
@@ -428,7 +428,7 @@ function run(){
 
   // WEB-07: all C combination ordinals, 30 native shortcut identities,
   // MNT-12 applied/draft predicates and MNT-13 second-row markers.
-  check("All 12 canonical combination ordinals in v3.3.0 source order",
+  check("All 12 canonical combination ordinals in v3.4.0 source order",
     H.combinationNames.length===12&&H.combinationNames[0]==="MODIFIER RELEASED"&&
     H.combinationNames[1]==="MOD + MIDDLE"&&H.combinationNames[5]==="MOD + BACKWARD"&&
     H.combinationNames[11]==="MOD + MOVE DOWN");
@@ -456,6 +456,23 @@ function run(){
   check("Exactly owning MIDDLE combination is unavailable",
     Array.from({length:12},function(_,i){return H.comboUnavailable(i,cp.targets);})
       .filter(Boolean).length===1&&H.comboUnavailable(1,cp.targets));
+  var disabledStore=memoryStore(), disabledMice=V.create({storage:disabledStore});
+  disabledMice.beginPair("Test Mouse");disabledMice.complete(true);
+  var disabledId=disabledMice.snapshot().connectedId;
+  var original=disabledMice.profileFor(disabledId);
+  original.kind="CUSTOM";original.targets[0]=5;original.shortcuts[5]=1;
+  disabledMice.applyProfile(disabledId,original);
+  var editor=H.createEngine();editor.syncMice(disabledMice.snapshot(),"initialized");
+  editor.inspect("MIDDLE_WILL_BECOME");
+  check("Legacy Middle keeps its identity without a highlighted target",editor.snapshot().customTargets[2]===2&&
+    P.frame(editor.snapshot(),L).cells.slice(1,7).every(row=>row[1].tone!==L.tones.CURRENT&&row[1].tone!==L.tones.SELECTED_CURRENT));
+  editor.inspect("BACKWARD_WILL_BECOME");press(editor,"JOY_DOWN");press(editor,"JOY_DOWN");press(editor,"KEY_A");
+  check("Disabled Backward fits the 21-column focused summary",lcdLine(P.frame(editor.snapshot(),L),5)==="|BACKWARD IS DISABLED");
+  var disabledApply=press(editor,"KEY_A");original.targets=disabledApply.payload.targets;
+  disabledMice.applyProfile(disabledId,original);
+  var reloaded=V.create({storage:disabledStore}).profileFor(disabledId);
+  check("Reload preserves Disabled with the physical Modifier + Backward shortcut",reloaded.targets[4]===6&&
+    reloaded.shortcuts[5]===1&&H.shortcutsActive(reloaded.kind,reloaded.targets)&&!H.comboUnavailable(5,reloaded.targets));
   var unavailSources=[[5,1,2,3,4],2,[0,5,2,3,4],3,[0,1,2,5,4],4,[0,1,2,3,5],5];
   check("Unavailable source mapping covers Left, Right, Forward and Backward",
     H.comboUnavailable(2,[5,1,2,3,4])&&H.comboUnavailable(3,[0,5,2,3,4])&&
@@ -784,7 +801,7 @@ function run(){
    keys[2].click(); // HOME > MOUSE_OPTIONS
    keys[4].click();keys[2].click(); // CUSTOM
    keys[2].click(); // LEFT WILL BECOME
-   for(var buttonStep=0;buttonStep<5;buttonStep++)keys[4].click();
+   for(var buttonStep=0;buttonStep<4;buttonStep++)keys[4].click();
    keys[5].click(); // draft Modifier
    check("End-to-end Custom draft is not persisted until second A",
      W.getSession().screen==="EDIT_CUSTOM"&&W.getSession().customDirty&&

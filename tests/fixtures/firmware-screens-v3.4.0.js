@@ -1,6 +1,6 @@
-/* WEB-10: generated directly from the checked-in v3.3.0 C firmware literals.
+/* WEB-10: generated directly from the checked-in v3.4.0 C firmware literals.
  * Immutable, independent fixture for browser-only C↔JS parity regression.
- * Source Git blob 9f83921b8c780622a545157ed373726603b96cae.
+ * Source Git blob 758e1279cc48065887d9526ded3044a4f2b31a80.
  * No runtime network request or build tooling is needed.
  */
 (function(){
@@ -8,10 +8,10 @@
 window.RemappingBridgeFirmwareFixture=Object.freeze({
   "schema": "remappingbridge-web10-firmware-screen-fixture-v1",
   "source": "remappingbridge/remappingbridge",
-  "sourceTag": "v3.3.0",
-  "sourceCommit": "0efbd433c68867f38d38cc98560714c1f96cfec1",
+  "sourceTag": "v3.4.0",
+  "sourceCommit": "0de93cb0f3175cff9597f7bae968d3085a1b6fac",
   "sourcePath": "src/ux_model/ux_model.c",
-  "sourceBlob": "9f83921b8c780622a545157ed373726603b96cae",
+  "sourceBlob": "758e1279cc48065887d9526ded3044a4f2b31a80",
   "screenCount": 48,
   "screens": {
     "HOME": {
@@ -249,12 +249,12 @@ window.RemappingBridgeFirmwareFixture=Object.freeze({
     "LEFT_WILL_BECOME": {
       "rows": [
         "LEFT WILL BECOME",
-        " LEFT",
-        " RIGHT",
-        " MIDDLE",
+        " LEFT CLICK",
+        " RIGHT CLICK",
         " FORWARD",
         " BACKWARD",
         " MODIFIER",
+        " DISABLED",
         "",
         "KEY A: APPLY AND BACK"
       ],
@@ -263,12 +263,12 @@ window.RemappingBridgeFirmwareFixture=Object.freeze({
     "RIGHT_WILL_BECOME": {
       "rows": [
         "RIGHT WILL BECOME",
-        " LEFT",
-        " RIGHT",
-        " MIDDLE",
+        " LEFT CLICK",
+        " RIGHT CLICK",
         " FORWARD",
         " BACKWARD",
         " MODIFIER",
+        " DISABLED",
         "",
         "KEY A: APPLY AND BACK"
       ],
@@ -277,12 +277,12 @@ window.RemappingBridgeFirmwareFixture=Object.freeze({
     "MIDDLE_WILL_BECOME": {
       "rows": [
         "MIDDLE WILL BECOME",
-        " LEFT",
-        " RIGHT",
-        " MIDDLE",
+        " LEFT CLICK",
+        " RIGHT CLICK",
         " FORWARD",
         " BACKWARD",
         " MODIFIER",
+        " DISABLED",
         "",
         "KEY A: APPLY AND BACK"
       ],
@@ -291,12 +291,12 @@ window.RemappingBridgeFirmwareFixture=Object.freeze({
     "FORWARD_WILL_BECOME": {
       "rows": [
         "FORWARD WILL BECOME",
-        " LEFT",
-        " RIGHT",
-        " MIDDLE",
+        " LEFT CLICK",
+        " RIGHT CLICK",
         " FORWARD",
         " BACKWARD",
         " MODIFIER",
+        " DISABLED",
         "",
         "KEY A: APPLY AND BACK"
       ],
@@ -305,12 +305,12 @@ window.RemappingBridgeFirmwareFixture=Object.freeze({
     "BACKWARD_WILL_BECOME": {
       "rows": [
         "BACKWARD WILL BECOME",
-        " LEFT",
-        " RIGHT",
-        " MIDDLE",
+        " LEFT CLICK",
+        " RIGHT CLICK",
         " FORWARD",
         " BACKWARD",
         " MODIFIER",
+        " DISABLED",
         "",
         "KEY A: APPLY AND BACK"
       ],

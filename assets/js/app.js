@@ -4,10 +4,10 @@
 (function () {
   "use strict";
   var FIRMWARE=Object.freeze({
-    name:"RemappingBridge",version:"v3.3.0",
-    uiBaseline:"v3.3.0",
-    commit:"0efbd433c68867f38d38cc98560714c1f96cfec1",
-    uiBaselineCommit:"0efbd433c68867f38d38cc98560714c1f96cfec1",
+    name:"RemappingBridge",version:"v3.4.0",
+    uiBaseline:"v3.4.0",
+    commit:"0de93cb0f3175cff9597f7bae968d3085a1b6fac",
+    uiBaselineCommit:"0de93cb0f3175cff9597f7bae968d3085a1b6fac",
     gate:"WEB-10",lcdMode:"Canvas 240x240 RGB565 glyph preview",
     framebufferImplemented:true,hatInteractionImplemented:true,
     uxImplemented:true,bluetoothImplemented:false,virtualMiceImplemented:true,profilesImplemented:true,shortcutsImplemented:true,displayControlsImplemented:false,diagnosticsImplemented:true,maxWebBrightnessPercent:100

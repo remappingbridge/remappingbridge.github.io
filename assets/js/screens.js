@@ -1,5 +1,5 @@
-/* WEB-04 — authoritative 48 templates from v3.3.0 firmware.
- * Source src/ux_model/ux_model.c, Git blob 9f83921b8c780622a545157ed373726603b96cae.
+/* WEB-04 — authoritative 48 templates from v3.4.0 firmware.
+ * Source src/ux_model/ux_model.c, Git blob 758e1279cc48065887d9526ded3044a4f2b31a80.
  * The C source has 2 long source strings in HELP_REMAPPER_OPTIONS (22 chars);
  * preserve those literals here and clip only when producing the physical
  * 21-column framebuffer, exactly as blu2usb_ui_frame_set_text() does.
@@ -242,12 +242,12 @@
   "LEFT_WILL_BECOME": {
     "rows": [
       "LEFT WILL BECOME",
-      " LEFT",
-      " RIGHT",
-      " MIDDLE",
+      " LEFT CLICK",
+      " RIGHT CLICK",
       " FORWARD",
       " BACKWARD",
       " MODIFIER",
+      " DISABLED",
       "",
       "KEY A: APPLY AND BACK"
     ],
@@ -256,12 +256,12 @@
   "RIGHT_WILL_BECOME": {
     "rows": [
       "RIGHT WILL BECOME",
-      " LEFT",
-      " RIGHT",
-      " MIDDLE",
+      " LEFT CLICK",
+      " RIGHT CLICK",
       " FORWARD",
       " BACKWARD",
       " MODIFIER",
+      " DISABLED",
       "",
       "KEY A: APPLY AND BACK"
     ],
@@ -270,12 +270,12 @@
   "MIDDLE_WILL_BECOME": {
     "rows": [
       "MIDDLE WILL BECOME",
-      " LEFT",
-      " RIGHT",
-      " MIDDLE",
+      " LEFT CLICK",
+      " RIGHT CLICK",
       " FORWARD",
       " BACKWARD",
       " MODIFIER",
+      " DISABLED",
       "",
       "KEY A: APPLY AND BACK"
     ],
@@ -284,12 +284,12 @@
   "FORWARD_WILL_BECOME": {
     "rows": [
       "FORWARD WILL BECOME",
-      " LEFT",
-      " RIGHT",
-      " MIDDLE",
+      " LEFT CLICK",
+      " RIGHT CLICK",
       " FORWARD",
       " BACKWARD",
       " MODIFIER",
+      " DISABLED",
       "",
       "KEY A: APPLY AND BACK"
     ],
@@ -298,12 +298,12 @@
   "BACKWARD_WILL_BECOME": {
     "rows": [
       "BACKWARD WILL BECOME",
-      " LEFT",
-      " RIGHT",
-      " MIDDLE",
+      " LEFT CLICK",
+      " RIGHT CLICK",
       " FORWARD",
       " BACKWARD",
       " MODIFIER",
+      " DISABLED",
       "",
       "KEY A: APPLY AND BACK"
     ],
@@ -721,8 +721,8 @@
     Object.freeze(entry.rows);Object.freeze(entry.dynamic);Object.freeze(entry);
   });
   window.RemappingBridgeScreens=Object.freeze({
-    firmwareTag:"v3.3.0",
-    firmwareBlob:"9f83921b8c780622a545157ed373726603b96cae",
+    firmwareTag:"v3.4.0",
+    firmwareBlob:"758e1279cc48065887d9526ded3044a4f2b31a80",
     ids:Object.freeze(Object.keys(catalog)),
     templates:Object.freeze(catalog),
     get:function(id){return catalog[id]||null;}

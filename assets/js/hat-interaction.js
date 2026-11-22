@@ -1,4 +1,4 @@
-/* WEB-04 — 48 canonical screen route model, based on firmware v3.3.0.
+/* WEB-04 — 48 canonical screen route model, based on firmware v3.4.0.
  * Release-driven control/Help/Lock behavior preserved from WEB-03.
  * Persistence commits and actual BLE transactions belong to WEB-05/06/07.
  */
@@ -15,7 +15,9 @@ var C=Object.freeze(["JOY_UP","JOY_DOWN","JOY_LEFT","JOY_RIGHT","JOY_PRESS","KEY
 var SCENARIOS=Object.freeze(["first","connected","saved","first-connected","home-connected"]);
 var HELP=new Set(source.ids.filter(function(id){return id.startsWith("HELP_")||id.endsWith("_HELP");}));
 var SOURCE=Object.freeze(["LEFT","RIGHT","MIDDLE","FORWARD","BACKWARD"]);
-var TARGET=Object.freeze(["LEFT","RIGHT","MIDDLE","FORWARD","BACKWARD","MODIFIER"]);
+// Browser profile IDs are stable across releases. MIDDLE (2) is read-only.
+var MENU_TARGETS=Object.freeze([0,1,3,4,5,6]);
+function targetSelection(target){return MENU_TARGETS.indexOf(target);}
 var SHORTCUT_NAMES=Object.freeze(["NOT CUSTOMIZED","COPY","CUT","SELECT ALL","PASTE","UNDO","REDO","ESCAPE","SPACE","ENTER/RETURN","BACKSPACE","DELETE","RENAME","FULL SCREEN","SCREENSHOT FULL","SCREENSHOT AREA","REFRESH","FIND","SAVE","PLAY/PAUSE","NEXT TRACK","PREVIOUS TRACK","VOLUME UP","VOLUME DOWN","MUTE","HOME SCREEN/PAGE","ZOOM IN","ZOOM OUT","RESET ZOOM","BRIGHTNESS UP","BRIGHTNESS DOWN"]);
 var COMBINATION_NAMES=Object.freeze(["MODIFIER RELEASED","MOD + MIDDLE","MOD + LEFT CLICK","MOD + RIGHT CLICK",
  "MOD + FORWARD","MOD + BACKWARD","MOD + WHEEL UP","MOD + WHEEL DOWN",
@@ -112,7 +114,11 @@ function createEngine(listener){
  function inspect(id){
   if(!source.get(id))throw new RangeError("Unknown canonical screen");
   if(locked)return emit("locked");
-  go(id);held.clear();returnScreen=null;returnSelection=0;
+  if(isWill(id)){
+   customSource=SOURCE.indexOf(id.split("_")[0]);
+   go(id,Math.max(0,targetSelection(customTargets[customSource])));
+  }else go(id);
+  held.clear();returnScreen=null;returnSelection=0;
   return emit("inspect");
  }
  function help(){return HELP.has(screen);}
@@ -298,11 +304,11 @@ function createEngine(listener){
    }
   }
   if(screen==="EDIT_CUSTOM"&&id==="JOY_PRESS"){
-   customSource=selection;go(SOURCE[selection]+"_WILL_BECOME",customTargets[selection]);
+   customSource=selection;go(SOURCE[selection]+"_WILL_BECOME",Math.max(0,targetSelection(customTargets[selection])));
    return emit("access",id);
   }
   if(isWill(screen)&&id==="KEY_A"){
-   var target=selection;
+   var target=MENU_TARGETS[selection];
    // Only one physical mouse button may be a modifier. Replaced modifiers
    // restore their native identity (Forward/Backward are not interchanged).
    if(target===5)for(var i=0;i<customTargets.length;i++){
@@ -353,7 +359,7 @@ function createEngine(listener){
 window.RemappingBridgeHAT=Object.freeze({
  controls:C,scenarios:SCENARIOS,screens:S,
  templates:T,ids:source.ids,sourceBlob:source.firmwareBlob,createEngine:createEngine,
- isCombo:isCombo,isShortcut:isShortcut,isWill:isWill,isDpi:isDpi,optionCount:countFor,
+ targetSelection:targetSelection,isCombo:isCombo,isShortcut:isShortcut,isWill:isWill,isDpi:isDpi,optionCount:countFor,
  shortcutNames:SHORTCUT_NAMES,combinationNames:COMBINATION_NAMES,comboUnavailable:comboUnavailable,shortcutsActive:shortcutsActive
 });
 }());

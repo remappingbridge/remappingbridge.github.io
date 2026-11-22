@@ -18,7 +18,7 @@ var GAINS=[1,2,3,4,5,6,8,12];
 function validateProfile(p){
  if(!p||typeof p!=="object"||!["PASSTHROUGH","CUSTOM"].includes(p.kind)||
   !Array.isArray(p.targets)||p.targets.length!==5||
-  !p.targets.every(n=>Number.isInteger(n)&&n>=0&&n<=5)||
+  !p.targets.every(n=>Number.isInteger(n)&&n>=0&&n<=6)||
   p.targets.filter(n=>n===5).length>1||
   !p.movement||!GAINS.includes(p.movement.horizontal)||!GAINS.includes(p.movement.vertical)||
   (p.movement.scrollInverse!==undefined && typeof p.movement.scrollInverse!=="boolean")||

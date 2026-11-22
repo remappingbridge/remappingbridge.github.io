@@ -1,6 +1,6 @@
 /* WEB-04 — visual projection from canonical firmware 9×21 templates.
  * Sequence: source rows -> dynamic (demo) fields -> semantic foreground
- * -> focused option -> MNT-13 pipe marker -> v3.3.0 Canvas.
+ * -> focused option -> MNT-13 pipe marker -> v3.4.0 Canvas.
  * Does not claim BLE, flash/persistent preference operations.
  */
 (function(){
@@ -88,14 +88,15 @@ function projection(state,lcd){
   if(state.activeProfile==="CUSTOM"&&(state.appliedTargets||state.customTargets).indexOf(5)>=0)setCellRow(frame,3,now,lcd);
  }
  if(id==="EDIT_CUSTOM"){
-  var labels=["LEFT","RIGHT","MIDDLE","FORWARD","BACKWARD","MODIFIER"];
+  var labels=["LEFT","RIGHT","MIDDLE","FORWARD","BACKWARD","MODIFIER","DISABLED"];
   for(var c=0;c<5;c++){
    replace(frame,c+1," "+labels[c]+" IS "+labels[state.customTargets[c]],state.activeProfile==="CUSTOM"&&!state.customDirty?now:muted,lcd);
   }
  }
  if(U.isWill(id)){
   for(var w=1;w<=6;w++)setCellRow(frame,w,muted,lcd);
-  setCellRow(frame,(state.appliedTargets||state.customTargets)[state.customSource]+1,now,lcd);
+  var current=U.targetSelection(state.customTargets[state.customSource]);
+  if(current>=0)setCellRow(frame,current+1,now,lcd);
  }
  if(U.isCombo(id)){
   var page=Number(id.split("_")[1])-1;
@@ -121,7 +122,7 @@ function projection(state,lcd){
  if(id==="PASSTHROUGH_APPLIED"){
   for(var sr=1;sr<hint;sr++)setCellRow(frame,sr,now,lcd);
  }
- // WEB-07 mirrors v3.3.0 C rendering order: dynamic value, applied cyan,
+ // WEB-07 mirrors v3.4.0 C rendering order: dynamic value, applied cyan,
  // focus, disabled yellow, then MNT-13 pipe on the value/second row.
  var chosen=selectedRow(state);
  if(chosen>0&&chosen<hint&&id!=="SAVED_DEVICES"){
